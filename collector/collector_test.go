@@ -16,19 +16,18 @@ func TestCollector(t *testing.T) {
 
 	start := time.Now()
 	ts := start
-	delta := 10 * time.Millisecond
+	delta := 25 * time.Millisecond
 
-	for start.Add(50*time.Millisecond).Before(ts) {
+	for start.Add(100 * time.Millisecond).Before(ts) {
 		c.Intensity <- collector.Metric{Timestamp: ts, Value: 0.0}
 		ts = ts.Add(delta)
 	}
 
 	assert.Never(t, func() bool { return len(db.Get()) > 0 }, 100*time.Millisecond, 10*time.Millisecond)
 
-
 	assert.Eventually(t, func() bool {
-		c.Intensity <- collector.Metric{Timestamp: ts, Value: 5.0 }
 		c.Power <- collector.Metric{Timestamp: ts, Value: 50.0}
+		c.Intensity <- collector.Metric{Timestamp: ts, Value: 5.0}
 		ts = ts.Add(delta)
 		return len(db.Get()) > 0
 	}, 500*time.Millisecond, 10*time.Millisecond)
@@ -44,9 +43,7 @@ func TestCollector(t *testing.T) {
 	}
 
 	c.Stop <- struct{}{}
-
-	time.Sleep(100*time.Millisecond)
-
+	assert.Eventually(t, func() bool { return len(db.Get()) == 2 }, 500*time.Millisecond, 10*time.Millisecond)
 }
 
 func TestCollectorMultiple(t *testing.T) {
@@ -55,25 +52,18 @@ func TestCollectorMultiple(t *testing.T) {
 	go c.Run()
 
 	start := time.Now()
-	end   := start.Add(135*time.Millisecond)
+	end := start.Add(105 * time.Millisecond)
 	delta := 10 * time.Millisecond
 
 	for start.Before(end) {
-		c.Intensity <- collector.Metric{Timestamp: start, Value: 75.0 }
+		c.Intensity <- collector.Metric{Timestamp: start, Value: 75.0}
 		c.Power <- collector.Metric{Timestamp: start, Value: 500.0}
 		start = start.Add(delta)
 	}
 
 	c.Stop <- struct{}{}
-
-	time.Sleep(100*time.Millisecond)
-
-	values := db.Get()
-
-	assert.Len(t, values, 3)
-
+	assert.Eventually(t, func() bool { return len(db.Get()) == 3 }, 500*time.Millisecond, 10*time.Millisecond)
 }
-
 
 type MockDB struct {
 	sync.RWMutex
@@ -98,4 +88,3 @@ func (db *MockDB) Get() []store.Measurement {
 	defer db.RUnlock()
 	return db.content
 }
-

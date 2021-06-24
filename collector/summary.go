@@ -40,11 +40,3 @@ func (summary *Summary) Get() (result Metric) {
 	summary.Count = 0
 	return
 }
-
-func (summary *Summary) Expired(interval time.Duration) bool {
-	if summary.Count == 0 {
-		return false
-	}
-
-	return summary.Last.After(summary.First.Add(interval))
-}

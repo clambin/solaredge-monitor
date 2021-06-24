@@ -57,7 +57,7 @@ func (collector *Collector) process() {
 		log.WithFields(log.Fields{
 			"power":     collector.power.Count,
 			"intensity": collector.intensity.Count,
-		}).Debug("one or metrics have no data. skipping processing")
+		}).Debug("one or more metrics have no data. skipping processing")
 		return
 	}
 
@@ -66,9 +66,9 @@ func (collector *Collector) process() {
 
 	log.Debugf("power: %v, intensity: %v", power, intensity)
 
-	ts := power.Timestamp
-	if intensity.Timestamp.Before(ts) {
-		ts = intensity.Timestamp
+	ts := intensity.Timestamp
+	if power.Timestamp.Before(ts) {
+		ts = power.Timestamp
 	}
 
 	err := collector.db.Store(store.Measurement{
