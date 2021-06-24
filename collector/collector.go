@@ -71,13 +71,15 @@ func (collector *Collector) process() {
 		ts = power.Timestamp
 	}
 
-	err := collector.db.Store(store.Measurement{
+	measurement := store.Measurement{
 		Timestamp: ts,
 		Power:     power.Value,
 		Intensity: intensity.Value,
-	})
+	}
 
-	if err != nil {
+	if err := collector.db.Store(measurement); err == nil {
+		log.WithField("measurement", measurement).Info("new entry")
+	} else {
 		log.WithError(err).Warning("failed to store metrics")
 	}
 }
