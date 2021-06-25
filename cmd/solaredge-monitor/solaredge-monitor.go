@@ -9,7 +9,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -53,7 +56,18 @@ func main() {
 	power := poller.NewSolarEdgePoller(cfg.SolarEdge.Token, coll.Power, cfg.Polling)
 	intensity := poller.NewTadoPoller(cfg.Tado.Username, cfg.Tado.Password, coll.Intensity, cfg.Polling)
 
+	go coll.Run()
 	go power.Run()
 	go intensity.Run()
-	coll.Run()
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	<-sigs
+
+	coll.Stop <- struct{}{}
+	power.Stop <- struct{}{}
+	intensity.Stop <- struct{}{}
+
+	time.Sleep(1 * time.Second)
 }

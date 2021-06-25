@@ -13,6 +13,7 @@ type Collector struct {
 	intensity Summary
 	power     Summary
 	interval  time.Duration
+	cutOff    time.Time
 	db        store.DB
 }
 
@@ -20,6 +21,11 @@ type Metric struct {
 	Timestamp time.Time
 	Value     float64
 }
+
+const (
+	Intensity = iota
+	Power
+)
 
 func New(interval time.Duration, db store.DB) *Collector {
 	return &Collector{
@@ -38,28 +44,56 @@ loop:
 		case <-collector.Stop:
 			break loop
 		case m := <-collector.Intensity:
-			if !collector.intensity.InRange(m, collector.interval) {
-				collector.process()
-			}
-			collector.intensity.Add(m)
+			collector.process(m, Intensity)
 		case m := <-collector.Power:
-			if !collector.power.InRange(m, collector.interval) {
-				collector.process()
-			}
-			collector.power.Add(m)
+			collector.process(m, Power)
 		}
 	}
-	collector.process()
+	collector.collect()
 }
 
-func (collector *Collector) process() {
-	if collector.power.Count == 0 || collector.intensity.Count == 0 {
-		log.WithFields(log.Fields{
-			"power":     collector.power.Count,
-			"intensity": collector.intensity.Count,
-		}).Debug("one or more metrics have no data. skipping processing")
-		return
+func (collector *Collector) process(m Metric, source int) {
+	log.WithFields(log.Fields{
+		"metric": m,
+		"source": source,
+		"cutOff": collector.cutOff,
+	}).Debug("metric received")
+
+	if collector.shouldCollect(m.Timestamp, source) {
+		collector.collect()
 	}
+
+	switch source {
+	case Intensity:
+		collector.intensity.Add(m)
+	case Power:
+		collector.power.Add(m)
+	}
+}
+
+func (collector *Collector) shouldCollect(next time.Time, source int) bool {
+	if collector.cutOff.IsZero() {
+		collector.cutOff = next.Add(collector.interval)
+		return false
+	}
+
+	if source == Power && collector.intensity.Count == 0 {
+		return false
+	}
+
+	if source == Intensity && collector.power.Count == 0 {
+		return false
+	}
+
+	return next.After(collector.cutOff)
+}
+
+func (collector *Collector) collect() {
+	log.WithFields(log.Fields{
+		"power":     collector.power.Count,
+		"intensity": collector.intensity.Count,
+		"cutOff":    collector.cutOff,
+	}).Debug("running collection")
 
 	power := collector.power.Get()
 	intensity := collector.intensity.Get()
@@ -82,4 +116,8 @@ func (collector *Collector) process() {
 	} else {
 		log.WithError(err).Warning("failed to store metrics")
 	}
+
+	collector.cutOff = collector.cutOff.Add(collector.interval)
+
+	log.WithField("cutOff", collector.cutOff).Debug("new cut-off time set")
 }

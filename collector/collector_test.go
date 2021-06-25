@@ -3,6 +3,7 @@ package collector_test
 import (
 	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/store"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
@@ -10,55 +11,47 @@ import (
 )
 
 func TestCollector(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
+
 	db := NewDB()
 	c := collector.New(50*time.Millisecond, db)
 	go c.Run()
 
 	start := time.Now()
-	ts := start
+	timestamp := start
 	delta := 25 * time.Millisecond
+	cuttOff := start.Add(50 * time.Millisecond)
 
-	for start.Add(100 * time.Millisecond).Before(ts) {
-		c.Intensity <- collector.Metric{Timestamp: ts, Value: 0.0}
-		ts = ts.Add(delta)
+	for timestamp.Before(cuttOff) {
+		c.Intensity <- collector.Metric{Timestamp: timestamp, Value: 5.0}
+		timestamp = timestamp.Add(delta)
 	}
 
 	assert.Never(t, func() bool { return len(db.Get()) > 0 }, 100*time.Millisecond, 10*time.Millisecond)
 
+	c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
+	timestamp = timestamp.Add(delta)
+	c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
+
+	assert.Eventually(t, func() bool { return len(db.Get()) == 1 }, 500*time.Millisecond, 10*time.Millisecond)
+
 	assert.Eventually(t, func() bool {
-		c.Power <- collector.Metric{Timestamp: ts, Value: 50.0}
-		c.Intensity <- collector.Metric{Timestamp: ts, Value: 5.0}
-		ts = ts.Add(delta)
-		return len(db.Get()) > 0
+		c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
+		c.Intensity <- collector.Metric{Timestamp: timestamp, Value: 5.0}
+		timestamp = timestamp.Add(delta)
+		return len(db.Get()) > 1
 	}, 500*time.Millisecond, 10*time.Millisecond)
 
 	values := db.Get()
+	timestamps := make(map[time.Time]bool)
 
-	if assert.Len(t, values, 1) {
+	if assert.Len(t, values, 2) {
 		for _, entry := range values {
-			assert.Equal(t, start, entry.Timestamp)
+			timestamps[entry.Timestamp] = true
 			assert.Equal(t, 50.0, entry.Power)
 			assert.Equal(t, 5.0, entry.Intensity)
 		}
-	}
-
-	c.Stop <- struct{}{}
-	assert.Eventually(t, func() bool { return len(db.Get()) == 2 }, 500*time.Millisecond, 10*time.Millisecond)
-}
-
-func TestCollectorMultiple(t *testing.T) {
-	db := NewDB()
-	c := collector.New(50*time.Millisecond, db)
-	go c.Run()
-
-	start := time.Now()
-	end := start.Add(105 * time.Millisecond)
-	delta := 10 * time.Millisecond
-
-	for start.Before(end) {
-		c.Intensity <- collector.Metric{Timestamp: start, Value: 75.0}
-		c.Power <- collector.Metric{Timestamp: start, Value: 500.0}
-		start = start.Add(delta)
+		assert.Len(t, timestamps, 2)
 	}
 
 	c.Stop <- struct{}{}
