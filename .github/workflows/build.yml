@@ -76,9 +76,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: metadata
+      - uses: docker/metadata-action@v3
         id: docker_meta
-        uses: docker/metadata-action@v3
         with:
           images: clambin/solaredge-monitor
           tags: |
