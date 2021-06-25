@@ -22,11 +22,6 @@ type Metric struct {
 	Value     float64
 }
 
-const (
-	Intensity = iota
-	Power
-)
-
 func New(interval time.Duration, db store.DB) *Collector {
 	return &Collector{
 		Stop:      make(chan struct{}),
@@ -44,44 +39,29 @@ loop:
 		case <-collector.Stop:
 			break loop
 		case m := <-collector.Intensity:
-			collector.process(m, Intensity)
+			log.WithFields(log.Fields{"metric": m, "cutOff": collector.cutOff}).Debug("solar intensity metric received")
+			if collector.shouldCollect(m.Timestamp) {
+				collector.collect()
+			}
+			collector.intensity.Add(m)
 		case m := <-collector.Power:
-			collector.process(m, Power)
+			log.WithFields(log.Fields{"metric": m, "cutOff": collector.cutOff}).Debug("power metric received")
+			if collector.shouldCollect(m.Timestamp) {
+				collector.collect()
+			}
+			collector.power.Add(m)
 		}
 	}
 	collector.collect()
 }
 
-func (collector *Collector) process(m Metric, source int) {
-	log.WithFields(log.Fields{
-		"metric": m,
-		"source": source,
-		"cutOff": collector.cutOff,
-	}).Debug("metric received")
-
-	if collector.shouldCollect(m.Timestamp, source) {
-		collector.collect()
-	}
-
-	switch source {
-	case Intensity:
-		collector.intensity.Add(m)
-	case Power:
-		collector.power.Add(m)
-	}
-}
-
-func (collector *Collector) shouldCollect(next time.Time, source int) bool {
+func (collector *Collector) shouldCollect(next time.Time) bool {
 	if collector.cutOff.IsZero() {
 		collector.cutOff = next.Add(collector.interval)
 		return false
 	}
 
-	if source == Power && collector.intensity.Count == 0 {
-		return false
-	}
-
-	if source == Intensity && collector.power.Count == 0 {
+	if collector.intensity.Count == 0 || collector.power.Count == 0 {
 		return false
 	}
 
@@ -98,11 +78,9 @@ func (collector *Collector) collect() {
 	power := collector.power.Get()
 	intensity := collector.intensity.Get()
 
-	log.Debugf("power: %v, intensity: %v", power, intensity)
-
-	ts := intensity.Timestamp
-	if power.Timestamp.Before(ts) {
-		ts = power.Timestamp
+	ts := power.Timestamp
+	if intensity.Timestamp.Before(ts) {
+		ts = intensity.Timestamp
 	}
 
 	measurement := store.Measurement{

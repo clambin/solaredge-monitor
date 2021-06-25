@@ -22,13 +22,6 @@ func (summary *Summary) Add(m Metric) {
 	summary.Count++
 }
 
-func (summary *Summary) InRange(m Metric, interval time.Duration) bool {
-	if summary.First.IsZero() {
-		return true
-	}
-	return m.Timestamp.Before(summary.First.Add(interval))
-}
-
 func (summary *Summary) Get() (result Metric) {
 	result = Metric{
 		Timestamp: summary.First,
