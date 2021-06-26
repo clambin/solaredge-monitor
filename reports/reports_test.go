@@ -18,6 +18,8 @@ func TestServer_Overview(t *testing.T) {
 	start, _ := reporter.GetFirst()
 	stop, _ := reporter.GetLast()
 
+	assert.NotEqual(t, start, stop)
+
 	err := reporter.Overview(start, stop)
 	assert.NoError(t, err)
 

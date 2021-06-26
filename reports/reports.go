@@ -35,12 +35,14 @@ func (server *Server) Overview(start, stop time.Time) (err error) {
 
 	powerAverage, powerVariance, intensityAverage, intensityVariance := analyzeMeasurements(measurements)
 	log.WithFields(log.Fields{
+		"start":             start,
+		"stop":              stop,
 		"measurement":       len(measurements),
 		"powerAverage":      powerAverage,
 		"powerVariance":     powerVariance,
 		"intensityAverage":  intensityAverage,
 		"intensityVariance": intensityVariance,
-	}).Info("building graphs")
+	}).Debug("building graphs")
 
 	if err = saveGraph(measurements, path.Join(server.imagesDirectory, "week.png"), false); err != nil {
 		return err
@@ -130,5 +132,5 @@ func (server *Server) GetLast() (first time.Time, err error) {
 		return time.Time{}, fmt.Errorf("no entries found")
 	}
 
-	return measurements[0].Timestamp, nil
+	return measurements[len(measurements)-1].Timestamp, nil
 }
