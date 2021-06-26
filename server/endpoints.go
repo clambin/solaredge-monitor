@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+func (server *Server) main(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
 const OverviewResponse = `<body>
 <h1>Overview</h1>
 <h2>Time series</h2>

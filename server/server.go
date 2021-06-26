@@ -32,7 +32,7 @@ func (server *Server) Run() {
 	images := http.StripPrefix("/images/", http.FileServer(http.Dir(server.backend.ImagesDirectory())))
 	r.PathPrefix("/images/").Handler(images)
 	r.HandleFunc("/overview", server.overview).Methods(http.MethodGet)
-
+	r.HandleFunc("/", server.main).Methods(http.MethodGet)
 	address := ":8080"
 	if server.port > 0 {
 		address = fmt.Sprintf(":%d", server.port)

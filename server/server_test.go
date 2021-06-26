@@ -20,9 +20,9 @@ func TestServer_Overview(t *testing.T) {
 	var resp *http.Response
 	var err error
 	if assert.Eventually(t, func() bool {
-		resp, err = http.Get("http://localhost:8081/overview")
+		resp, err = http.Get("http://localhost:8081/")
 		return err == nil
-	}, 500*time.Millisecond, 50*time.Millisecond) {
+	}, 5*time.Second, 100*time.Millisecond) {
 
 		testCases := []struct {
 			url          string
