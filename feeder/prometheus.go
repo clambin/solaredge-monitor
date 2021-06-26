@@ -1,4 +1,4 @@
-package main
+package feeder
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func (feed *Feed) call(ctx context.Context, query string, start, end time.Time) 
 		warnings v1.Warnings
 	)
 
-	response, warnings, err = feed.client.QueryRange(ctx, query,v1.Range{
+	response, warnings, err = feed.client.QueryRange(ctx, query, v1.Range{
 		Start: start,
 		End:   end,
 		Step:  time.Minute,

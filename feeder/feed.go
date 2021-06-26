@@ -1,4 +1,4 @@
-package main
+package feeder
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func getPowerMetrics(prometheusURL string, start, stop time.Time) (metrics []collector.Metric, err error) {
+func GetPowerMetrics(prometheusURL string, start, stop time.Time) (metrics []collector.Metric, err error) {
 	return getMetrics(prometheusURL, "avg(solaredge_current_power)", start, stop)
 }
 
-func getIntensityMetrics(prometheusURL string, start, stop time.Time) (metrics []collector.Metric, err error) {
+func GetIntensityMetrics(prometheusURL string, start, stop time.Time) (metrics []collector.Metric, err error) {
 	return getMetrics(prometheusURL, "avg(tado_solar_intensity_percentage)", start, stop)
 }
 
@@ -25,9 +25,7 @@ func getMetrics(prometheusURL string, query string, start, stop time.Time) (metr
 	}
 
 	var results model.Matrix
-	results, err = client.call(context.Background(), query, start, stop)
-
-	if err == nil {
+	if results, err = client.call(context.Background(), query, start, stop); err == nil {
 		for _, entry := range results {
 			for _, pair := range entry.Values {
 				metrics = append(metrics, collector.Metric{Timestamp: pair.Timestamp.Time(), Value: float64(pair.Value)})
@@ -37,7 +35,7 @@ func getMetrics(prometheusURL string, query string, start, stop time.Time) (metr
 	return
 }
 
-func feedMetrics(power []collector.Metric, intensity []collector.Metric, coll *collector.Collector) (err error) {
+func FeedMetrics(power []collector.Metric, intensity []collector.Metric, coll *collector.Collector) (err error) {
 	for len(power) > 0 && len(intensity) > 0 {
 		if power[0].Timestamp.Before(intensity[0].Timestamp) {
 			coll.Power <- power[0]

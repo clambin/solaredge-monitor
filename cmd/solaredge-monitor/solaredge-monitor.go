@@ -25,7 +25,6 @@ func main() {
 		err            error
 		cfg            *configuration.Configuration
 	)
-	log.WithField("version", version.BuildVersion).Info("solaredge-monitoring started")
 
 	a := kingpin.New(filepath.Base(os.Args[0]), "SolarEdge power monitoring")
 	a.Version(version.BuildVersion)
@@ -39,6 +38,8 @@ func main() {
 		a.Usage(os.Args[1:])
 		os.Exit(1)
 	}
+
+	log.WithField("version", version.BuildVersion).Info("solaredge-monitoring started")
 
 	if cfg, err = configuration.LoadFromFile(configFileName); err != nil {
 		log.WithError(err).Fatal("failed to read configuration file")

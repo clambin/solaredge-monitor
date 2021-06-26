@@ -98,11 +98,8 @@ func saveGraph(measurements []store.Measurement, filename string, fold bool) (er
 		return err
 	}
 
-	defer func() {
-		_ = w.Close()
-	}()
-
 	_, err = img.WriteTo(w)
+	_ = w.Close()
 
 	return
 }
