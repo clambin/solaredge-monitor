@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"html/template"
 	"net/http"
 	"time"
@@ -23,6 +24,7 @@ func (server *Server) overview(w http.ResponseWriter, req *http.Request) {
 	start, stop, err := server.parseGenerateRequest(req)
 
 	if err != nil {
+		log.WithError(err).Error("failed to get determine start/stop parameters")
 		http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -30,6 +32,7 @@ func (server *Server) overview(w http.ResponseWriter, req *http.Request) {
 	err = server.backend.Overview(start, stop)
 
 	if err != nil {
+		log.WithError(err).Error("failed to create images")
 		http.Error(w, "unable to create image: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -38,6 +41,7 @@ func (server *Server) overview(w http.ResponseWriter, req *http.Request) {
 	t, err = t.Parse(OverviewResponse)
 
 	if err != nil {
+		log.WithError(err).Error("failed to generate page")
 		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
