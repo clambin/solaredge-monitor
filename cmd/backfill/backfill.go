@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func main () {
+func main() {
 	var (
 		debug          bool
 		configFileName string
@@ -52,7 +52,7 @@ func main () {
 	)
 
 	var (
-		power []collector.Metric
+		power     []collector.Metric
 		intensity []collector.Metric
 	)
 
@@ -70,7 +70,7 @@ func main () {
 	log.Infof("discovered %d power metrics", len(power))
 	log.Infof("discovered %d solar intensity metrics", len(intensity))
 
-	coll := collector.New(cfg.Collection, db)
+	coll := collector.New(cfg.Scrape.Collection, db)
 	go coll.Run()
 
 	if err = feedMetrics(power, intensity, coll); err != nil {

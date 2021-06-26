@@ -8,12 +8,23 @@ import (
 )
 
 type Configuration struct {
-	Debug      bool                    `yaml:"debug"`
-	Polling    time.Duration           `yaml:"polling"`
-	Collection time.Duration           `yaml:"collection"`
-	Database   DBConfiguration         `yaml:"database"`
-	Tado       TadoConfiguration       `yaml:"tado"`
-	SolarEdge  SolarEdgeConfiguration  `yaml:"solarEdge"`
+	Debug     bool                   `yaml:"debug"`
+	Server    ServerConfiguration    `yaml:"server"`
+	Scrape    ScrapeConfiguration    `yaml:"scrape"`
+	Database  DBConfiguration        `yaml:"database"`
+	Tado      TadoConfiguration      `yaml:"tado"`
+	SolarEdge SolarEdgeConfiguration `yaml:"solarEdge"`
+}
+
+type ServerConfiguration struct {
+	Port   int    `yaml:"port"`
+	Images string `yaml:"images"`
+}
+
+type ScrapeConfiguration struct {
+	Enabled    bool          `yaml:"enabled"`
+	Polling    time.Duration `yaml:"polling"`
+	Collection time.Duration `yaml:"collection"`
 }
 
 type DBConfiguration struct {
@@ -43,9 +54,15 @@ func LoadFromFile(filename string) (config *Configuration, err error) {
 
 func Load(content []byte) (configuration *Configuration, err error) {
 	configuration = &Configuration{
-		Polling:    5*time.Minute,
-		Collection: 15*time.Minute,
-		Database:   loadDBEnvironment(),
+		Server: ServerConfiguration{
+			Port:   80,
+			Images: "/images",
+		},
+		Scrape: ScrapeConfiguration{
+			Polling:    5 * time.Minute,
+			Collection: 15 * time.Minute,
+		},
+		Database: loadDBEnvironment(),
 	}
 	err = yaml.Unmarshal(content, &configuration)
 	return
