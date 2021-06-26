@@ -47,8 +47,6 @@ func (server *Server) overview(w http.ResponseWriter, req *http.Request) {
 	}
 
 	_ = t.Execute(w, nil)
-	// w.WriteHeader(http.StatusOK)
-	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
 }
 
 func (server *Server) parseGenerateRequest(req *http.Request) (start, stop time.Time, err error) {

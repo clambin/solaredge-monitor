@@ -2,7 +2,7 @@ package poller
 
 import (
 	"github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"

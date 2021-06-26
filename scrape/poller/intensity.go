@@ -1,7 +1,7 @@
 package poller
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/tado"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -12,7 +12,6 @@ type TadoPoller struct {
 	BasePoller
 	tado.API
 }
-
 
 func NewTadoPoller(username, password string, summary chan collector.Metric, pollInterval time.Duration) *TadoPoller {
 	c := &TadoPoller{

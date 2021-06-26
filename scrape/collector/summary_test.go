@@ -1,7 +1,7 @@
 package collector_test
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

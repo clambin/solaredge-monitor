@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/configuration"
-	"github.com/clambin/solaredge-monitor/poller"
 	"github.com/clambin/solaredge-monitor/reports"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
+	"github.com/clambin/solaredge-monitor/scrape/poller"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"

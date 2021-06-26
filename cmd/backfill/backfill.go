@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/configuration"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
 	log "github.com/sirupsen/logrus"

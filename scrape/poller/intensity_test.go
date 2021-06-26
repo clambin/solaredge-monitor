@@ -1,8 +1,8 @@
 package poller_test
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
-	"github.com/clambin/solaredge-monitor/poller"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
+	"github.com/clambin/solaredge-monitor/scrape/poller"
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -11,7 +11,7 @@ import (
 
 func TestTadoCollector(t *testing.T) {
 	collect := make(chan collector.Metric)
-	p := poller.NewTadoPoller("foo", "bar", collect, 50 * time.Millisecond)
+	p := poller.NewTadoPoller("foo", "bar", collect, 50*time.Millisecond)
 	p.API = &TadoMock{}
 	go p.Run()
 
@@ -21,7 +21,6 @@ func TestTadoCollector(t *testing.T) {
 
 	p.Stop <- struct{}{}
 }
-
 
 type TadoMock struct {
 }

@@ -1,7 +1,7 @@
 package poller
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
@@ -35,7 +35,7 @@ loop:
 			if err == nil {
 				poller.collector <- collector.Metric{
 					Timestamp: time.Now(),
-					Value: value,
+					Value:     value,
 				}
 			} else {
 				log.WithError(err).Warning("failed to poll data")

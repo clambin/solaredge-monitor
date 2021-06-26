@@ -2,8 +2,8 @@ package poller_test
 
 import (
 	"github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/collector"
-	"github.com/clambin/solaredge-monitor/poller"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
+	"github.com/clambin/solaredge-monitor/scrape/poller"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -11,11 +11,11 @@ import (
 
 func TestSolarEdgePoller(t *testing.T) {
 	summary := make(chan collector.Metric)
-	p := poller.NewSolarEdgePoller("", summary, 50 * time.Millisecond)
+	p := poller.NewSolarEdgePoller("", summary, 50*time.Millisecond)
 	p.API = &SolarEdgeMock{}
 	go p.Run()
 
-	received := <- summary
+	received := <-summary
 
 	assert.Equal(t, 1.0, received.Value)
 
@@ -45,4 +45,3 @@ func (api *SolarEdgeMock) GetPower(_ int, startTime, endTime time.Time) (entries
 func (api *SolarEdgeMock) GetPowerOverview(_ int) (lifeTime, lastYear, lastMonth, lastDay, current float64, err error) {
 	return 10000.0, 1000.0, 100.0, 10.0, 1.0, nil
 }
-
