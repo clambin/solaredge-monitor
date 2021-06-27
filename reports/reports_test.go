@@ -7,6 +7,11 @@ import (
 	"testing"
 )
 
+func TestServer_Empty(t *testing.T) {
+	_, err := reports.MakeGraph(nil, true)
+	assert.Error(t, err)
+}
+
 func TestServer_Summary(t *testing.T) {
 	reporter := reports.New(mockdb.BuildDB())
 

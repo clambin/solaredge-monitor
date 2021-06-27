@@ -3,6 +3,7 @@ package reports
 import (
 	"bytes"
 	"github.com/clambin/solaredge-monitor/store"
+	"gonum.org/v1/plot/vg/vgimg"
 	"time"
 )
 
@@ -18,15 +19,13 @@ func New(db store.DB) *Server {
 
 func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-
-	if measurements, err = server.db.Get(start, stop); err != nil {
-		return nil, err
-	}
-
-	// TODO: MakeGraph to return an error for simpler code
 	buf := new(bytes.Buffer)
-	if graph := MakeGraph(measurements, true); graph != nil {
-		_, err = graph.WriteTo(buf)
+
+	if measurements, err = server.db.Get(start, stop); err == nil {
+		var graph *vgimg.PngCanvas
+		if graph, err = MakeGraph(measurements, true); err == nil {
+			_, err = graph.WriteTo(buf)
+		}
 	}
 
 	return buf.Bytes(), err
@@ -34,14 +33,14 @@ func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 
 func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-
-	if measurements, err = server.db.Get(start, stop); err != nil {
-		return nil, err
-	}
-
 	buf := new(bytes.Buffer)
-	if graph := MakeGraph(measurements, false); graph != nil {
-		_, err = graph.WriteTo(buf)
+
+	if measurements, err = server.db.Get(start, stop); err == nil {
+		var graph *vgimg.PngCanvas
+		if graph, err = MakeGraph(measurements, false); err == nil {
+			_, err = graph.WriteTo(buf)
+		}
 	}
+
 	return buf.Bytes(), err
 }

@@ -16,9 +16,19 @@ import (
 // This is the width of the legend, experimentally determined.
 const legendWidth = vg.Centimeter
 
-func MakeGraph(measurements []store.Measurement, fold bool) *vgimg.PngCanvas {
+func MakeGraph(measurements []store.Measurement, fold bool) (img *vgimg.PngCanvas, err error) {
+	if len(measurements) == 0 {
+		return nil, fmt.Errorf("no data for graph")
+	}
+
 	XYZs, minZ, maxZ := buildPlotData(measurements, fold)
-	return makeImage(makePlot(XYZs, minZ, maxZ))
+
+	var p *plot.Plot
+	if p, err = makePlot(XYZs, minZ, maxZ); err != nil {
+		return nil, err
+	}
+
+	return makeImage(p), nil
 }
 
 func buildPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, minZ, maxZ float64) {
@@ -47,12 +57,7 @@ func buildPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, m
 	return
 }
 
-func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
-	if minZ == maxZ {
-		log.WithFields(log.Fields{"minZ": minZ, "maxZ": maxZ}).Error("no plottable data found")
-		return nil
-	}
-
+func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot, err error) {
 	colors := moreland.SmoothBlueRed() // Initialize a color map.
 	colors.SetMax(maxZ)
 	colors.SetMin(minZ)
@@ -63,10 +68,12 @@ func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
 	p.Y.Label.Text = "solar intensity"
 	p.Add(plotter.NewGrid())
 
-	sc, err := plotter.NewScatter(XYZs)
+	var sc *plotter.Scatter
+	sc, err = plotter.NewScatter(XYZs)
+
 	if err != nil {
 		log.WithError(err).Error("failed to create plotter")
-		return nil
+		return nil, err
 	}
 
 	// Specify style and color for individual points.
@@ -106,10 +113,6 @@ func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
 }
 
 func makeImage(p *plot.Plot) (img *vgimg.PngCanvas) {
-	if p == nil {
-		return nil
-	}
-
 	rawImg := vgimg.New(600, 460)
 	dc := draw.New(rawImg)
 	dc = draw.Crop(dc, 0, -legendWidth, 0, 0) // Make space for the legend.
