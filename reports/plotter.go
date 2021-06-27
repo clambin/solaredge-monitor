@@ -17,12 +17,11 @@ import (
 const legendWidth = vg.Centimeter
 
 func MakeGraph(measurements []store.Measurement, fold bool) *vgimg.PngCanvas {
-	XYZs, minZ, maxZ := getPlotData(measurements, fold)
-	p := makePlot(XYZs, minZ, maxZ)
-	return makeImage(p)
+	XYZs, minZ, maxZ := buildPlotData(measurements, fold)
+	return makeImage(makePlot(XYZs, minZ, maxZ))
 }
 
-func getPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, minZ, maxZ float64) {
+func buildPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, minZ, maxZ float64) {
 	result = make(plotter.XYZs, len(input))
 
 	minZ, maxZ = math.Inf(1), math.Inf(-1)
@@ -49,6 +48,11 @@ func getPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, min
 }
 
 func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
+	if minZ == maxZ {
+		log.WithFields(log.Fields{"minZ": minZ, "maxZ": maxZ}).Error("no plottable data found")
+		return nil
+	}
+
 	colors := moreland.SmoothBlueRed() // Initialize a color map.
 	colors.SetMax(maxZ)
 	colors.SetMin(minZ)
@@ -61,7 +65,8 @@ func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
 
 	sc, err := plotter.NewScatter(XYZs)
 	if err != nil {
-		log.Panic(err)
+		log.WithError(err).Error("failed to create plotter")
+		return nil
 	}
 
 	// Specify style and color for individual points.
@@ -77,7 +82,6 @@ func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
 
 	//Create a legend
 	step := int(maxZ-minZ) / 100
-	// TODO: this panics if step == 0
 	thumbs := plotter.PaletteThumbnailers(colors.Palette(step))
 	for i := len(thumbs) - 1; i >= 0; i-- {
 		t := thumbs[i]
@@ -102,6 +106,10 @@ func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot) {
 }
 
 func makeImage(p *plot.Plot) (img *vgimg.PngCanvas) {
+	if p == nil {
+		return nil
+	}
+
 	rawImg := vgimg.New(600, 460)
 	dc := draw.New(rawImg)
 	dc = draw.Crop(dc, 0, -legendWidth, 0, 0) // Make space for the legend.

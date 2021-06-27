@@ -25,4 +25,7 @@ func TestCache_Run(t *testing.T) {
 		_, err = os.Stat(path.Join(tmpdir, filename))
 		return os.IsNotExist(err)
 	}, 500*time.Millisecond, 50*time.Millisecond)
+
+	c.Stop <- struct{}{}
+	time.Sleep(100 * time.Millisecond)
 }

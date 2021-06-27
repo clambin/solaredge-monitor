@@ -44,6 +44,8 @@ func (server *Server) Run() {
 	r.PathPrefix("/images/").Handler(images)
 	r.HandleFunc("/", server.main).Methods(http.MethodGet)
 	r.HandleFunc("/report", server.report).Methods(http.MethodGet)
+	r.HandleFunc("/summary", server.summary).Methods(http.MethodGet)
+	r.HandleFunc("/timeseries", server.timeSeries).Methods(http.MethodGet)
 
 	address := ":8080"
 	if server.port > 0 {

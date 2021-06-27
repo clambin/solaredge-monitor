@@ -23,8 +23,12 @@ func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 		return nil, err
 	}
 
+	// TODO: MakeGraph to return an error for simpler code
 	buf := new(bytes.Buffer)
-	_, err = MakeGraph(measurements, true).WriteTo(buf)
+	if graph := MakeGraph(measurements, true); graph != nil {
+		_, err = graph.WriteTo(buf)
+	}
+
 	return buf.Bytes(), err
 }
 
@@ -36,6 +40,8 @@ func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error
 	}
 
 	buf := new(bytes.Buffer)
-	_, err = MakeGraph(measurements, false).WriteTo(buf)
+	if graph := MakeGraph(measurements, false); graph != nil {
+		_, err = graph.WriteTo(buf)
+	}
 	return buf.Bytes(), err
 }
