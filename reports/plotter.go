@@ -24,7 +24,7 @@ func MakeGraph(measurements []store.Measurement, fold bool) (img *vgimg.PngCanva
 	XYZs, minZ, maxZ := buildPlotData(measurements, fold)
 
 	var p *plot.Plot
-	if p, err = makePlot(XYZs, minZ, maxZ); err != nil {
+	if p, err = makePlot(XYZs, minZ, maxZ, fold); err != nil {
 		return nil, err
 	}
 
@@ -39,7 +39,7 @@ func buildPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, m
 	for _, value := range input {
 		unixTime := float64(value.Timestamp.Unix())
 		if fold {
-			unixTime = float64(int64(unixTime)%(60*60*24)) / (60 * 60)
+			unixTime = float64(int64(unixTime) % (60 * 60 * 24))
 		}
 		result[index].X = unixTime
 		result[index].Y = value.Intensity
@@ -57,15 +57,20 @@ func buildPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, m
 	return
 }
 
-func makePlot(XYZs plotter.XYZs, minZ, maxZ float64) (p *plot.Plot, err error) {
+func makePlot(XYZs plotter.XYZs, minZ, maxZ float64, fold bool) (p *plot.Plot, err error) {
 	colors := moreland.SmoothBlueRed() // Initialize a color map.
 	colors.SetMax(maxZ)
 	colors.SetMin(minZ)
 
 	p = plot.New()
 	p.Title.Text = "Solar Panel output"
-	p.X.Label.Text = "time"
-	p.Y.Label.Text = "solar intensity"
+	p.X.Label.Text = "Time"
+	if fold {
+		p.X.Tick.Marker = plot.TimeTicks{Format: "15:04:05"}
+	} else {
+		p.X.Tick.Marker = plot.TimeTicks{Format: "2006-01-02"}
+	}
+	p.Y.Label.Text = "Solar Intensity (%)"
 	p.Add(plotter.NewGrid())
 
 	var sc *plotter.Scatter
