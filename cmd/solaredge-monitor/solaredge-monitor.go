@@ -5,9 +5,9 @@ import (
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/scrape/poller"
-	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
+	"github.com/clambin/solaredge-monitor/web/server"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
@@ -73,7 +73,7 @@ func main() {
 		go intensity.Run()
 	}
 
-	s := server.New(cfg.Server.Port, reports.New(cfg.Server.Images, db))
+	s := server.New(cfg.Server.Port, cfg.Server.Images, reports.New(db))
 	go s.Run()
 
 	sigs := make(chan os.Signal, 1)
