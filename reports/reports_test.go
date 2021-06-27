@@ -37,3 +37,17 @@ func TestServer_TimeSeries(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, image)
 }
+
+func Benchmark(b *testing.B) {
+	reporter := reports.New(mockdb.BuildDB())
+
+	start, _ := reporter.GetFirst()
+	stop, _ := reporter.GetLast()
+	assert.NotEqual(b, start, stop)
+
+	image, err := reporter.TimeSeries(start, stop)
+
+	assert.NoError(b, err)
+	assert.NotNil(b, image)
+
+}

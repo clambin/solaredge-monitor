@@ -41,17 +41,13 @@ func buildPlotData(input []store.Measurement, fold bool) (result plotter.XYZs, m
 		if fold {
 			unixTime = float64(int64(unixTime) % (60 * 60 * 24))
 		}
+
 		result[index].X = unixTime
 		result[index].Y = value.Intensity
-		Z := value.Power
-		result[index].Z = Z
+		result[index].Z = value.Power
 
-		if Z < minZ {
-			minZ = Z
-		}
-		if Z > maxZ {
-			maxZ = Z
-		}
+		minZ = math.Min(minZ, value.Power)
+		maxZ = math.Max(maxZ, value.Power)
 		index++
 	}
 	return
