@@ -7,7 +7,10 @@ import (
 )
 
 func (server *Server) main(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`
+<head>
+  <meta http-equiv="Refresh" content="0; URL=/report">
+</head>`))
 }
 
 func (server *Server) summary(w http.ResponseWriter, req *http.Request) {
