@@ -5,53 +5,54 @@ import (
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
-func TestServer_Summary(t *testing.T) {
-	reporter := reports.New(mockdb.BuildDB())
+func TestServer_GetFirstLast(t *testing.T) {
+	reporter := reports.New(mockdb.NewDB())
 
-	start, _ := reporter.GetFirst()
-	stop, _ := reporter.GetLast()
-	assert.NotEqual(t, start, stop)
+	_, err := reporter.GetFirst()
+	assert.Error(t, err)
 
-	image, err := reporter.Summary(start, stop)
+	_, err = reporter.GetLast()
+	assert.Error(t, err)
 
+	reporter = reports.New(mockdb.BuildDB())
+
+	var timestamp time.Time
+	timestamp, err = reporter.GetFirst()
 	assert.NoError(t, err)
-	assert.NotNil(t, image)
+	assert.NotZero(t, timestamp)
+
+	_, err = reporter.GetLast()
+	assert.NoError(t, err)
+	assert.NotZero(t, timestamp)
 }
 
-func TestServer_TimeSeries(t *testing.T) {
+func TestServer_Reports(t *testing.T) {
 	reporter := reports.New(mockdb.BuildDB())
 
-	start, _ := reporter.GetFirst()
-	stop, _ := reporter.GetLast()
+	var start, stop time.Time
+	var err error
+	start, err = reporter.GetFirst()
+	assert.NoError(t, err)
+	stop, err = reporter.GetLast()
+	assert.NoError(t, err)
 	assert.NotEqual(t, start, stop)
 
-	image, err := reporter.TimeSeries(start, stop)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, image)
-}
-
-func TestServer_Classify(t *testing.T) {
-	reporter := reports.New(mockdb.BuildDB())
-
-	start, _ := reporter.GetFirst()
-	stop, _ := reporter.GetLast()
-	assert.NotEqual(t, start, stop)
-
-	img, err := reporter.Classify(start, stop)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, img)
-	/*
-		var w *os.File
-		w, err = os.Create("foo.png")
+	for _, f := range []func(time.Time, time.Time) ([]byte, error){reporter.Summary, reporter.TimeSeries, reporter.Classify} {
+		var img []byte
+		img, err = f(start, stop)
 		assert.NoError(t, err)
-		_, err = w.Write(img)
-		assert.NoError(t, err)
-		_ = w.Close()
-	*/
+		assert.NotNil(t, img)
+		assert.Greater(t, len(img), 0)
+	}
+
+	reporter = reports.New(mockdb.BadDB())
+	for _, f := range []func(time.Time, time.Time) ([]byte, error){reporter.Summary, reporter.TimeSeries, reporter.Classify} {
+		_, err = f(start, stop)
+		assert.Error(t, err)
+	}
 }
 
 func Benchmark(b *testing.B) {

@@ -99,11 +99,11 @@ func addScatter(p *plot.Plot, c palette.ColorMap, data plotter.XYZs, minZ, maxZ 
 	return
 }
 
-func addContour(p *plot.Plot, _ palette.ColorMap, data *GridXYZ, _, _ float64) (err error) {
+func addContour(p *plot.Plot, _ palette.ColorMap, data *GridXYZ, contour Contour) (err error) {
 	colors := palette.Rainbow(10, palette.Blue, palette.Red, 1, 1, 1)
 
 	var ct *plotter.Contour
-	ct = plotter.NewContour(data, nil, colors)
+	ct = plotter.NewContour(data, contour.Ranges, colors)
 
 	p.Add(ct)
 

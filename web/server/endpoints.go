@@ -26,6 +26,10 @@ func (server *Server) classify(w http.ResponseWriter, req *http.Request) {
 	server.handleDetailRequest(w, req, "Classification", server.backend.Classify)
 }
 
+func (server *Server) predict(w http.ResponseWriter, req *http.Request) {
+	server.handleDetailRequest(w, req, "Prediction", server.backend.Predict)
+}
+
 const DetailResponseTemplate = `
 <!DOCTYPE html>
 <html>

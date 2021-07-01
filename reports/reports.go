@@ -22,7 +22,7 @@ func New(db store.DB) *Server {
 func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
 	if measurements, err = server.db.Get(start, stop); err != nil {
-		return nil, err
+		return
 	}
 
 	options := plot.Options{
@@ -33,11 +33,9 @@ func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 		Size:   plot.Size{Width: 800, Height: 600},
 	}
 
-	var img *vgimg.PngCanvas
-	img, err = plot.ScatterPlot(measurementsToPlotData(measurements, true), options)
-
 	buf := new(bytes.Buffer)
-	if err == nil {
+	var img *vgimg.PngCanvas
+	if img, err = plot.ScatterPlot(measurementsToPlotData(measurements, true), options); err == nil {
 		_, err = img.WriteTo(buf)
 	}
 
@@ -47,7 +45,7 @@ func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
 	if measurements, err = server.db.Get(start, stop); err != nil {
-		return nil, err
+		return
 	}
 
 	options := plot.Options{
@@ -58,11 +56,9 @@ func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error
 		Size:   plot.Size{Width: 800, Height: 600},
 	}
 
-	var img *vgimg.PngCanvas
-	img, err = plot.ScatterPlot(measurementsToPlotData(measurements, false), options)
-
 	buf := new(bytes.Buffer)
-	if err == nil {
+	var img *vgimg.PngCanvas
+	if img, err = plot.ScatterPlot(measurementsToPlotData(measurements, false), options); err == nil {
 		_, err = img.WriteTo(buf)
 	}
 
@@ -71,22 +67,22 @@ func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error
 
 func (server *Server) Classify(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-	buf := new(bytes.Buffer)
-
 	if measurements, err = server.db.Get(start, stop); err != nil {
-		return nil, err
+		return
 	}
 
 	options := plot.Options{
-		Title:  "Summary",
-		AxisX:  plot.Axis{Label: "time", TimeFormat: "15:04:05"},
-		AxisY:  plot.Axis{Label: "solar intensity (%)"},
-		Legend: plot.Legend{Increase: 100},
-		Size:   plot.Size{Width: 800, Height: 600},
+		Title:   "Classification",
+		AxisX:   plot.Axis{Label: "time", TimeFormat: "15:04:05"},
+		AxisY:   plot.Axis{Label: "solar intensity (%)"},
+		Legend:  plot.Legend{Increase: 100},
+		Size:    plot.Size{Width: 800, Height: 600},
+		Contour: plot.Contour{Ranges: []float64{1000, 2000, 3000, 3500, 3800}},
 	}
 
+	buf := new(bytes.Buffer)
 	var graph *vgimg.PngCanvas
-	if graph, err = plot.ContourPlot(measurementsToPredictedGrid(measurements), options); err == nil {
+	if graph, err = plot.ContourPlot(measurementsToGrid(measurements), options); err == nil {
 		_, err = graph.WriteTo(buf)
 	}
 
@@ -97,9 +93,9 @@ func measurementsToPlotData(measurements []store.Measurement, fold bool) (data p
 	data = make(plotter.XYZs, len(measurements))
 	for index, measurement := range measurements {
 		if fold {
-			data[index].X = float64(measurement.Timestamp.Unix())
-		} else {
 			data[index].X = float64(measurement.Timestamp.Unix() % (24 * 60 * 60))
+		} else {
+			data[index].X = float64(measurement.Timestamp.Unix())
 		}
 		data[index].Y = measurement.Intensity
 		data[index].Z = measurement.Power
@@ -107,7 +103,7 @@ func measurementsToPlotData(measurements []store.Measurement, fold bool) (data p
 	return
 }
 
-func measurementsToPredictedGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
+func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
 	const timeStampRange = 3600
 	const intensityRange = 10
 

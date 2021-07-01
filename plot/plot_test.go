@@ -5,7 +5,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gonum.org/v1/plot/plotter"
 	"math/rand"
+	"os"
 	"testing"
+	"time"
 )
 
 func TestGraph_ScatterPlot(t *testing.T) {
@@ -32,8 +34,7 @@ func TestGraph_ContourPlot(t *testing.T) {
 	options := plot.Options{
 		Title: "foo",
 		AxisX: plot.Axis{
-			Label:      "x",
-			TimeFormat: "15:04:05",
+			Label: "x",
 		},
 		AxisY: plot.Axis{
 			Label: "y",
@@ -42,18 +43,21 @@ func TestGraph_ContourPlot(t *testing.T) {
 			Width:  800,
 			Height: 600,
 		},
+		Contour: plot.Contour{
+			Ranges: []float64{},
+		},
 	}
 	img, err := plot.ContourPlot(buildGridData(20, 20), options)
 	assert.NoError(t, err)
 	assert.NotNil(t, img)
-	/*
-		var w *os.File
-		w, err = os.Create("foo.png")
-		assert.NoError(t, err)
-		_, err = img.WriteTo(w)
-		assert.NoError(t, err)
-		_ = w.Close()
-	*/
+
+	var w *os.File
+	w, err = os.Create("foo.png")
+	assert.NoError(t, err)
+	_, err = img.WriteTo(w)
+	assert.NoError(t, err)
+	_ = w.Close()
+
 }
 
 func buildData(size int) (data plotter.XYZs) {
@@ -67,6 +71,7 @@ func buildData(size int) (data plotter.XYZs) {
 }
 
 func buildGridData(c, r int) (data *plot.GridXYZ) {
+	rand.Seed(time.Now().Unix())
 	X := make([]float64, c)
 	for i := 0; i < c; i++ {
 		X[i] = float64(i)

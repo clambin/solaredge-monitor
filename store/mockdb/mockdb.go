@@ -1,6 +1,7 @@
 package mockdb
 
 import (
+	"fmt"
 	"github.com/clambin/solaredge-monitor/store"
 	"math"
 	"sync"
@@ -9,6 +10,7 @@ import (
 
 type MockDB struct {
 	sync.RWMutex
+	bad     bool
 	content []store.Measurement
 }
 
@@ -18,9 +20,21 @@ func NewDB() *MockDB {
 	}
 }
 
+func BadDB() *MockDB {
+	return &MockDB{
+		bad:     true,
+		content: make([]store.Measurement, 0),
+	}
+}
+
 func (db *MockDB) Store(measurement store.Measurement) (err error) {
 	db.Lock()
 	defer db.Unlock()
+
+	if db.bad {
+		return fmt.Errorf("error accessing database")
+	}
+
 	db.content = append(db.content, measurement)
 	return
 }
@@ -35,6 +49,10 @@ func (db *MockDB) Get(from, to time.Time) (measurements []store.Measurement, err
 	db.RLock()
 	defer db.RUnlock()
 
+	if db.bad {
+		return measurements, fmt.Errorf("error accessing database")
+	}
+
 	for _, entry := range db.content {
 		if !entry.Timestamp.Before(from) && !entry.Timestamp.After(to) {
 			measurements = append(measurements, entry)
@@ -47,6 +65,10 @@ func (db *MockDB) Get(from, to time.Time) (measurements []store.Measurement, err
 func (db *MockDB) GetAll() (measurements []store.Measurement, err error) {
 	db.RLock()
 	defer db.RUnlock()
+
+	if db.bad {
+		return measurements, fmt.Errorf("error accessing database")
+	}
 
 	for _, entry := range db.content {
 		measurements = append(measurements, entry)
