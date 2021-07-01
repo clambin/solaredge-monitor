@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -34,15 +35,20 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var summary, timeSeries []byte
+	defer func() {
+		if err != nil {
+			log.WithError(err).Error("failed to create response")
+			http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
+		}
+	}()
 
+	var summary, timeSeries []byte
 	if summary, err = server.backend.Summary(start, stop); err == nil {
 		timeSeries, err = server.backend.TimeSeries(start, stop)
 	}
 
 	if err != nil {
-		log.WithError(err).Error("failed to create image")
-		http.Error(w, "unable to create image: "+err.Error(), http.StatusInternalServerError)
+		err = fmt.Errorf("failed to create report: %s", err.Error())
 		return
 	}
 
@@ -52,8 +58,7 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if err != nil {
-		log.WithError(err).Error("failed to store images")
-		http.Error(w, "unable to store image: "+err.Error(), http.StatusInternalServerError)
+		err = fmt.Errorf("failed to store image: %s", err.Error())
 		return
 	}
 
@@ -68,7 +73,6 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 	err = writePageFromTemplate(w, ReportResponseTemplate, data)
 
 	if err != nil {
-		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
-		return
+		err = fmt.Errorf("failed to create page from template: %s", err.Error())
 	}
 }

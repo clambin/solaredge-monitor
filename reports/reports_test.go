@@ -7,11 +7,6 @@ import (
 	"testing"
 )
 
-func TestServer_Empty(t *testing.T) {
-	_, err := reports.MakeGraph(nil, true)
-	assert.Error(t, err)
-}
-
 func TestServer_Summary(t *testing.T) {
 	reporter := reports.New(mockdb.BuildDB())
 
@@ -36,6 +31,27 @@ func TestServer_TimeSeries(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, image)
+}
+
+func TestServer_Classify(t *testing.T) {
+	reporter := reports.New(mockdb.BuildDB())
+
+	start, _ := reporter.GetFirst()
+	stop, _ := reporter.GetLast()
+	assert.NotEqual(t, start, stop)
+
+	img, err := reporter.Classify(start, stop)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, img)
+	/*
+		var w *os.File
+		w, err = os.Create("foo.png")
+		assert.NoError(t, err)
+		_, err = w.Write(img)
+		assert.NoError(t, err)
+		_ = w.Close()
+	*/
 }
 
 func Benchmark(b *testing.B) {

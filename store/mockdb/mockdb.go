@@ -60,7 +60,7 @@ func BuildDB() store.DB {
 
 	start := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	for i := 0; i < 7*24; i++ {
+	for i := 0; i < 365*24; i++ {
 		intensity := 0.0
 		hour := start.Hour()
 		if hour > 7 && hour < 22 {

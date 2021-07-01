@@ -2,7 +2,9 @@ package reports
 
 import (
 	"bytes"
+	"github.com/clambin/solaredge-monitor/plot"
 	"github.com/clambin/solaredge-monitor/store"
+	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg/vgimg"
 	"time"
 )
@@ -19,13 +21,24 @@ func New(db store.DB) *Server {
 
 func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-	buf := new(bytes.Buffer)
+	if measurements, err = server.db.Get(start, stop); err != nil {
+		return nil, err
+	}
 
-	if measurements, err = server.db.Get(start, stop); err == nil {
-		var graph *vgimg.PngCanvas
-		if graph, err = MakeGraph(measurements, true); err == nil {
-			_, err = graph.WriteTo(buf)
-		}
+	options := plot.Options{
+		Title:  "Summary",
+		AxisX:  plot.Axis{Label: "time", TimeFormat: "15:04:05"},
+		AxisY:  plot.Axis{Label: "solar intensity (%)"},
+		Legend: plot.Legend{Increase: 100},
+		Size:   plot.Size{Width: 800, Height: 600},
+	}
+
+	var img *vgimg.PngCanvas
+	img, err = plot.ScatterPlot(measurementsToPlotData(measurements, true), options)
+
+	buf := new(bytes.Buffer)
+	if err == nil {
+		_, err = img.WriteTo(buf)
 	}
 
 	return buf.Bytes(), err
@@ -33,14 +46,101 @@ func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 
 func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-	buf := new(bytes.Buffer)
+	if measurements, err = server.db.Get(start, stop); err != nil {
+		return nil, err
+	}
 
-	if measurements, err = server.db.Get(start, stop); err == nil {
-		var graph *vgimg.PngCanvas
-		if graph, err = MakeGraph(measurements, false); err == nil {
-			_, err = graph.WriteTo(buf)
-		}
+	options := plot.Options{
+		Title:  "Time series",
+		AxisX:  plot.Axis{Label: "time", TimeFormat: "2006-01-02\n15:04:05"},
+		AxisY:  plot.Axis{Label: "solar intensity (%)"},
+		Legend: plot.Legend{Increase: 100},
+		Size:   plot.Size{Width: 800, Height: 600},
+	}
+
+	var img *vgimg.PngCanvas
+	img, err = plot.ScatterPlot(measurementsToPlotData(measurements, false), options)
+
+	buf := new(bytes.Buffer)
+	if err == nil {
+		_, err = img.WriteTo(buf)
 	}
 
 	return buf.Bytes(), err
+}
+
+func (server *Server) Classify(start, stop time.Time) (image []byte, err error) {
+	var measurements []store.Measurement
+	buf := new(bytes.Buffer)
+
+	if measurements, err = server.db.Get(start, stop); err != nil {
+		return nil, err
+	}
+
+	options := plot.Options{
+		Title:  "Summary",
+		AxisX:  plot.Axis{Label: "time", TimeFormat: "15:04:05"},
+		AxisY:  plot.Axis{Label: "solar intensity (%)"},
+		Legend: plot.Legend{Increase: 100},
+		Size:   plot.Size{Width: 800, Height: 600},
+	}
+
+	var graph *vgimg.PngCanvas
+	if graph, err = plot.ContourPlot(measurementsToPredictedGrid(measurements), options); err == nil {
+		_, err = graph.WriteTo(buf)
+	}
+
+	return buf.Bytes(), err
+}
+
+func measurementsToPlotData(measurements []store.Measurement, fold bool) (data plotter.XYZs) {
+	data = make(plotter.XYZs, len(measurements))
+	for index, measurement := range measurements {
+		if fold {
+			data[index].X = float64(measurement.Timestamp.Unix())
+		} else {
+			data[index].X = float64(measurement.Timestamp.Unix() % (24 * 60 * 60))
+		}
+		data[index].Y = measurement.Intensity
+		data[index].Z = measurement.Power
+	}
+	return
+}
+
+func measurementsToPredictedGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
+	const timeStampRange = 3600
+	const intensityRange = 10
+
+	xRange := 24 * 3600 / timeStampRange
+	yRange := 100 / int(intensityRange)
+
+	x := make([]float64, 0, xRange)
+	for i := 0.0; i < 24*3600; i += timeStampRange {
+		x = append(x, i)
+	}
+
+	y := make([]float64, 0, yRange)
+	for i := 0.0; i < 100; i += intensityRange {
+		y = append(y, i)
+	}
+
+	z := make([]float64, xRange*yRange)
+	zCounts := make([]int, xRange*yRange)
+
+	for _, measurement := range measurements {
+		r := (measurement.Timestamp.Hour()*3600 + measurement.Timestamp.Minute()*60 + measurement.Timestamp.Second()) / timeStampRange
+		c := int(measurement.Intensity / intensityRange)
+		index := r*yRange + c
+
+		z[index] += measurement.Power
+		zCounts[index]++
+	}
+
+	for index, zCount := range zCounts {
+		if zCount != 0 {
+			z[index] = z[index] / float64(zCount)
+		}
+	}
+
+	return plot.NewGrid(x, y, z)
 }

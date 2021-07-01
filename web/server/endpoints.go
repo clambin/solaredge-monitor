@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
@@ -19,6 +20,10 @@ func (server *Server) summary(w http.ResponseWriter, req *http.Request) {
 
 func (server *Server) timeSeries(w http.ResponseWriter, req *http.Request) {
 	server.handleDetailRequest(w, req, "Time Series", server.backend.TimeSeries)
+}
+
+func (server *Server) classify(w http.ResponseWriter, req *http.Request) {
+	server.handleDetailRequest(w, req, "Classification", server.backend.Classify)
 }
 
 const DetailResponseTemplate = `
@@ -45,18 +50,26 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	var output []byte
+	defer func() {
+		if err != nil {
+			log.WithError(err).Error("failed to create page")
+			http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
+		}
+	}()
 
-	if output, err = backendFunction(start, stop); err != nil {
-		log.WithError(err).Error("failed to create image")
-		http.Error(w, "unable to create image: "+err.Error(), http.StatusInternalServerError)
+	var output []byte
+	output, err = backendFunction(start, stop)
+
+	if err != nil {
+		err = fmt.Errorf("failed to create image: %s", err.Error())
 		return
 	}
 
 	var filename string
-	if filename, err = server.cache.Store("image.png", output); err != nil {
-		log.WithError(err).Error("failed to store images")
-		http.Error(w, "unable to store image: "+err.Error(), http.StatusInternalServerError)
+	filename, err = server.cache.Store("image.png", output)
+
+	if err != nil {
+		err = fmt.Errorf("failed to store image: %s", err.Error())
 		return
 	}
 
@@ -67,11 +80,9 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		Title:    title,
 		Filename: filename,
 	}
-
 	err = writePageFromTemplate(w, DetailResponseTemplate, data)
 
 	if err != nil {
-		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
-		return
+		err = fmt.Errorf("failed to create page from template: %s", err.Error())
 	}
 }

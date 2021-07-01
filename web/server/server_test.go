@@ -39,6 +39,10 @@ func TestServer_Overview(t *testing.T) {
 			{url: "http://localhost:8081/timeseries", responseCode: http.StatusOK, searchString: "<title>Time Series</title>"},
 			{url: "http://localhost:8081/timeseries?start=123&stop=123", responseCode: http.StatusBadRequest},
 			{url: "http://localhost:8081/timeseries?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+			{url: "http://localhost:8081/classify?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Classification</title>"},
+			{url: "http://localhost:8081/classify", responseCode: http.StatusOK, searchString: "<title>Classification</title>"},
+			{url: "http://localhost:8081/classify?start=123&stop=123", responseCode: http.StatusBadRequest},
+			{url: "http://localhost:8081/classify?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
 		}
 
 		for _, testCase := range testCases {

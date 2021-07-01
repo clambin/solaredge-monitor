@@ -71,7 +71,7 @@ func (cache *Cache) cleanup() {
 }
 
 func (cache *Cache) Store(filename string, content []byte) (unique string, err error) {
-	unique = filename + "-" + uuid.NewV4().String()
+	unique = uuid.NewV4().String() + "-" + filename
 
 	err = os.WriteFile(path.Join(cache.Directory, unique), content, 0600)
 
