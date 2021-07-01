@@ -27,7 +27,7 @@ jobs:
       matrix:
         target: [ solaredge-monitor, backfill ]
         platform: [ linux ]
-        arch: [ amd64, arm, arm64 ]
+        arch: [ amd64, arm64 ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -58,10 +58,6 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: solaredge-monitor-linux-arm
-          path: ./bld
-      - uses: actions/download-artifact@v2
-        with:
           name: solaredge-monitor-linux-arm64
           path: ./bld
       - uses: actions/download-artifact@v2
@@ -87,7 +83,7 @@ jobs:
         with:
           context: .
           file: ./build/Dockerfile
-          platforms: linux/amd64,linux/arm, linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
