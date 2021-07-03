@@ -26,11 +26,11 @@ func TestSolarEdgePoller(t *testing.T) {
 
 type SolarEdgeMock struct{}
 
-func (api *SolarEdgeMock) GetSiteIDs() (siteIDs []int, err error) {
+func (api *SolarEdgeMock) GetSiteIDs(_ context.Context) (siteIDs []int, err error) {
 	return []int{1}, nil
 }
 
-func (api *SolarEdgeMock) GetPower(_ int, startTime, endTime time.Time) (entries []solaredge.PowerMeasurement, err error) {
+func (api *SolarEdgeMock) GetPower(_ context.Context, _ int, startTime, endTime time.Time) (entries []solaredge.PowerMeasurement, err error) {
 	var value float64
 
 	for startTime.Before(endTime) {
@@ -44,6 +44,6 @@ func (api *SolarEdgeMock) GetPower(_ int, startTime, endTime time.Time) (entries
 	return
 }
 
-func (api *SolarEdgeMock) GetPowerOverview(_ int) (lifeTime, lastYear, lastMonth, lastDay, current float64, err error) {
+func (api *SolarEdgeMock) GetPowerOverview(_ context.Context, _ int) (lifeTime, lastYear, lastMonth, lastDay, current float64, err error) {
 	return 10000.0, 1000.0, 100.0, 10.0, 1.0, nil
 }

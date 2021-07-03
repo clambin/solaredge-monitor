@@ -1,6 +1,7 @@
 package poller
 
 import (
+	"context"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	log "github.com/sirupsen/logrus"
@@ -21,14 +22,14 @@ func NewSolarEdgePoller(token string, summary chan collector.Metric, pollInterva
 	return c
 }
 
-func (poller *SolarEdgePoller) poll() (result float64, err error) {
+func (poller *SolarEdgePoller) poll(ctx context.Context) (result float64, err error) {
 	var sites []int
-	sites, err = poller.API.GetSiteIDs()
+	sites, err = poller.API.GetSiteIDs(ctx)
 
 	if err == nil {
 		for _, siteID := range sites {
 			var current float64
-			_, _, _, _, current, err = poller.API.GetPowerOverview(siteID)
+			_, _, _, _, current, err = poller.API.GetPowerOverview(ctx, siteID)
 
 			result += current
 		}

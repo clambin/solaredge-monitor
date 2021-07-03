@@ -1,6 +1,7 @@
 package poller
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/tado"
 	log "github.com/sirupsen/logrus"
@@ -25,9 +26,9 @@ func NewTadoPoller(username, password string, summary chan collector.Metric, pol
 	return c
 }
 
-func (poller *TadoPoller) poll() (result float64, err error) {
+func (poller *TadoPoller) poll(ctx context.Context) (result float64, err error) {
 	var weatherInfo tado.WeatherInfo
-	weatherInfo, err = poller.API.GetWeatherInfo()
+	weatherInfo, err = poller.API.GetWeatherInfo(ctx)
 
 	if err == nil {
 		result = weatherInfo.SolarIntensity.Percentage

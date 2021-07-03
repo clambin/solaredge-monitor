@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PollFunc func() (float64, error)
+type PollFunc func(ctx context.Context) (value float64, err error)
 
 type BasePoller struct {
 	ticker    *time.Ticker
@@ -30,7 +30,7 @@ loop:
 		case <-ctx.Done():
 			break loop
 		case <-poller.ticker.C:
-			value, err := poller.poll()
+			value, err := poller.poll(ctx)
 			if err == nil {
 				poller.collector <- collector.Metric{
 					Timestamp: time.Now(),

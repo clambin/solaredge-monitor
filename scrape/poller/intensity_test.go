@@ -27,15 +27,15 @@ func TestTadoCollector(t *testing.T) {
 type TadoMock struct {
 }
 
-func (api *TadoMock) GetZones() ([]tado.Zone, error) {
+func (api *TadoMock) GetZones(_ context.Context) ([]tado.Zone, error) {
 	return []tado.Zone{}, nil
 }
 
-func (api *TadoMock) GetZoneInfo(_ int) (tado.ZoneInfo, error) {
+func (api *TadoMock) GetZoneInfo(_ context.Context, _ int) (tado.ZoneInfo, error) {
 	return tado.ZoneInfo{}, nil
 }
 
-func (api *TadoMock) GetWeatherInfo() (tado.WeatherInfo, error) {
+func (api *TadoMock) GetWeatherInfo(_ context.Context) (tado.WeatherInfo, error) {
 	return tado.WeatherInfo{
 		OutsideTemperature: tado.Temperature{Celsius: 3.4},
 		SolarIntensity:     tado.Percentage{Percentage: 13.3},
@@ -43,14 +43,14 @@ func (api *TadoMock) GetWeatherInfo() (tado.WeatherInfo, error) {
 	}, nil
 }
 
-func (api *TadoMock) GetMobileDevices() ([]tado.MobileDevice, error) {
+func (api *TadoMock) GetMobileDevices(_ context.Context) ([]tado.MobileDevice, error) {
 	return []tado.MobileDevice{}, nil
 }
 
-func (api *TadoMock) SetZoneOverlay(_ int, _ float64) error {
+func (api *TadoMock) SetZoneOverlay(_ context.Context, _ int, _ float64) error {
 	return nil
 }
 
-func (api *TadoMock) DeleteZoneOverlay(_ int) error {
+func (api *TadoMock) DeleteZoneOverlay(_ context.Context, _ int) error {
 	return nil
 }
