@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const ReportResponseTemplate = `
+const reportResponseTemplate = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -80,5 +80,5 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		ClassifyImage:   classificationFilename,
 	}
 
-	err = writePageFromTemplate(w, ReportResponseTemplate, data)
+	err = writePageFromTemplate(w, reportResponseTemplate, data)
 }

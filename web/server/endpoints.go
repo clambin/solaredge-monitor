@@ -26,7 +26,7 @@ func (server *Server) classify(w http.ResponseWriter, req *http.Request) {
 	server.handleDetailRequest(w, req, "Classification", server.backend.Classify)
 }
 
-const DetailResponseTemplate = `
+const detailResponseTemplate = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -80,5 +80,5 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		Title:    title,
 		Filename: filename,
 	}
-	err = writePageFromTemplate(w, DetailResponseTemplate, data)
+	err = writePageFromTemplate(w, detailResponseTemplate, data)
 }
