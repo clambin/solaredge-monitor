@@ -32,6 +32,6 @@ func (poller *TadoPoller) poll() (result float64, err error) {
 	if err == nil {
 		result = weatherInfo.SolarIntensity.Percentage
 	}
-	log.WithField("intensity", result).Debug("solar intensity polled")
+	log.WithError(err).WithField("intensity", result).Debug("solar intensity polled")
 	return
 }

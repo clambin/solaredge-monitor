@@ -1,6 +1,7 @@
 package poller
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -9,7 +10,6 @@ import (
 type PollFunc func() (float64, error)
 
 type BasePoller struct {
-	Stop      chan struct{}
 	ticker    *time.Ticker
 	poll      PollFunc
 	collector chan collector.Metric
@@ -17,18 +17,17 @@ type BasePoller struct {
 
 func NewBasePoller(interval time.Duration, poll PollFunc, collectorChannel chan collector.Metric) *BasePoller {
 	return &BasePoller{
-		Stop:      make(chan struct{}),
 		ticker:    time.NewTicker(interval),
 		poll:      poll,
 		collector: collectorChannel,
 	}
 }
 
-func (poller *BasePoller) Run() {
+func (poller *BasePoller) Run(ctx context.Context) {
 loop:
 	for {
 		select {
-		case <-poller.Stop:
+		case <-ctx.Done():
 			break loop
 		case <-poller.ticker.C:
 			value, err := poller.poll()

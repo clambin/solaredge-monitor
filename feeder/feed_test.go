@@ -1,6 +1,7 @@
 package feeder_test
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/feeder"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
@@ -12,7 +13,8 @@ import (
 func TestFeeder(t *testing.T) {
 	db := mockdb.NewDB()
 	coll := collector.New(15*time.Minute, db)
-	go coll.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	go coll.Run(ctx)
 
 	var power, intensity []collector.Metric
 
@@ -52,8 +54,7 @@ func TestFeeder(t *testing.T) {
 	err = feeder.FeedMetrics(power, intensity, coll)
 	assert.NoError(t, err)
 
-	coll.Stop <- struct{}{}
-
+	cancel()
 	assert.Eventually(t, func() bool { return db.Rows() == 4 }, 500*time.Millisecond, 50*time.Millisecond)
 
 	content, _ := db.GetAll()

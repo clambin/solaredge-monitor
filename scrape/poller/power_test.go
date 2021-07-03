@@ -1,6 +1,7 @@
 package poller_test
 
 import (
+	"context"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/scrape/poller"
@@ -13,13 +14,14 @@ func TestSolarEdgePoller(t *testing.T) {
 	summary := make(chan collector.Metric)
 	p := poller.NewSolarEdgePoller("", summary, 50*time.Millisecond)
 	p.API = &SolarEdgeMock{}
-	go p.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	go p.Run(ctx)
 
 	received := <-summary
 
 	assert.Equal(t, 1.0, received.Value)
 
-	p.Stop <- struct{}{}
+	cancel()
 }
 
 type SolarEdgeMock struct{}

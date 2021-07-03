@@ -1,13 +1,13 @@
 package collector
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/store"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type Collector struct {
-	Stop      chan struct{}
 	Intensity chan Metric
 	Power     chan Metric
 	intensity Summary
@@ -24,7 +24,6 @@ type Metric struct {
 
 func New(interval time.Duration, db store.DB) *Collector {
 	return &Collector{
-		Stop:      make(chan struct{}),
 		Intensity: make(chan Metric),
 		Power:     make(chan Metric),
 		interval:  interval,
@@ -32,11 +31,11 @@ func New(interval time.Duration, db store.DB) *Collector {
 	}
 }
 
-func (collector *Collector) Run() {
+func (collector *Collector) Run(ctx context.Context) {
 loop:
 	for {
 		select {
-		case <-collector.Stop:
+		case <-ctx.Done():
 			break loop
 		case m := <-collector.Intensity:
 			log.WithFields(log.Fields{"metric": m, "cutOff": collector.cutOff}).Debug("solar intensity metric received")

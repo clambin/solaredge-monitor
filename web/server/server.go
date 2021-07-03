@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/store"
@@ -34,8 +35,8 @@ func New(port int, imagesDirectory string, backend *reports.Server) *Server {
 	}
 }
 
-func (server *Server) Run() {
-	go server.cache.Run()
+func (server *Server) Run(ctx context.Context) {
+	go server.cache.Run(ctx)
 
 	r := mux.NewRouter()
 	r.Use(prometheusMiddleware)
@@ -53,8 +54,12 @@ func (server *Server) Run() {
 		address = fmt.Sprintf(":%d", server.port)
 	}
 
-	err := http.ListenAndServe(address, r)
-	log.WithError(err).Fatal("failed to start server")
+	go func() {
+		err := http.ListenAndServe(address, r)
+		log.WithError(err).Fatal("failed to start server")
+	}()
+
+	<-ctx.Done()
 }
 
 // Prometheus metrics

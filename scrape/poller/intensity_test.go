@@ -1,6 +1,7 @@
 package poller_test
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/scrape/poller"
 	"github.com/clambin/tado"
@@ -13,13 +14,14 @@ func TestTadoCollector(t *testing.T) {
 	collect := make(chan collector.Metric)
 	p := poller.NewTadoPoller("foo", "bar", collect, 50*time.Millisecond)
 	p.API = &TadoMock{}
-	go p.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	go p.Run(ctx)
 
 	received := <-collect
 
 	assert.Equal(t, 13.3, received.Value)
 
-	p.Stop <- struct{}{}
+	cancel()
 }
 
 type TadoMock struct {

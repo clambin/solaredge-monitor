@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
@@ -63,33 +64,29 @@ func main() {
 		intensity *poller.TadoPoller
 	)
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	if scrape || cfg.Scrape.Enabled {
 		coll = collector.New(cfg.Scrape.Collection, db)
 		power = poller.NewSolarEdgePoller(cfg.SolarEdge.Token, coll.Power, cfg.Scrape.Polling)
 		intensity = poller.NewTadoPoller(cfg.Tado.Username, cfg.Tado.Password, coll.Intensity, cfg.Scrape.Polling)
 
-		go coll.Run()
-		go power.Run()
-		go intensity.Run()
+		go coll.Run(ctx)
+		go power.Run(ctx)
+		go intensity.Run(ctx)
 	}
 
 	s := server.New(cfg.Server.Port, cfg.Server.Images, reports.New(db))
-	go s.Run()
+	go s.Run(ctx)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	<-sigs
 
-	if coll != nil {
-		coll.Stop <- struct{}{}
+	cancel()
+	if scrape || cfg.Scrape.Enabled {
+		// wait for collector to finish last scrape
+		time.Sleep(1 * time.Second)
 	}
-	if power != nil {
-		power.Stop <- struct{}{}
-	}
-	if intensity != nil {
-		intensity.Stop <- struct{}{}
-	}
-
-	time.Sleep(1 * time.Second)
 }

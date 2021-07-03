@@ -1,6 +1,7 @@
 package collector_test
 
 import (
+	"context"
 	collector2 "github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	log "github.com/sirupsen/logrus"
@@ -14,7 +15,8 @@ func TestCollector(t *testing.T) {
 
 	db := mockdb.NewDB()
 	c := collector2.New(50*time.Millisecond, db)
-	go c.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	go c.Run(ctx)
 
 	start := time.Now()
 	timestamp := start
@@ -60,6 +62,6 @@ func TestCollector(t *testing.T) {
 		assert.Len(t, timestamps, 3)
 	}
 
-	c.Stop <- struct{}{}
+	cancel()
 	assert.Eventually(t, func() bool { return db.Rows() == 4 }, 500*time.Millisecond, 10*time.Millisecond)
 }

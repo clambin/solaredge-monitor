@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/feeder"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
@@ -73,11 +74,13 @@ func main() {
 	log.Infof("discovered %d solar intensity metrics", len(intensity))
 
 	coll := collector.New(cfg.Scrape.Collection, db)
-	go coll.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	go coll.Run(ctx)
 
 	if err = feeder.FeedMetrics(power, intensity, coll); err != nil {
 		log.WithError(err).Error("failed to feed metrics")
 	}
 
-	coll.Stop <- struct{}{}
+	cancel()
+	time.Sleep(1)
 }

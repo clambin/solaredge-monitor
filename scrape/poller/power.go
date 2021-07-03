@@ -34,6 +34,6 @@ func (poller *SolarEdgePoller) poll() (result float64, err error) {
 		}
 	}
 
-	log.WithField("power", result).Debug("power polled")
+	log.WithError(err).WithField("power", result).Debug("power polled")
 	return
 }

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -9,7 +10,6 @@ import (
 )
 
 type Cache struct {
-	Stop      chan struct{}
 	Add       chan string
 	Directory string
 
@@ -20,7 +20,6 @@ type Cache struct {
 
 func New(directory string, retention time.Duration, interval time.Duration) *Cache {
 	return &Cache{
-		Stop:      make(chan struct{}),
 		Add:       make(chan string),
 		Directory: directory,
 		refresh:   time.NewTicker(interval),
@@ -29,11 +28,11 @@ func New(directory string, retention time.Duration, interval time.Duration) *Cac
 	}
 }
 
-func (cache *Cache) Run() {
+func (cache *Cache) Run(ctx context.Context) {
 loop:
 	for {
 		select {
-		case <-cache.Stop:
+		case <-ctx.Done():
 			break loop
 		case filename := <-cache.Add:
 			cache.add(filename)

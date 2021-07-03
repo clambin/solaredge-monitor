@@ -1,9 +1,10 @@
 package server_test
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
-	server2 "github.com/clambin/solaredge-monitor/web/server"
+	"github.com/clambin/solaredge-monitor/web/server"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -12,8 +13,9 @@ import (
 )
 
 func TestServer_Overview(t *testing.T) {
-	s := server2.New(8081, "", reports.New(mockdb.BuildDB()))
-	go s.Run()
+	ctx, cancel := context.WithCancel(context.Background())
+	s := server.New(8081, "", reports.New(mockdb.BuildDB()))
+	go s.Run(ctx)
 
 	var resp *http.Response
 	var err error
@@ -60,4 +62,35 @@ func TestServer_Overview(t *testing.T) {
 			}
 		}
 	}
+
+	cancel()
+}
+
+func TestServer_BadDirectory(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	s := server.New(8082, "/notadirectory", reports.New(mockdb.BuildDB()))
+	go s.Run(ctx)
+
+	var err error
+	if assert.Eventually(t, func() bool {
+		_, err = http.Get("http://localhost:8082/")
+		return err == nil
+	}, 5*time.Second, 100*time.Millisecond) {
+
+		for _, url := range []string{
+			"http://localhost:8082/report?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://localhost:8082/summary?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://localhost:8082/timeseries?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://localhost:8082/classify?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+		} {
+			var resp *http.Response
+			resp, err = http.Get(url)
+
+			assert.NoError(t, err, url)
+			assert.Equal(t, http.StatusInternalServerError, resp.StatusCode, url)
+		}
+
+	}
+
+	cancel()
 }
