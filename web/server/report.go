@@ -23,6 +23,10 @@ const ReportResponseTemplate = `
     <a href="/images/{{.SummaryImage}}">
       <img src="/images/{{.SummaryImage}}" alt="summary" style="width:400px;height:400px;">
     </a>
+    <h2>Classification</h2>
+    <a href="/images/{{.ClassifyImage}}">
+      <img src="/images/{{.ClassifyImage}}" alt="classification" style="width:400px;height:400px;">
+    </a>
   </body>
 </html>`
 
@@ -42,9 +46,11 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	var summary, timeSeries []byte
+	var summary, timeSeries, classification []byte
 	if summary, err = server.backend.Summary(start, stop); err == nil {
-		timeSeries, err = server.backend.TimeSeries(start, stop)
+		if timeSeries, err = server.backend.TimeSeries(start, stop); err == nil {
+			classification, err = server.backend.Classify(start, stop)
+		}
 	}
 
 	if err != nil {
@@ -52,9 +58,11 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var summaryFilename, timeSeriesFilename string
+	var summaryFilename, timeSeriesFilename, classificationFilename string
 	if summaryFilename, err = server.cache.Store("summary.png", summary); err == nil {
-		timeSeriesFilename, err = server.cache.Store("timeseries.png", timeSeries)
+		if timeSeriesFilename, err = server.cache.Store("timeseries.png", timeSeries); err == nil {
+			classificationFilename, err = server.cache.Store("classify.png", classification)
+		}
 	}
 
 	if err != nil {
@@ -65,14 +73,12 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 	data := struct {
 		TimeSeriesImage string
 		SummaryImage    string
+		ClassifyImage   string
 	}{
 		TimeSeriesImage: timeSeriesFilename,
 		SummaryImage:    summaryFilename,
+		ClassifyImage:   classificationFilename,
 	}
 
 	err = writePageFromTemplate(w, ReportResponseTemplate, data)
-
-	if err != nil {
-		err = fmt.Errorf("failed to create page from template: %s", err.Error())
-	}
 }

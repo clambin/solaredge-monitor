@@ -47,7 +47,6 @@ func (server *Server) Run() {
 	r.HandleFunc("/summary", server.summary).Methods(http.MethodGet)
 	r.HandleFunc("/timeseries", server.timeSeries).Methods(http.MethodGet)
 	r.HandleFunc("/classify", server.classify).Methods(http.MethodGet)
-	r.HandleFunc("/predict", server.predict).Methods(http.MethodGet)
 
 	address := ":8080"
 	if server.port > 0 {

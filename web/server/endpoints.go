@@ -26,10 +26,6 @@ func (server *Server) classify(w http.ResponseWriter, req *http.Request) {
 	server.handleDetailRequest(w, req, "Classification", server.backend.Classify)
 }
 
-func (server *Server) predict(w http.ResponseWriter, req *http.Request) {
-	server.handleDetailRequest(w, req, "Prediction", server.backend.Predict)
-}
-
 const DetailResponseTemplate = `
 <!DOCTYPE html>
 <html>
@@ -85,8 +81,4 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		Filename: filename,
 	}
 	err = writePageFromTemplate(w, DetailResponseTemplate, data)
-
-	if err != nil {
-		err = fmt.Errorf("failed to create page from template: %s", err.Error())
-	}
 }

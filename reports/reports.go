@@ -77,7 +77,7 @@ func (server *Server) Classify(start, stop time.Time) (image []byte, err error) 
 		AxisY:   plot.Axis{Label: "solar intensity (%)"},
 		Legend:  plot.Legend{Increase: 100},
 		Size:    plot.Size{Width: 800, Height: 600},
-		Contour: plot.Contour{Ranges: []float64{1000, 2000, 3000, 3500, 3800}},
+		Contour: plot.Contour{Ranges: []float64{1000, 2000, 3000, 3500, 3800, 4000}},
 	}
 
 	buf := new(bytes.Buffer)
@@ -104,19 +104,19 @@ func measurementsToPlotData(measurements []store.Measurement, fold bool) (data p
 }
 
 func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
-	const timeStampRange = 3600
-	const intensityRange = 10
+	const timeStampInterval = 3600
+	const intensityInterval = 10
 
-	xRange := 24 * 3600 / timeStampRange
-	yRange := 100 / int(intensityRange)
+	xRange := 24 * 3600 / timeStampInterval
+	yRange := 100 / int(intensityInterval)
 
 	x := make([]float64, 0, xRange)
-	for i := 0.0; i < 24*3600; i += timeStampRange {
+	for i := 0.0; i < 24*3600; i += timeStampInterval {
 		x = append(x, i)
 	}
 
 	y := make([]float64, 0, yRange)
-	for i := 0.0; i < 100; i += intensityRange {
+	for i := 0.0; i < 100; i += intensityInterval {
 		y = append(y, i)
 	}
 
@@ -124,8 +124,8 @@ func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
 	zCounts := make([]int, xRange*yRange)
 
 	for _, measurement := range measurements {
-		r := (measurement.Timestamp.Hour()*3600 + measurement.Timestamp.Minute()*60 + measurement.Timestamp.Second()) / timeStampRange
-		c := int(measurement.Intensity / intensityRange)
+		r := (measurement.Timestamp.Hour()*3600 + measurement.Timestamp.Minute()*60 + measurement.Timestamp.Second()) / timeStampInterval
+		c := int(measurement.Intensity / intensityInterval)
 		index := r*yRange + c
 
 		z[index] += measurement.Power

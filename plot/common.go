@@ -31,9 +31,6 @@ func makeBasePlot(options Options) (p *plot.Plot) {
 		p.X.Tick.Marker = plot.TimeTicks{Format: options.AxisX.TimeFormat}
 	}
 	p.Y.Label.Text = options.AxisY.Label
-	if options.AxisY.TimeFormat != "" {
-		p.Y.Tick.Marker = plot.TimeTicks{Format: options.AxisY.TimeFormat}
-	}
 	p.Add(plotter.NewGrid())
 
 	return p
@@ -50,7 +47,7 @@ func allocateColors(minZ, maxZ float64) palette.ColorMap {
 // This is the width of the legend, experimentally determined.
 const legendWidth = vg.Centimeter
 
-func makeLegend(p *plot.Plot, c palette.ColorMap, minZ, maxZ float64, increase int) {
+func addLegend(p *plot.Plot, c palette.ColorMap, minZ, maxZ float64, increase int) {
 	step := int(maxZ-minZ) / increase
 	thumbs := plotter.PaletteThumbnailers(c.Palette(step))
 	for i := len(thumbs) - 1; i >= 0; i-- {
@@ -99,13 +96,31 @@ func addScatter(p *plot.Plot, c palette.ColorMap, data plotter.XYZs, minZ, maxZ 
 	return
 }
 
-func addContour(p *plot.Plot, _ palette.ColorMap, data *GridXYZ, contour Contour) (err error) {
-	colors := palette.Rainbow(10, palette.Blue, palette.Red, 1, 1, 1)
+func addContour(p *plot.Plot, data *GridXYZ, contour Contour) (err error) {
+	colorCount := len(contour.Ranges)
+	if colorCount == 0 {
+		colorCount = 5
+	}
+	colors := palette.Rainbow(colorCount, palette.Blue, palette.Red, 1, 1, 1)
 
 	var ct *plotter.Contour
 	ct = plotter.NewContour(data, contour.Ranges, colors)
 
 	p.Add(ct)
+
+	return
+}
+
+func addContourLegend(p *plot.Plot, ranges []float64) (err error) {
+	colors := palette.Rainbow(len(ranges), palette.Blue, palette.Red, 1, 1, 1)
+	thumbs := plotter.PaletteThumbnailers(colors)
+	for i := len(thumbs) - 1; i >= 0; i-- {
+		t := thumbs[i]
+		val := int(ranges[i])
+		p.Legend.Add(fmt.Sprintf("%d", val), t)
+	}
+
+	p.Legend.XOffs = legendWidth
 
 	return
 }

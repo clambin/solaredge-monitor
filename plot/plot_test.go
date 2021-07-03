@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gonum.org/v1/plot/plotter"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 )
@@ -51,12 +50,17 @@ func TestGraph_ContourPlot(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, img)
 
-	var w *os.File
-	w, err = os.Create("foo.png")
-	assert.NoError(t, err)
-	_, err = img.WriteTo(w)
-	assert.NoError(t, err)
-	_ = w.Close()
+	/*
+		var w *os.File
+		w, err = os.Create("foo.png")
+		assert.NoError(t, err)
+		_, err = img.WriteTo(w)
+		assert.NoError(t, err)
+		_ = w.Close()
+	*/
+
+	_, err = plot.ContourPlot(&plot.GridXYZ{}, options)
+	assert.Error(t, err)
 
 }
 
