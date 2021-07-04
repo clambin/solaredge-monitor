@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/store"
 	log "github.com/sirupsen/logrus"
+	"math"
 	"time"
 )
 
@@ -60,10 +61,6 @@ func (collector *Collector) shouldCollect(next time.Time) bool {
 		return false
 	}
 
-	if collector.intensity.Count == 0 || collector.power.Count == 0 {
-		return false
-	}
-
 	return next.After(collector.cutOff)
 }
 
@@ -76,6 +73,11 @@ func (collector *Collector) collect() {
 
 	power := collector.power.Get()
 	intensity := collector.intensity.Get()
+
+	if math.IsNaN(power.Value) || math.IsNaN(intensity.Value) {
+		log.Warning("impartial data collection")
+		return
+	}
 
 	ts := power.Timestamp
 	if intensity.Timestamp.Before(ts) {
