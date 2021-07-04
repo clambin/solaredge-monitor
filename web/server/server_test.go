@@ -5,7 +5,6 @@ import (
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	"github.com/clambin/solaredge-monitor/web/server"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -49,10 +48,7 @@ func TestServer_Overview(t *testing.T) {
 		}
 
 		for _, testCase := range testCases {
-			before := time.Now()
 			resp, err = http.Get(testCase.url)
-			delta := time.Now().Sub(before)
-			log.WithField("url", testCase.url).Infof("response time: %v", delta)
 			if assert.NoError(t, err, testCase.url) {
 				assert.Equal(t, testCase.responseCode, resp.StatusCode, testCase.responseCode)
 				if testCase.responseCode == http.StatusOK && testCase.searchString != "" {
