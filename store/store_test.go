@@ -56,10 +56,10 @@ func TestStore(t *testing.T) {
 	measurements, err = db.GetAll()
 
 	if assert.NoError(t, err) && assert.NotEmpty(t, measurements) {
-		assert.Equal(t, first, measurements[0].Timestamp)
+		assert.Equal(t, first, measurements[0].Timestamp.UTC())
 		assert.Equal(t, 0.0, measurements[0].Power)
 		assert.Equal(t, 0.0, measurements[0].Intensity)
-		assert.Equal(t, timestamp.Add(-delta), measurements[len(measurements)-1].Timestamp)
+		assert.Equal(t, timestamp.Add(-delta), measurements[len(measurements)-1].Timestamp.UTC())
 		assert.Equal(t, 5.0, measurements[len(measurements)-1].Power)
 		assert.Equal(t, 5.0, measurements[len(measurements)-1].Intensity)
 	}
