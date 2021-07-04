@@ -14,8 +14,8 @@ jobs:
         image: postgres
         env:
           POSTGRES_DB: solar
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: solar
+          POSTGRES_PASSWORD: solar
         ports:
           - 5432:5432
         options: >-
@@ -33,8 +33,8 @@ jobs:
           export pg_host=postgres
           export pg_port=5432
           export pg_database=solar
-          export pg_user=postgres
-          export pg_password=postgres
+          export pg_user=solar
+          export pg_password=solar
           go test ./... -race -coverprofile=coverage.txt -covermode=atomic
       - name: benchmark
         run: |
