@@ -8,6 +8,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container: golang:1.16
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: solar
+          POSTGRES_USER: solar
+          POSTGRES_PASSWORD: solar
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -15,7 +30,15 @@ jobs:
           go-version: 1.16
       - name: test
         run: |
+          export pg_host=postgres
+          export pg_port=5432
+          export pg_database=solar
+          export pg_user=solar
+          export pg_password=solar
           go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+      - name: benchmark
+        run: |
+          go test ./... -bench . -run=Benchmark
       - uses: codecov/codecov-action@v1
         with:
           file: coverage.txt
