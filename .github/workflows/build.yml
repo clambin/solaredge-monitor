@@ -16,6 +16,9 @@ jobs:
       - name: test
         run: |
           go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+      - name: benchmark
+        run: |
+          go test ./... -bench .
       - uses: codecov/codecov-action@v1
         with:
           file: coverage.txt

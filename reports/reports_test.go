@@ -40,12 +40,14 @@ func TestServer_Reports(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, start, stop)
 
+	const pngMagicNumber = "\x89PNG\r\n\x1a\n"
+
 	for _, f := range []func(time.Time, time.Time) ([]byte, error){reporter.Summary, reporter.TimeSeries, reporter.Classify} {
 		var img []byte
 		img, err = f(start, stop)
 		assert.NoError(t, err)
 		assert.NotNil(t, img)
-		assert.Greater(t, len(img), 0)
+		assert.Equal(t, pngMagicNumber, string(img[:len(pngMagicNumber)]))
 	}
 
 	reporter = reports.New(mockdb.BadDB())
