@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 )
@@ -48,6 +49,7 @@ func TestServer_Overview(t *testing.T) {
 			{url: "http://localhost:8081/classify?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
 		}
 
+		log.SetOutput(os.Stdout)
 		for _, testCase := range testCases {
 			before := time.Now()
 			resp, err = http.Get(testCase.url)
