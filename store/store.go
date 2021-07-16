@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -24,12 +27,21 @@ type PostgresDB struct {
 	initialized bool
 }
 
-func NewPostgresDB(host string, port int, database string, user string, password string) *PostgresDB {
-	return &PostgresDB{
+func NewPostgresDB(host string, port int, database string, user string, password string) (handle *PostgresDB) {
+	handle = &PostgresDB{
 		psqlInfo: fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 			host, port, user, password, database),
 		initialized: false,
 	}
+
+	dbh, err := sql.Open("postgres", handle.psqlInfo)
+	if err != nil {
+		log.WithError(err).Fatalf("failed to open database '%s'", database)
+	}
+
+	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(dbh, database))
+
+	return
 }
 
 func (db *PostgresDB) initializeDB(dbh *sql.DB) (err error) {
