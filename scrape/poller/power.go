@@ -16,7 +16,10 @@ type SolarEdgePoller struct {
 
 func NewSolarEdgePoller(token string, summary chan collector.Metric, pollInterval time.Duration) *SolarEdgePoller {
 	c := &SolarEdgePoller{
-		API: solaredge.NewClient(token, &http.Client{}),
+		API: &solaredge.Client{
+			Token:      token,
+			HTTPClient: &http.Client{},
+		},
 	}
 	c.BasePoller = *NewBasePoller(pollInterval, c.poll, summary)
 	return c

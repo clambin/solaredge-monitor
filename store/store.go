@@ -45,7 +45,6 @@ func (db *PostgresDB) Store(measurement Measurement) (err error) {
 
 	if err != nil {
 		err = fmt.Errorf("failed to insert measurements in database: %s", err)
-		db.close()
 	}
 
 	return err
@@ -60,7 +59,6 @@ func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err e
 		from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05")))
 
 	if err != nil {
-		db.close()
 		return nil, err
 	}
 
@@ -82,7 +80,6 @@ func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
 	rows, err = db.dbh.Query("SELECT timestamp, intensity, power FROM solar ORDER BY 1")
 
 	if err != nil {
-		db.close()
 		return nil, err
 	}
 
@@ -123,11 +120,4 @@ func (db *PostgresDB) initialize() {
 	}
 
 	return
-}
-
-func (db *PostgresDB) close() {
-	if db.dbh != nil {
-		_ = db.dbh.Close()
-	}
-	db.dbh = nil
 }
