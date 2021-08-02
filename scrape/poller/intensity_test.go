@@ -51,6 +51,10 @@ func (api *TadoMock) SetZoneOverlay(_ context.Context, _ int, _ float64) error {
 	return nil
 }
 
+func (api *TadoMock) SetZoneOverlayWithDuration(_ context.Context, _ int, _ float64, _ time.Duration) error {
+	return nil
+}
+
 func (api *TadoMock) DeleteZoneOverlay(_ context.Context, _ int) error {
 	return nil
 }
