@@ -5,7 +5,6 @@ import (
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/tado"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"time"
 )
 
@@ -15,13 +14,7 @@ type TadoPoller struct {
 }
 
 func NewTadoPoller(username, password string, summary chan collector.Metric, pollInterval time.Duration) *TadoPoller {
-	c := &TadoPoller{
-		API: &tado.APIClient{
-			Username:   username,
-			Password:   password,
-			HTTPClient: &http.Client{},
-		},
-	}
+	c := &TadoPoller{API: tado.New(username, password, "")}
 	c.BasePoller = *NewBasePoller(pollInterval, c.poll, summary)
 	return c
 }
