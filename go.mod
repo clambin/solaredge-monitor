@@ -6,7 +6,7 @@ require (
 	github.com/clambin/solaredge v0.3.3
 	github.com/clambin/tado v0.5.0
 	github.com/gorilla/mux v1.8.0
-	github.com/lib/pq v1.10.2
+	github.com/lib/pq v1.10.3
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0
 	github.com/satori/go.uuid v1.2.0
