@@ -39,7 +39,7 @@ jobs:
       - name: benchmark
         run: |
           go test ./... -bench . -run=Benchmark
-      - uses: codecov/codecov-action@v2.0.3
+      - uses: codecov/codecov-action@v2.1.0
         with:
           file: coverage.txt
           token: ${{ secrets.CODECOV_TOKEN }}
