@@ -75,7 +75,7 @@ func (collector *Collector) collect() {
 	intensity := collector.intensity.Get()
 
 	if math.IsNaN(power.Value) || math.IsNaN(intensity.Value) {
-		log.Warning("impartial data collection")
+		log.Warning("partial data collection. skipping")
 		return
 	}
 
