@@ -105,10 +105,10 @@ func measurementsToPlotData(measurements []store.Measurement, fold bool) (data p
 
 func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
 	const timeStampInterval = 3600
-	const intensityInterval = 10
+	const intensityInterval = 5
 
 	xRange := 24 * 3600 / timeStampInterval
-	yRange := 100 / int(intensityInterval)
+	yRange := 1 + 100/int(intensityInterval)
 
 	x := make([]float64, 0, xRange)
 	for i := 0.0; i < 24*3600; i += timeStampInterval {
@@ -116,7 +116,7 @@ func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
 	}
 
 	y := make([]float64, 0, yRange)
-	for i := 0.0; i < 100; i += intensityInterval {
+	for i := 0.0; i <= 100; i += intensityInterval {
 		y = append(y, i)
 	}
 
@@ -124,7 +124,7 @@ func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
 	zCounts := make([]int, xRange*yRange)
 
 	for _, measurement := range measurements {
-		r := (measurement.Timestamp.Hour()*3600 + measurement.Timestamp.Minute()*60 + measurement.Timestamp.Second()) / timeStampInterval
+		r := int(measurement.Timestamp.Unix()%(24*60*60)) / timeStampInterval
 		c := int(measurement.Intensity / intensityInterval)
 		index := r*yRange + c
 
