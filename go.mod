@@ -3,7 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.16
 
 require (
-	github.com/clambin/solaredge v0.3.3
+	github.com/clambin/solaredge v0.4.0
 	github.com/clambin/tado v0.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.3
