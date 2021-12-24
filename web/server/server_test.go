@@ -20,7 +20,7 @@ func TestServer_Overview(t *testing.T) {
 	var resp *http.Response
 	var err error
 	if assert.Eventually(t, func() bool {
-		resp, err = http.Get("http://localhost:8081/")
+		resp, err = http.Get("http://127.0.0.1:8081/")
 		return err == nil
 	}, 5*time.Second, 100*time.Millisecond) {
 
@@ -29,22 +29,22 @@ func TestServer_Overview(t *testing.T) {
 			responseCode int
 			searchString string
 		}{
-			{url: "http://localhost:8081/report?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Report</title>"},
-			{url: "http://localhost:8081/report", responseCode: http.StatusOK, searchString: "<title>Report</title>"},
-			{url: "http://localhost:8081/report?start=123&stop=123", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/report?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/summary?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Summary</title>"},
-			{url: "http://localhost:8081/summary", responseCode: http.StatusOK, searchString: "<title>Summary</title>"},
-			{url: "http://localhost:8081/summary?start=123&stop=123", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/summary?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/timeseries?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Time Series</title>"},
-			{url: "http://localhost:8081/timeseries", responseCode: http.StatusOK, searchString: "<title>Time Series</title>"},
-			{url: "http://localhost:8081/timeseries?start=123&stop=123", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/timeseries?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/classify?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Classification</title>"},
-			{url: "http://localhost:8081/classify", responseCode: http.StatusOK, searchString: "<title>Classification</title>"},
-			{url: "http://localhost:8081/classify?start=123&stop=123", responseCode: http.StatusBadRequest},
-			{url: "http://localhost:8081/classify?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/report?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Report</title>"},
+			{url: "http://127.0.0.1:8081/report", responseCode: http.StatusOK, searchString: "<title>Report</title>"},
+			{url: "http://127.0.0.1:8081/report?start=123&stop=123", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/report?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/summary?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Summary</title>"},
+			{url: "http://127.0.0.1:8081/summary", responseCode: http.StatusOK, searchString: "<title>Summary</title>"},
+			{url: "http://127.0.0.1:8081/summary?start=123&stop=123", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/summary?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/timeseries?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Time Series</title>"},
+			{url: "http://127.0.0.1:8081/timeseries", responseCode: http.StatusOK, searchString: "<title>Time Series</title>"},
+			{url: "http://127.0.0.1:8081/timeseries?start=123&stop=123", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/timeseries?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/classify?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK, searchString: "<title>Classification</title>"},
+			{url: "http://127.0.0.1:8081/classify", responseCode: http.StatusOK, searchString: "<title>Classification</title>"},
+			{url: "http://127.0.0.1:8081/classify?start=123&stop=123", responseCode: http.StatusBadRequest},
+			{url: "http://127.0.0.1:8081/classify?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
 		}
 
 		for _, testCase := range testCases {
@@ -73,15 +73,15 @@ func TestServer_BadDirectory(t *testing.T) {
 
 	var err error
 	if assert.Eventually(t, func() bool {
-		_, err = http.Get("http://localhost:8082/")
+		_, err = http.Get("http://127.0.0.1:8082/")
 		return err == nil
 	}, 5*time.Second, 100*time.Millisecond) {
 
 		for _, url := range []string{
-			"http://localhost:8082/report?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
-			"http://localhost:8082/summary?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
-			"http://localhost:8082/timeseries?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
-			"http://localhost:8082/classify?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://127.0.0.1:8082/report?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://127.0.0.1:8082/summary?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://127.0.0.1:8082/timeseries?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
+			"http://127.0.0.1:8082/classify?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z",
 		} {
 			var resp *http.Response
 			resp, err = http.Get(url)
