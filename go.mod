@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/clambin/solaredge v0.5.0
-	github.com/clambin/tado v0.5.0
+	github.com/clambin/tado v0.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.4
 	github.com/prometheus/client_golang v1.12.1
