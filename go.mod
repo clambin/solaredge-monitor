@@ -3,7 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.17
 
 require (
-	github.com/clambin/solaredge v0.5.0
+	github.com/clambin/solaredge v0.6.0
 	github.com/clambin/tado v0.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.4
@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/common v0.32.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	gonum.org/v1/gonum v0.11.0
 	gonum.org/v1/plot v0.11.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
