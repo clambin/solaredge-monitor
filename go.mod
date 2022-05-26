@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/clambin/solaredge v0.6.0
-	github.com/clambin/tado v0.7.0
+	github.com/clambin/tado v0.7.1
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.6
 	github.com/prometheus/client_golang v1.12.2
@@ -15,7 +15,7 @@ require (
 	gonum.org/v1/gonum v0.11.0
 	gonum.org/v1/plot v0.11.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+	gopkg.in/yaml.v3 v3.0.0
 )
 
 require (
