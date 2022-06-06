@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/common v0.34.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	gonum.org/v1/gonum v0.11.0
 	gonum.org/v1/plot v0.11.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
