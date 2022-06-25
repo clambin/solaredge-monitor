@@ -1,4 +1,4 @@
-package collector
+package sampler
 
 import (
 	"time"
@@ -6,12 +6,17 @@ import (
 
 type Summary struct {
 	Total float64
-	Count float64
+	Count int
 	First time.Time
 	Last  time.Time
 }
 
-func (summary *Summary) Add(m Metric) {
+type Sample struct {
+	Timestamp time.Time
+	Value     float64
+}
+
+func (summary *Summary) Add(m Sample) {
 	if m.Timestamp.Before(summary.First) || summary.First.IsZero() {
 		summary.First = m.Timestamp
 	}
@@ -22,10 +27,10 @@ func (summary *Summary) Add(m Metric) {
 	summary.Count++
 }
 
-func (summary *Summary) Get() (result Metric) {
-	result = Metric{
+func (summary *Summary) Summarize() (result Sample) {
+	result = Sample{
 		Timestamp: summary.First,
-		Value:     summary.Total / summary.Count,
+		Value:     summary.Total / float64(summary.Count),
 	}
 	summary.First = time.Time{}
 	summary.Last = time.Time{}

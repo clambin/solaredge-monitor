@@ -26,7 +26,7 @@ func (server *Server) parseGenerateRequest(req *http.Request) (start, stop time.
 func parseTimestamp(req *http.Request, field string, dbfunc func() (time.Time, error)) (timestamp time.Time, err error) {
 	arg, ok := req.URL.Query()[field]
 
-	if ok == false {
+	if !ok {
 		return dbfunc()
 	}
 

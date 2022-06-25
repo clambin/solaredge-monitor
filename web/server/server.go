@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/reports"
-	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/web/cache"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,7 +17,6 @@ import (
 
 type Server struct {
 	port    int
-	db      store.DB
 	backend *reports.Server
 	cache   *cache.Cache
 }

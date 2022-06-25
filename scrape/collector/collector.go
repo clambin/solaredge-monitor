@@ -2,82 +2,40 @@ package collector
 
 import (
 	"context"
+	"github.com/clambin/solaredge-monitor/scrape/sampler"
 	"github.com/clambin/solaredge-monitor/store"
 	log "github.com/sirupsen/logrus"
-	"math"
 	"time"
 )
 
 type Collector struct {
-	Intensity chan Metric
-	Power     chan Metric
-	intensity Summary
-	power     Summary
-	interval  time.Duration
-	cutOff    time.Time
-	db        store.DB
+	SolarEdge sampler.Summarizer
+	Tado      sampler.Summarizer
+	store.DB
 }
 
-type Metric struct {
-	Timestamp time.Time
-	Value     float64
-}
-
-func New(interval time.Duration, db store.DB) *Collector {
-	return &Collector{
-		Intensity: make(chan Metric),
-		Power:     make(chan Metric),
-		interval:  interval,
-		db:        db,
-	}
-}
-
-func (collector *Collector) Run(ctx context.Context) {
-loop:
-	for {
+func (c *Collector) Run(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	for running := true; running; {
 		select {
 		case <-ctx.Done():
-			break loop
-		case m := <-collector.Intensity:
-			log.WithFields(log.Fields{"metric": m, "cutOff": collector.cutOff}).Debug("solar intensity metric received")
-			if collector.shouldCollect(m.Timestamp) {
-				collector.collect()
-			}
-			collector.intensity.Add(m)
-		case m := <-collector.Power:
-			log.WithFields(log.Fields{"metric": m, "cutOff": collector.cutOff}).Debug("power metric received")
-			if collector.shouldCollect(m.Timestamp) {
-				collector.collect()
-			}
-			collector.power.Add(m)
+			c.collect()
+			running = false
+		case <-ticker.C:
+			c.collect()
 		}
 	}
-	collector.collect()
+	ticker.Stop()
 }
 
-func (collector *Collector) shouldCollect(next time.Time) bool {
-	if collector.cutOff.IsZero() {
-		collector.cutOff = next.Add(collector.interval)
-		return false
-	}
-
-	return next.After(collector.cutOff)
-}
-
-func (collector *Collector) collect() {
-	log.WithFields(log.Fields{
-		"power":     collector.power.Count,
-		"intensity": collector.intensity.Count,
-		"cutOff":    collector.cutOff,
-	}).Debug("running collection")
-
-	power := collector.power.Get()
-	intensity := collector.intensity.Get()
-
-	if math.IsNaN(power.Value) || math.IsNaN(intensity.Value) {
+func (c *Collector) collect() {
+	if c.SolarEdge.Count() == 0 || c.Tado.Count() == 0 {
 		log.Warning("partial data collection. skipping")
 		return
 	}
+
+	power := c.SolarEdge.Summarize()
+	intensity := c.Tado.Summarize()
 
 	ts := power.Timestamp
 	if intensity.Timestamp.Before(ts) {
@@ -90,13 +48,9 @@ func (collector *Collector) collect() {
 		Intensity: intensity.Value,
 	}
 
-	if err := collector.db.Store(measurement); err == nil {
+	if err := c.Store(measurement); err == nil {
 		log.WithField("measurement", measurement).Info("new entry")
 	} else {
 		log.WithError(err).Warning("failed to store metrics")
 	}
-
-	collector.cutOff = collector.cutOff.Add(collector.interval)
-
-	log.WithField("cutOff", collector.cutOff).Debug("new cut-off time set")
 }

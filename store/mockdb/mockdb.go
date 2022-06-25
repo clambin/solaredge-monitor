@@ -70,10 +70,8 @@ func (db *MockDB) GetAll() (measurements []store.Measurement, err error) {
 		return measurements, fmt.Errorf("error accessing database")
 	}
 
-	for _, entry := range db.content {
-		measurements = append(measurements, entry)
-	}
-
+	measurements = make([]store.Measurement, len(db.content))
+	copy(measurements, db.content)
 	return
 }
 

@@ -118,6 +118,4 @@ func (db *PostgresDB) initialize() {
 	if err != nil {
 		log.WithError(err).Fatalf("unable to intialize database '%s'", db.database)
 	}
-
-	return
 }

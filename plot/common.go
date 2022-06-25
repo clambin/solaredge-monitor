@@ -103,9 +103,7 @@ func addContour(p *plot.Plot, data *GridXYZ, contour Contour) (err error) {
 	}
 	colors := palette.Rainbow(colorCount, palette.Blue, palette.Red, 1, 1, 1)
 
-	var ct *plotter.Contour
-	ct = plotter.NewContour(data, contour.Ranges, colors)
-
+	ct := plotter.NewContour(data, contour.Ranges, colors)
 	p.Add(ct)
 
 	return

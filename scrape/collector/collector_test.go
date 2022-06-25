@@ -3,74 +3,68 @@ package collector_test
 import (
 	"context"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
+	"github.com/clambin/solaredge-monitor/scrape/sampler"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
+	mockSolaredge "github.com/clambin/solaredge/mocks"
+	"github.com/clambin/tado"
+	mockTado "github.com/clambin/tado/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestCollector(t *testing.T) {
 	db := mockdb.NewDB()
-	c := collector.New(50*time.Millisecond, db)
-	ctx, cancel := context.WithCancel(context.Background())
-	go c.Run(ctx)
+	solarEdgeClient := &mockSolaredge.API{}
+	tadoClient := &mockTado.API{}
 
-	start := time.Now()
-	timestamp := start
-	delta := 25 * time.Millisecond
-	cutOff := start.Add(50 * time.Millisecond)
-
-	for timestamp.Before(cutOff) {
-		c.Intensity <- collector.Metric{Timestamp: timestamp, Value: 5.0}
-		timestamp = timestamp.Add(delta)
+	c1 := &sampler.Client{Sampler: &sampler.SolarEdgeSampler{API: solarEdgeClient}}
+	c2 := &sampler.Client{Sampler: &sampler.TadoSampler{API: tadoClient}}
+	c := collector.Collector{
+		SolarEdge: c1,
+		Tado:      c2,
+		DB:        db,
 	}
 
-	assert.Never(t, func() bool { return db.Rows() > 0 }, 100*time.Millisecond, 10*time.Millisecond)
+	solarEdgeClient.
+		On("GetSiteIDs", mock.AnythingOfType("*context.cancelCtx")).
+		Return([]int{100}, nil)
+	solarEdgeClient.
+		On("GetPowerOverview", mock.AnythingOfType("*context.cancelCtx"), 100).
+		Return(0.0, 0.0, 0.0, 0.0, 1500.0, nil)
+	tadoClient.
+		On("GetWeatherInfo", mock.AnythingOfType("*context.cancelCtx")).
+		Return(tado.WeatherInfo{SolarIntensity: tado.Percentage{Percentage: 55.0}}, nil)
 
-	c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
-	timestamp = timestamp.Add(delta)
-	c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
+	ctx, cancel := context.WithCancel(context.Background())
 
-	assert.Eventually(t, func() bool { return db.Rows() == 1 }, 500*time.Millisecond, 10*time.Millisecond)
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		c1.Run(ctx, 10*time.Millisecond)
+		wg.Done()
+	}()
+	go func() {
+		c2.Run(ctx, 10*time.Millisecond)
+		wg.Done()
+	}()
+	go func() {
+		c.Run(ctx, 100*time.Millisecond)
+		wg.Done()
+	}()
 
-	assert.Eventually(t, func() bool {
-		c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
-		c.Intensity <- collector.Metric{Timestamp: timestamp, Value: 5.0}
-		timestamp = timestamp.Add(delta)
-		return db.Rows() == 2
-	}, 500*time.Millisecond, 10*time.Millisecond)
+	assert.Eventually(t, func() bool { return db.Rows() > 0 }, 500*time.Millisecond, 100*time.Millisecond)
 
-	assert.Eventually(t, func() bool {
-		c.Intensity <- collector.Metric{Timestamp: timestamp, Value: 5.0}
-		c.Power <- collector.Metric{Timestamp: timestamp, Value: 50.0}
-		timestamp = timestamp.Add(delta)
-		return db.Rows() == 3
-	}, 500*time.Millisecond, 10*time.Millisecond)
-
-	values, _ := db.GetAll()
-	timestamps := make(map[time.Time]bool)
-
-	if assert.Len(t, values, 3) {
-		for _, entry := range values {
-			timestamps[entry.Timestamp] = true
-			assert.Equal(t, 50.0, entry.Power)
-			assert.Equal(t, 5.0, entry.Intensity)
-		}
-		assert.Len(t, timestamps, 3)
+	measurements, _ := db.GetAll()
+	for _, entry := range measurements {
+		assert.Equal(t, 1500.0, entry.Power)
+		assert.Equal(t, 55.0, entry.Intensity)
 	}
 
 	cancel()
-	assert.Eventually(t, func() bool { return db.Rows() == 4 }, 500*time.Millisecond, 10*time.Millisecond)
-}
+	wg.Wait()
 
-func TestCollectorShutDown(t *testing.T) {
-	db := mockdb.NewDB()
-	c := collector.New(50*time.Millisecond, db)
-	ctx, cancel := context.WithCancel(context.Background())
-	go c.Run(ctx)
-
-	c.Intensity <- collector.Metric{Timestamp: time.Now(), Value: 5.0}
-
-	cancel()
-	assert.Never(t, func() bool { return db.Rows() > 0 }, 500*time.Millisecond, 10*time.Millisecond)
+	mock.AssertExpectationsForObjects(t, solarEdgeClient, tadoClient)
 }
