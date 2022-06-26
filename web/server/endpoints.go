@@ -72,5 +72,5 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		Title:    title,
 		Filename: filename,
 	}
-	writePageFromTemplate(w, detailResponseTemplate, data)
+	err = writePageFromTemplate(w, detailResponseTemplate, data)
 }

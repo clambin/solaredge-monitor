@@ -37,14 +37,10 @@ func parseTimestamp(req *http.Request, field string, dbfunc func() (time.Time, e
 	return
 }
 
-func writePageFromTemplate(w http.ResponseWriter, pageTemplate string, data interface{}) {
-	var err error
+func writePageFromTemplate(w http.ResponseWriter, pageTemplate string, data interface{}) (err error) {
 	t := template.New("body")
 	if t, err = t.Parse(pageTemplate); err == nil {
 		err = t.Execute(w, data)
 	}
-
-	if err != nil {
-		http.Error(w, "failed to create page: "+err.Error(), http.StatusInternalServerError)
-	}
+	return
 }

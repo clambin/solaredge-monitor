@@ -72,8 +72,7 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 	wg.Wait()
 	for _, e := range errs {
 		if e != nil {
-			log.WithError(e).Error("failed to create response")
-			http.Error(w, "unable to create report: "+e.Error(), http.StatusInternalServerError)
+			err = e
 			return
 		}
 	}
@@ -88,7 +87,7 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		ClassifyImage:   classificationFilename,
 	}
 
-	writePageFromTemplate(w, reportResponseTemplate, data)
+	err = writePageFromTemplate(w, reportResponseTemplate, data)
 }
 
 func (server *Server) runReport(f func(start time.Time, stop time.Time) (image []byte, err error), start, stop time.Time, name string) (filename string, err error) {
