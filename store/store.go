@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"fmt"
+	// postgres driver for database/sql
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"

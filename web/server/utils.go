@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"net/http"
 	"time"
 )
@@ -38,13 +37,14 @@ func parseTimestamp(req *http.Request, field string, dbfunc func() (time.Time, e
 	return
 }
 
-func writePageFromTemplate(w io.Writer, pageTemplate string, data interface{}) (err error) {
+func writePageFromTemplate(w http.ResponseWriter, pageTemplate string, data interface{}) {
+	var err error
 	t := template.New("body")
-	t, err = t.Parse(pageTemplate)
-
-	if err == nil {
+	if t, err = t.Parse(pageTemplate); err == nil {
 		err = t.Execute(w, data)
 	}
 
-	return
+	if err != nil {
+		http.Error(w, "failed to create page: "+err.Error(), http.StatusInternalServerError)
+	}
 }

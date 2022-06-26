@@ -57,16 +57,8 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		}
 	}()
 
-	var output []byte
-	output, err = backendFunction(start, stop)
-
-	if err != nil {
-		err = fmt.Errorf("failed to create image: %s", err.Error())
-		return
-	}
-
 	var filename string
-	filename, err = server.cache.Store("image.png", output)
+	filename, err = server.runReport(backendFunction, start, stop, "image.png")
 
 	if err != nil {
 		err = fmt.Errorf("failed to store image: %s", err.Error())
@@ -80,5 +72,5 @@ func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Reque
 		Title:    title,
 		Filename: filename,
 	}
-	err = writePageFromTemplate(w, detailResponseTemplate, data)
+	writePageFromTemplate(w, detailResponseTemplate, data)
 }

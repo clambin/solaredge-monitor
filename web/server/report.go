@@ -4,6 +4,8 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"sync"
+	"time"
 )
 
 const reportResponseTemplate = `
@@ -46,28 +48,34 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	var summary, timeSeries, classification []byte
-	if summary, err = server.backend.Summary(start, stop); err == nil {
-		if timeSeries, err = server.backend.TimeSeries(start, stop); err == nil {
-			classification, err = server.backend.Classify(start, stop)
-		}
-	}
-
-	if err != nil {
-		err = fmt.Errorf("failed to create report: %s", err.Error())
-		return
-	}
+	var wg sync.WaitGroup
+	wg.Add(3)
 
 	var summaryFilename, timeSeriesFilename, classificationFilename string
-	if summaryFilename, err = server.cache.Store("summary.png", summary); err == nil {
-		if timeSeriesFilename, err = server.cache.Store("timeseries.png", timeSeries); err == nil {
-			classificationFilename, err = server.cache.Store("classify.png", classification)
-		}
-	}
+	errs := make([]error, 3)
 
-	if err != nil {
-		err = fmt.Errorf("failed to store image: %s", err.Error())
-		return
+	go func() {
+		summaryFilename, errs[0] = server.runReport(server.backend.Summary, start, stop, "summary.png")
+		wg.Done()
+	}()
+
+	go func() {
+		timeSeriesFilename, errs[1] = server.runReport(server.backend.TimeSeries, start, stop, "timeseries.png")
+		wg.Done()
+	}()
+
+	go func() {
+		classificationFilename, errs[2] = server.runReport(server.backend.Classify, start, stop, "classify.png")
+		wg.Done()
+	}()
+
+	wg.Wait()
+	for _, e := range errs {
+		if e != nil {
+			log.WithError(e).Error("failed to create response")
+			http.Error(w, "unable to create report: "+e.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	data := struct {
@@ -80,5 +88,18 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		ClassifyImage:   classificationFilename,
 	}
 
-	err = writePageFromTemplate(w, reportResponseTemplate, data)
+	writePageFromTemplate(w, reportResponseTemplate, data)
+}
+
+func (server *Server) runReport(f func(start time.Time, stop time.Time) (image []byte, err error), start, stop time.Time, name string) (filename string, err error) {
+	var img []byte
+	if img, err = f(start, stop); err == nil {
+		filename, err = server.cache.Store(name, img)
+	}
+
+	if err != nil {
+		err = fmt.Errorf("report %s failed: %w", name, err)
+	}
+
+	return
 }
