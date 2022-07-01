@@ -46,14 +46,10 @@ type SolarEdgeConfiguration struct {
 
 func LoadFromFile(filename string) (config *Configuration, err error) {
 	var content []byte
-	if content, err = os.ReadFile(filename); err == nil {
-		config, err = Load(content)
+	if content, err = os.ReadFile(filename); err != nil {
+		return
 	}
-	return
-}
-
-func Load(content []byte) (configuration *Configuration, err error) {
-	configuration = &Configuration{
+	config = &Configuration{
 		Server: ServerConfiguration{
 			Port:   80,
 			Images: "/images",
@@ -64,7 +60,7 @@ func Load(content []byte) (configuration *Configuration, err error) {
 		},
 		Database: loadDBEnvironment(),
 	}
-	err = yaml.Unmarshal(content, &configuration)
+	err = yaml.Unmarshal(content, config)
 	return
 }
 

@@ -1,0 +1,13 @@
+debug: false
+server:
+  port: 8080
+  images: /static
+scrape:
+  enabled: true
+  polling: 15m
+  collection: 1h
+tado:
+  username: tado
+  password: tadopassword
+solarEdge:
+  token: 1234

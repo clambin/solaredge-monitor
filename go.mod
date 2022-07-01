@@ -6,6 +6,7 @@ require (
 	github.com/clambin/solaredge v0.6.0
 	github.com/clambin/tado v0.7.1
 	github.com/gorilla/mux v1.8.0
+	github.com/gosimple/slug v1.12.0
 	github.com/lib/pq v1.10.6
 	github.com/prometheus/client_golang v1.12.2
 	github.com/satori/go.uuid v1.2.0
@@ -30,6 +31,7 @@ require (
 	github.com/go-pdf/fpdf v0.6.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
