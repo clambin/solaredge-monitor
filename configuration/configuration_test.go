@@ -17,29 +17,34 @@ var update = flag.Bool("update", false, "update .golden files")
 func TestLoadFromFile(t *testing.T) {
 	testCases := []struct {
 		filename string
-		env      map[string]string
 		pass     bool
+		env      EnvVars
 	}{
 		{filename: "testdata/complete.yaml", pass: true},
 		{filename: "testdata/defaults.yaml", pass: true},
-		{filename: "testdata/envvars.yaml", pass: true, env: map[string]string{
-			"pg_host":     "localhost",
-			"pg_port":     "31000",
-			"pg_database": "foo",
-			"pg_user":     "bar",
-			"pg_password": "secret",
+		{filename: "testdata/envvars.yaml", pass: true, env: EnvVars{
+			"pg_host":       "localhost",
+			"pg_port":       "31000",
+			"pg_database":   "foo",
+			"pg_user":       "bar",
+			"pg_password":   "secret",
+			"tado_password": "tadopassword",
+		}},
+		{filename: "testdata/envvars.yaml", pass: false, env: EnvVars{
+			"pg_host":       "localhost",
+			"pg_port":       "ABC",
+			"pg_database":   "foo",
+			"pg_user":       "bar",
+			"pg_password":   "secret",
+			"tado_password": "tadopassword",
 		}},
 		{filename: "testdata/invalid.yaml", pass: false},
 		{filename: "not-a-file", pass: false},
 	}
 
 	for _, tt := range testCases {
-		if tt.env != nil {
-			for key, value := range tt.env {
-				err := os.Setenv(key, value)
-				require.NoError(t, err)
-			}
-		}
+		err := tt.env.Set()
+		require.NoError(t, err)
 
 		cfg, err := configuration.LoadFromFile(tt.filename)
 		if tt.pass == false {
@@ -69,5 +74,27 @@ func TestLoadFromFile(t *testing.T) {
 			}
 		}
 
+		err = tt.env.Clear()
+		require.NoError(t, err)
 	}
+}
+
+type EnvVars map[string]string
+
+func (e EnvVars) Set() error {
+	for key, value := range e {
+		if err := os.Setenv(key, value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e EnvVars) Clear() error {
+	for key := range e {
+		if err := os.Unsetenv(key); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -3,7 +3,6 @@ package configuration
 import (
 	"gopkg.in/yaml.v3"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -49,6 +48,8 @@ func LoadFromFile(filename string) (config *Configuration, err error) {
 	if content, err = os.ReadFile(filename); err != nil {
 		return
 	}
+	content = []byte(os.ExpandEnv(string(content)))
+
 	config = &Configuration{
 		Server: ServerConfiguration{
 			Port:   80,
@@ -58,42 +59,14 @@ func LoadFromFile(filename string) (config *Configuration, err error) {
 			Polling:    5 * time.Minute,
 			Collection: 15 * time.Minute,
 		},
-		Database: loadDBEnvironment(),
+		Database: DBConfiguration{
+			Host:     "postgres",
+			Port:     5432,
+			Database: "solar",
+			Username: "solar",
+			Password: "solar",
+		},
 	}
 	err = yaml.Unmarshal(content, config)
 	return
-}
-
-func loadDBEnvironment() DBConfiguration {
-	var (
-		err        error
-		pgHost     string
-		pgPort     int
-		pgDatabase string
-		pgUser     string
-		pgPassword string
-	)
-	if pgHost = os.Getenv("pg_host"); pgHost == "" {
-		pgHost = "postgres"
-	}
-	if pgPort, err = strconv.Atoi(os.Getenv("pg_port")); err != nil || pgPort == 0 {
-		pgPort = 5432
-	}
-	if pgDatabase = os.Getenv("pg_database"); pgDatabase == "" {
-		pgDatabase = "solar"
-	}
-	if pgUser = os.Getenv("pg_user"); pgUser == "" {
-		pgUser = "solar"
-	}
-	if pgPassword = os.Getenv("pg_password"); pgPassword == "" {
-		pgPassword = "solar"
-	}
-
-	return DBConfiguration{
-		Host:     pgHost,
-		Port:     pgPort,
-		Database: pgDatabase,
-		Username: pgUser,
-		Password: pgPassword,
-	}
 }

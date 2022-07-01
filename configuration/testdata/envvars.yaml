@@ -6,8 +6,14 @@ scrape:
   enabled: true
   polling: 15m
   collection: 1h
+database:
+  host: ${pg_host}
+  port: ${pg_port}
+  database: ${pg_database}
+  username: ${pg_user}
+  password: ${pg_password}
 tado:
   username: tado
-  password: tadopassword
+  password: ${tado_password}
 solarEdge:
   token: 1234
