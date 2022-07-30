@@ -17,11 +17,11 @@ import (
 
 type Server struct {
 	port    int
-	backend *reports.Server
+	backend *reports.Reporter
 	cache   *cache.Cache
 }
 
-func New(port int, imagesDirectory string, backend *reports.Server) *Server {
+func New(port int, imagesDirectory string, backend *reports.Reporter) *Server {
 	if imagesDirectory == "" {
 		imagesDirectory, _ = os.MkdirTemp("", "")
 	}

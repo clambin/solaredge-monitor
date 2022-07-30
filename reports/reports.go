@@ -9,19 +9,19 @@ import (
 	"time"
 )
 
-type Server struct {
+type Reporter struct {
 	db store.DB
 }
 
-func New(db store.DB) *Server {
-	return &Server{
+func New(db store.DB) *Reporter {
+	return &Reporter{
 		db: db,
 	}
 }
 
-func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
+func (r *Reporter) Summary(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-	if measurements, err = server.db.Get(start, stop); err != nil {
+	if measurements, err = r.db.Get(start, stop); err != nil {
 		return
 	}
 
@@ -42,9 +42,9 @@ func (server *Server) Summary(start, stop time.Time) (image []byte, err error) {
 	return buf.Bytes(), err
 }
 
-func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error) {
+func (r *Reporter) TimeSeries(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-	if measurements, err = server.db.Get(start, stop); err != nil {
+	if measurements, err = r.db.Get(start, stop); err != nil {
 		return
 	}
 
@@ -65,9 +65,9 @@ func (server *Server) TimeSeries(start, stop time.Time) (image []byte, err error
 	return buf.Bytes(), err
 }
 
-func (server *Server) Classify(start, stop time.Time) (image []byte, err error) {
+func (r *Reporter) Classify(start, stop time.Time) (image []byte, err error) {
 	var measurements []store.Measurement
-	if measurements, err = server.db.Get(start, stop); err != nil {
+	if measurements, err = r.db.Get(start, stop); err != nil {
 		return
 	}
 
@@ -92,11 +92,11 @@ func (server *Server) Classify(start, stop time.Time) (image []byte, err error) 
 func measurementsToPlotData(measurements []store.Measurement, fold bool) (data plotter.XYZs) {
 	data = make(plotter.XYZs, len(measurements))
 	for index, measurement := range measurements {
+		t := measurement.Timestamp.Unix()
 		if fold {
-			data[index].X = float64(measurement.Timestamp.Unix() % (24 * 60 * 60))
-		} else {
-			data[index].X = float64(measurement.Timestamp.Unix())
+			t %= 24 * 3600
 		}
+		data[index].X = float64(t)
 		data[index].Y = measurement.Intensity
 		data[index].Z = measurement.Power
 	}
@@ -124,7 +124,7 @@ func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
 	zCounts := make([]int, xRange*yRange)
 
 	for _, measurement := range measurements {
-		r := int(measurement.Timestamp.Unix()%(24*60*60)) / timeStampInterval
+		r := int(measurement.Timestamp.Unix() % (24 * 60 * 60) / timeStampInterval)
 		c := int(measurement.Intensity / intensityInterval)
 		index := r*yRange + c
 

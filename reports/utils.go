@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-func (server *Server) GetFirst() (first time.Time, err error) {
+func (r *Reporter) GetFirst() (first time.Time, err error) {
 	var measurements []store.Measurement
 
-	measurements, err = server.db.GetAll()
+	measurements, err = r.db.GetAll()
 
 	if err == nil && len(measurements) == 0 {
 		err = fmt.Errorf("no entries found")
@@ -22,10 +22,10 @@ func (server *Server) GetFirst() (first time.Time, err error) {
 	return measurements[0].Timestamp, nil
 }
 
-func (server *Server) GetLast() (first time.Time, err error) {
+func (r *Reporter) GetLast() (first time.Time, err error) {
 	var measurements []store.Measurement
 
-	measurements, err = server.db.GetAll()
+	measurements, err = r.db.GetAll()
 
 	if err == nil && len(measurements) == 0 {
 		err = fmt.Errorf("no entries found")
