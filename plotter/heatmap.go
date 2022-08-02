@@ -10,7 +10,6 @@ import (
 
 type HeatmapPlotter struct {
 	BasePlotter
-	Fold   bool
 	XSteps int
 	YSteps int
 	XRange *Range

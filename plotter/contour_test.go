@@ -39,11 +39,13 @@ func TestContourPlotter_Plot(t *testing.T) {
 		}
 
 		p := plotter.ContourPlotter{
-			BasePlotter: plotter.BasePlotter{Options: options},
-			Fold:        fold,
-			XSteps:      48,
-			YSteps:      10,
-			YRange:      plotter.NewRange(0, 120),
+			BasePlotter: plotter.BasePlotter{
+				Options: options,
+				Fold:    fold,
+			},
+			XSteps: 48,
+			YSteps: 10,
+			YRange: plotter.NewRange(0, 120),
 		}
 
 		img, err := p.Plot(buildData(200))
@@ -63,6 +65,6 @@ func TestContourPlotter_Plot(t *testing.T) {
 		var golden []byte
 		golden, err = os.ReadFile(gp)
 		require.NoError(t, err)
-		assert.Equal(t, golden, buf.Bytes())
+		assert.True(t, bytes.Equal(golden, buf.Bytes()))
 	}
 }

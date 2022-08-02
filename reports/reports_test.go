@@ -1,6 +1,7 @@
 package reports_test
 
 import (
+	"bytes"
 	"flag"
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
@@ -68,7 +69,7 @@ func TestReporter(t *testing.T) {
 		var golden []byte
 		golden, err = os.ReadFile(gp)
 		require.NoError(t, err)
-		assert.Equal(t, golden, img)
+		assert.True(t, bytes.Equal(golden, img))
 	}
 
 	reporter = reports.New(mockdb.BadDB())

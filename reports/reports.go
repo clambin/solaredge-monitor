@@ -35,8 +35,8 @@ func (r *Reporter) Summary(start, stop time.Time) (image []byte, err error) {
 				Size:     plotter.Size{Width: 800, Height: 600},
 				ColorMap: moreland.SmoothBlueRed(),
 			},
+			Fold: true,
 		},
-		Fold: true,
 	}
 
 	var img *vgimg.PngCanvas
@@ -66,8 +66,8 @@ func (r *Reporter) TimeSeries(start, stop time.Time) (image []byte, err error) {
 				Size:     plotter.Size{Width: 800, Height: 600},
 				ColorMap: moreland.SmoothBlueRed(),
 			},
+			Fold: false,
 		},
-		Fold: false,
 	}
 
 	var img *vgimg.PngCanvas
@@ -98,11 +98,11 @@ func (r *Reporter) Classify(start, stop time.Time) (image []byte, err error) {
 				Contour:  plotter.Contour{Ranges: []float64{1000, 2000, 3000, 3500, 3800, 4000}},
 				ColorMap: moreland.SmoothBlueRed(),
 			},
+			Fold: true,
 		},
 		XSteps: 48,
 		YSteps: 20,
 		YRange: &plotter.Range{Min: 0, Max: 100},
-		Fold:   true,
 	}
 
 	var img *vgimg.PngCanvas

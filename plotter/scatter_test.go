@@ -42,8 +42,10 @@ func TestScatterPlotter_Plot(t *testing.T) {
 		}
 
 		p := plotter.ScatterPlotter{
-			BasePlotter: plotter.BasePlotter{Options: options},
-			Fold:        fold,
+			BasePlotter: plotter.BasePlotter{
+				Options: options,
+				Fold:    fold,
+			},
 		}
 
 		img, err := p.Plot(buildData(200))
@@ -64,7 +66,7 @@ func TestScatterPlotter_Plot(t *testing.T) {
 		var golden []byte
 		golden, err = os.ReadFile(gp)
 		require.NoError(t, err)
-		assert.Equal(t, golden, buf.Bytes())
+		assert.True(t, bytes.Equal(golden, buf.Bytes()))
 	}
 }
 

@@ -14,7 +14,6 @@ import (
 
 type ScatterPlotter struct {
 	BasePlotter
-	Fold bool
 }
 
 var _ Plotter = &ScatterPlotter{}

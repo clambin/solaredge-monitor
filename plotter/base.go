@@ -10,6 +10,7 @@ import (
 
 type BasePlotter struct {
 	Options Options
+	Fold    bool
 }
 
 func (bp BasePlotter) makeBasePlot() *plot.Plot {

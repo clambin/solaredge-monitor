@@ -39,11 +39,13 @@ func TestHeatmapPlotter_Plot(t *testing.T) {
 		}
 
 		p := plotter.HeatmapPlotter{
-			BasePlotter: plotter.BasePlotter{Options: options},
-			Fold:        fold,
-			XSteps:      48,
-			YSteps:      10,
-			YRange:      plotter.NewRange(0, 100),
+			BasePlotter: plotter.BasePlotter{
+				Options: options,
+				Fold:    fold,
+			},
+			XSteps: 48,
+			YSteps: 10,
+			YRange: plotter.NewRange(0, 100),
 		}
 
 		img, err := p.Plot(buildData(200))
@@ -63,6 +65,6 @@ func TestHeatmapPlotter_Plot(t *testing.T) {
 		var golden []byte
 		golden, err = os.ReadFile(gp)
 		require.NoError(t, err)
-		assert.Equal(t, golden, buf.Bytes())
+		assert.True(t, bytes.Equal(golden, buf.Bytes()))
 	}
 }
