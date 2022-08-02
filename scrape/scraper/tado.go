@@ -1,4 +1,4 @@
-package sampler
+package scraper
 
 import (
 	"context"
@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-type TadoSampler struct {
+type TadoScraper struct {
 	tado.API
 }
 
-var _ Sampler = &TadoSampler{}
+var _ Scraper = &TadoScraper{}
 
-func (t *TadoSampler) Sample(ctx context.Context) (sample Sample, err error) {
+func (t *TadoScraper) Scrape(ctx context.Context) (sample Sample, err error) {
 	var weatherInfo tado.WeatherInfo
 	if weatherInfo, err = t.GetWeatherInfo(ctx); err == nil {
 		sample = Sample{

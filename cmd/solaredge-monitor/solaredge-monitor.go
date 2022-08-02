@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
-	"github.com/clambin/solaredge-monitor/scrape/sampler"
+	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
 	"github.com/clambin/solaredge-monitor/web/server"
@@ -83,15 +83,15 @@ func main() {
 }
 
 func runScraper(ctx context.Context, cfg *configuration.Configuration, db store.DB) {
-	tadoClient := &sampler.Client{
-		Sampler: &sampler.TadoSampler{
+	tadoClient := &scraper.Client{
+		Scraper: &scraper.TadoScraper{
 			API: tado.New(cfg.Tado.Username, cfg.Tado.Password, ""),
 		},
 	}
 	go tadoClient.Run(ctx, cfg.Scrape.Polling)
 
-	solarEdgeClient := &sampler.Client{
-		Sampler: &sampler.SolarEdgeSampler{
+	solarEdgeClient := &scraper.Client{
+		Scraper: &scraper.SolarEdgeScraper{
 			API: &solaredge.Client{
 				Token:      cfg.SolarEdge.Token,
 				HTTPClient: http.DefaultClient,

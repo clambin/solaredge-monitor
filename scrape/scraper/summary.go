@@ -1,4 +1,4 @@
-package sampler
+package scraper
 
 import (
 	"time"
@@ -9,11 +9,6 @@ type Summary struct {
 	Count int
 	First time.Time
 	Last  time.Time
-}
-
-type Sample struct {
-	Timestamp time.Time
-	Value     float64
 }
 
 func (summary *Summary) Add(m Sample) {

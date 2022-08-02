@@ -1,4 +1,4 @@
-package sampler
+package scraper
 
 import (
 	"context"
@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-type SolarEdgeSampler struct {
+type SolarEdgeScraper struct {
 	solaredge.API
 	SiteID int
 }
 
-var _ Sampler = &SolarEdgeSampler{}
+var _ Scraper = &SolarEdgeScraper{}
 
-func (s *SolarEdgeSampler) Sample(ctx context.Context) (sample Sample, err error) {
+func (s *SolarEdgeScraper) Scrape(ctx context.Context) (sample Sample, err error) {
 	if err = s.setSiteID(ctx); err != nil {
 		return
 	}
@@ -29,7 +29,7 @@ func (s *SolarEdgeSampler) Sample(ctx context.Context) (sample Sample, err error
 	return
 }
 
-func (s *SolarEdgeSampler) setSiteID(ctx context.Context) (err error) {
+func (s *SolarEdgeScraper) setSiteID(ctx context.Context) (err error) {
 	if s.SiteID != 0 {
 		return
 	}

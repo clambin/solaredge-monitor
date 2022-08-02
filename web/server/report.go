@@ -33,7 +33,7 @@ const reportResponseTemplate = `
 </html>`
 
 func (server *Server) report(w http.ResponseWriter, req *http.Request) {
-	start, stop, err := server.parseGenerateRequest(req)
+	start, stop, err := server.parseRequest(req)
 
 	if err != nil {
 		log.WithError(err).Error("failed to get determine start/stop parameters")

@@ -2,9 +2,9 @@ package reports
 
 import (
 	"bytes"
-	"github.com/clambin/solaredge-monitor/plot"
+	"github.com/clambin/solaredge-monitor/plotter"
 	"github.com/clambin/solaredge-monitor/store"
-	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/palette/moreland"
 	"gonum.org/v1/plot/vg/vgimg"
 	"time"
 )
@@ -25,19 +25,27 @@ func (r *Reporter) Summary(start, stop time.Time) (image []byte, err error) {
 		return
 	}
 
-	options := plot.Options{
-		Title:  "Summary",
-		AxisX:  plot.Axis{Label: "time", TimeFormat: "15:04:05"},
-		AxisY:  plot.Axis{Label: "solar intensity (%)"},
-		Legend: plot.Legend{Increase: 100},
-		Size:   plot.Size{Width: 800, Height: 600},
+	p := plotter.ScatterPlotter{
+		BasePlotter: plotter.BasePlotter{
+			Options: plotter.Options{
+				Title:    "Summary",
+				AxisX:    plotter.Axis{Label: "time", TimeFormat: "15:04:05"},
+				AxisY:    plotter.Axis{Label: "solar intensity (%)"},
+				Legend:   plotter.Legend{Increase: 100},
+				Size:     plotter.Size{Width: 800, Height: 600},
+				ColorMap: moreland.SmoothBlueRed(),
+			},
+		},
+		Fold: true,
+	}
+
+	var img *vgimg.PngCanvas
+	if img, err = p.Plot(measurements); err != nil {
+		return
 	}
 
 	buf := new(bytes.Buffer)
-	var img *vgimg.PngCanvas
-	if img, err = plot.ScatterPlot(measurementsToPlotData(measurements, true), options); err == nil {
-		_, err = img.WriteTo(buf)
-	}
+	_, err = img.WriteTo(buf)
 
 	return buf.Bytes(), err
 }
@@ -48,19 +56,27 @@ func (r *Reporter) TimeSeries(start, stop time.Time) (image []byte, err error) {
 		return
 	}
 
-	options := plot.Options{
-		Title:  "Time series",
-		AxisX:  plot.Axis{Label: "time", TimeFormat: "2006-01-02\n15:04:05"},
-		AxisY:  plot.Axis{Label: "solar intensity (%)"},
-		Legend: plot.Legend{Increase: 100},
-		Size:   plot.Size{Width: 800, Height: 600},
+	p := plotter.ScatterPlotter{
+		BasePlotter: plotter.BasePlotter{
+			Options: plotter.Options{
+				Title:    "Time series",
+				AxisX:    plotter.Axis{Label: "time", TimeFormat: "2006-01-02\n15:04:05"},
+				AxisY:    plotter.Axis{Label: "solar intensity (%)"},
+				Legend:   plotter.Legend{Increase: 100},
+				Size:     plotter.Size{Width: 800, Height: 600},
+				ColorMap: moreland.SmoothBlueRed(),
+			},
+		},
+		Fold: false,
+	}
+
+	var img *vgimg.PngCanvas
+	if img, err = p.Plot(measurements); err != nil {
+		return
 	}
 
 	buf := new(bytes.Buffer)
-	var img *vgimg.PngCanvas
-	if img, err = plot.ScatterPlot(measurementsToPlotData(measurements, false), options); err == nil {
-		_, err = img.WriteTo(buf)
-	}
+	_, err = img.WriteTo(buf)
 
 	return buf.Bytes(), err
 }
@@ -71,72 +87,31 @@ func (r *Reporter) Classify(start, stop time.Time) (image []byte, err error) {
 		return
 	}
 
-	options := plot.Options{
-		Title:   "Classification",
-		AxisX:   plot.Axis{Label: "time", TimeFormat: "15:04:05"},
-		AxisY:   plot.Axis{Label: "solar intensity (%)"},
-		Legend:  plot.Legend{Increase: 100},
-		Size:    plot.Size{Width: 800, Height: 600},
-		Contour: plot.Contour{Ranges: []float64{1000, 2000, 3000, 3500, 3800, 4000}},
+	p := plotter.ContourPlotter{
+		BasePlotter: plotter.BasePlotter{
+			Options: plotter.Options{
+				Title:    "Classification",
+				AxisX:    plotter.Axis{Label: "time", TimeFormat: "15:04:05"},
+				AxisY:    plotter.Axis{Label: "solar intensity (%)"},
+				Legend:   plotter.Legend{Increase: 100},
+				Size:     plotter.Size{Width: 800, Height: 600},
+				Contour:  plotter.Contour{Ranges: []float64{1000, 2000, 3000, 3500, 3800, 4000}},
+				ColorMap: moreland.SmoothBlueRed(),
+			},
+		},
+		XSteps: 48,
+		YSteps: 20,
+		YRange: &plotter.Range{Min: 0, Max: 100},
+		Fold:   true,
+	}
+
+	var img *vgimg.PngCanvas
+	if img, err = p.Plot(measurements); err != nil {
+		return
 	}
 
 	buf := new(bytes.Buffer)
-	var graph *vgimg.PngCanvas
-	if graph, err = plot.ContourPlot(measurementsToGrid(measurements), options); err == nil {
-		_, err = graph.WriteTo(buf)
-	}
+	_, err = img.WriteTo(buf)
 
 	return buf.Bytes(), err
-}
-
-func measurementsToPlotData(measurements []store.Measurement, fold bool) (data plotter.XYZs) {
-	data = make(plotter.XYZs, len(measurements))
-	for index, measurement := range measurements {
-		t := measurement.Timestamp.Unix()
-		if fold {
-			t %= 24 * 3600
-		}
-		data[index].X = float64(t)
-		data[index].Y = measurement.Intensity
-		data[index].Z = measurement.Power
-	}
-	return
-}
-
-func measurementsToGrid(measurements []store.Measurement) (data *plot.GridXYZ) {
-	const timeStampInterval = 3600
-	const intensityInterval = 5
-
-	xRange := 24 * 3600 / timeStampInterval
-	yRange := 1 + 100/int(intensityInterval)
-
-	x := make([]float64, 0, xRange)
-	for i := 0.0; i < 24*3600; i += timeStampInterval {
-		x = append(x, i)
-	}
-
-	y := make([]float64, 0, yRange)
-	for i := 0.0; i <= 100; i += intensityInterval {
-		y = append(y, i)
-	}
-
-	z := make([]float64, xRange*yRange)
-	zCounts := make([]int, xRange*yRange)
-
-	for _, measurement := range measurements {
-		r := int(measurement.Timestamp.Unix() % (24 * 60 * 60) / timeStampInterval)
-		c := int(measurement.Intensity / intensityInterval)
-		index := r*yRange + c
-
-		z[index] += measurement.Power
-		zCounts[index]++
-	}
-
-	for index, zCount := range zCounts {
-		if zCount != 0 {
-			z[index] = z[index] / float64(zCount)
-		}
-	}
-
-	return plot.NewGrid(x, y, z)
 }

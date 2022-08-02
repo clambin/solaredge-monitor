@@ -1,9 +1,9 @@
-package sampler_test
+package scraper_test
 
 import (
 	"context"
 	"errors"
-	"github.com/clambin/solaredge-monitor/scrape/sampler"
+	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"sync"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestClient_Run(t *testing.T) {
-	s := sampler.Client{Sampler: &measurer{}}
+	s := scraper.Client{Scraper: &measurer{}}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg := sync.WaitGroup{}
@@ -33,7 +33,7 @@ func TestClient_Run(t *testing.T) {
 
 func TestClient_Run_Failure(t *testing.T) {
 	m := measurer{err: errors.New("fail")}
-	s := sampler.Client{Sampler: &m}
+	s := scraper.Client{Scraper: &m}
 	wg := sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	wg.Add(1)
@@ -53,12 +53,12 @@ type measurer struct {
 	err     error
 }
 
-func (m *measurer) Sample(_ context.Context) (sampler.Sample, error) {
+func (m *measurer) Scrape(_ context.Context) (scraper.Sample, error) {
 	m.counter++
-	return sampler.Sample{
+	return scraper.Sample{
 		Timestamp: time.Now(),
 		Value:     m.counter,
 	}, m.err
 }
 
-var _ sampler.Sampler = &measurer{}
+var _ scraper.Scraper = &measurer{}

@@ -1,4 +1,4 @@
-package sampler
+package scraper
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type Summarizer interface {
 
 // Client collects measurements and returns a summary of those collected measurement
 type Client struct {
-	Sampler
+	Scraper
 	summary Summary
 	lock    sync.RWMutex
 }
@@ -41,7 +41,7 @@ func (c *Client) collect(ctx context.Context) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if m, err := c.Sample(ctx); err == nil {
+	if m, err := c.Scrape(ctx); err == nil {
 		log.Debugf("received %v", m)
 		c.summary.Add(m)
 	} else {

@@ -42,7 +42,7 @@ const detailResponseTemplate = `
 </html>`
 
 func (server *Server) handleDetailRequest(w http.ResponseWriter, req *http.Request, title string, backendFunction func(time.Time, time.Time) ([]byte, error)) {
-	start, stop, err := server.parseGenerateRequest(req)
+	start, stop, err := server.parseRequest(req)
 
 	if err != nil {
 		log.WithError(err).Error("failed to get determine start/stop parameters")

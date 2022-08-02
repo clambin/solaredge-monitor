@@ -7,15 +7,16 @@ import (
 	"time"
 )
 
-func (server *Server) parseGenerateRequest(req *http.Request) (start, stop time.Time, err error) {
-
-	start, err = parseTimestamp(req, "start", server.backend.GetFirst)
-
-	if err == nil {
-		stop, err = parseTimestamp(req, "stop", server.backend.GetLast)
+func (server *Server) parseRequest(req *http.Request) (start, stop time.Time, err error) {
+	if start, err = parseTimestamp(req, "start", server.backend.GetFirst); err != nil {
+		return
 	}
 
-	if err == nil && stop.Before(start) {
+	if stop, err = parseTimestamp(req, "stop", server.backend.GetLast); err != nil {
+		return
+	}
+
+	if stop.Before(start) {
 		err = fmt.Errorf("start time is later than stop time")
 	}
 
@@ -32,7 +33,7 @@ func parseTimestamp(req *http.Request, field string, dbfunc func() (time.Time, e
 	timestamp, err = time.Parse(time.RFC3339, arg[0])
 
 	if err != nil {
-		err = fmt.Errorf("invalid format for '%s' argument: %s", field, err.Error())
+		err = fmt.Errorf("invalid format for '%s': %w", field, err)
 	}
 	return
 }

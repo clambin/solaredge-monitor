@@ -1,9 +1,9 @@
-package sampler_test
+package scraper_test
 
 import (
 	"context"
 	"errors"
-	"github.com/clambin/solaredge-monitor/scrape/sampler"
+	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/clambin/tado"
 	"github.com/clambin/tado/mocks"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 
 func TestTadoClient(t *testing.T) {
 	api := &mocks.API{}
-	c := sampler.TadoSampler{
+	c := scraper.TadoScraper{
 		API: api,
 	}
 
@@ -24,12 +24,12 @@ func TestTadoClient(t *testing.T) {
 		WeatherState:       tado.Value{Value: "SUNNY"},
 	}, nil).Once()
 
-	sample, err := c.Sample(context.Background())
+	sample, err := c.Scrape(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, 75.0, sample.Value)
 
 	api.On("GetWeatherInfo", mock.AnythingOfType("*context.emptyCtx")).Return(tado.WeatherInfo{}, errors.New("fail")).Once()
-	_, err = c.Sample(context.Background())
+	_, err = c.Scrape(context.Background())
 	assert.Error(t, err)
 
 	mock.AssertExpectationsForObjects(t, api)
