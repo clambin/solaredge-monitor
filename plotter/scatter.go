@@ -14,6 +14,11 @@ import (
 
 type ScatterPlotter struct {
 	BasePlotter
+	Legend Legend
+}
+
+type Legend struct {
+	Increase int
 }
 
 var _ Plotter = &ScatterPlotter{}
@@ -32,11 +37,11 @@ func (s ScatterPlotter) Plot(measurement []store.Measurement) (*vgimg.PngCanvas,
 	if dataRange.Bound() {
 		s.addLegend(p, c, dataRange)
 	}
-	return s.saveImage(p), nil
+	return s.createImage(p), nil
 }
 
 func (s ScatterPlotter) allocateColors(r *Range) palette.ColorMap {
-	colors := s.Options.ColorMap
+	colors := s.ColorMap
 	colors.SetMin(r.Min)
 	colors.SetMax(r.Max)
 	return colors
@@ -60,23 +65,19 @@ func (s ScatterPlotter) addScatter(p *plot.Plot, c palette.ColorMap, data plotte
 }
 
 func (s ScatterPlotter) addLegend(p *plot.Plot, c palette.ColorMap, r *Range) {
-	increase := int(math.Max(500, float64(s.Options.Legend.Increase)))
-	step := int(r.Max-r.Min) / increase
-	thumbs := plotter.PaletteThumbnailers(c.Palette(step))
+	increase := int(math.Max(500, float64(s.Legend.Increase)))
+	steps := int(r.Max-r.Min) / increase
+	thumbs := plotter.PaletteThumbnailers(c.Palette(steps))
 	for i := len(thumbs) - 1; i >= 0; i-- {
-		t := thumbs[i]
-		if i != 0 && i != len(thumbs)-1 {
-			p.Legend.Add("", t)
-			continue
-		}
-		var val int
+		var name string
 		switch i {
 		case 0:
-			val = int(r.Min)
+			name = fmt.Sprintf("%d", int(r.Min))
 		case len(thumbs) - 1:
-			val = int(r.Max)
+			name = fmt.Sprintf("%d", int(r.Max))
+		default:
 		}
-		p.Legend.Add(fmt.Sprintf("%d", val), t)
+		p.Legend.Add(name, thumbs[i])
 	}
 
 	p.Legend.XOffs = legendWidth

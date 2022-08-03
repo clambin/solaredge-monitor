@@ -1,7 +1,6 @@
 package plotter
 
 import (
-	"fmt"
 	"github.com/clambin/solaredge-monitor/store"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -9,46 +8,23 @@ import (
 )
 
 type ContourPlotter struct {
-	BasePlotter
-	XSteps int
-	YSteps int
-	XRange *Range
-	YRange *Range
+	GriddedPlotter
 }
 
 var _ Plotter = &ContourPlotter{}
 
-func (c ContourPlotter) Plot(measurement []store.Measurement) (*vgimg.PngCanvas, error) {
-	data := Sample(measurement, c.Fold, c.XSteps, c.YSteps, c.XRange, c.YRange)
-
-	rows, cols := data.Dims()
-	if rows == 0 || cols == 0 {
-		return nil, fmt.Errorf("no data to plot")
+func (c ContourPlotter) Plot(measurements []store.Measurement) (*vgimg.PngCanvas, error) {
+	p, data, err := c.preparePlot(measurements)
+	if err != nil {
+		return nil, err
 	}
-
-	p := c.makeBasePlot()
 	c.addContour(p, data)
-
-	if len(c.Options.Contour.Ranges) > 0 {
-		c.addLegend(p)
-	}
-
-	return c.saveImage(p), nil
+	c.addLegend(p)
+	return c.createImage(p), nil
 }
 
 func (c ContourPlotter) addContour(p *plot.Plot, data plotter.GridXYZ) {
-	palette := c.Options.ColorMap.Palette(len(c.Options.Contour.Ranges))
-	ct := plotter.NewContour(data, c.Options.Contour.Ranges, palette)
+	palette := c.ColorMap.Palette(len(c.Ranges))
+	ct := plotter.NewContour(data, c.Ranges, palette)
 	p.Add(ct)
-}
-
-func (c ContourPlotter) addLegend(p *plot.Plot) {
-	palette := c.Options.ColorMap.Palette(len(c.Options.Contour.Ranges))
-	thumbs := plotter.PaletteThumbnailers(palette)
-	for i := len(thumbs) - 1; i >= 0; i-- {
-		t := thumbs[i]
-		val := int(c.Options.Contour.Ranges[i])
-		p.Legend.Add(fmt.Sprintf("%d", val), t)
-	}
-	p.Legend.XOffs = legendWidth
 }

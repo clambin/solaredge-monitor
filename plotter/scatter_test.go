@@ -15,25 +15,6 @@ import (
 )
 
 func TestScatterPlotter_Plot(t *testing.T) {
-	options := plotter.Options{
-		Title: "foo",
-		AxisX: plotter.Axis{
-			Label:      "x",
-			TimeFormat: "15:04:05",
-		},
-		AxisY: plotter.Axis{
-			Label: "y",
-		},
-		Size: plotter.Size{
-			Width:  800,
-			Height: 600,
-		},
-		Legend: plotter.Legend{
-			Increase: 500,
-		},
-		ColorMap: moreland.SmoothBlueRed(),
-	}
-
 	for i := 0; i < 2; i++ {
 		var gpSuffix string
 		fold := i == 0
@@ -43,8 +24,23 @@ func TestScatterPlotter_Plot(t *testing.T) {
 
 		p := plotter.ScatterPlotter{
 			BasePlotter: plotter.BasePlotter{
-				Options: options,
-				Fold:    fold,
+				Title: "foo",
+				AxisX: plotter.Axis{
+					Label:      "x",
+					TimeFormat: "15:04:05",
+				},
+				AxisY: plotter.Axis{
+					Label: "y",
+				},
+				Size: plotter.Size{
+					Width:  800,
+					Height: 600,
+				},
+				ColorMap: moreland.SmoothBlueRed(),
+				Fold:     fold,
+			},
+			Legend: plotter.Legend{
+				Increase: 500,
 			},
 		}
 

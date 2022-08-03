@@ -4,12 +4,11 @@ import (
 	"context"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/configuration"
-	"github.com/clambin/solaredge-monitor/reports"
 	"github.com/clambin/solaredge-monitor/scrape/collector"
 	"github.com/clambin/solaredge-monitor/scrape/scraper"
+	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
-	"github.com/clambin/solaredge-monitor/web/server"
 	"github.com/clambin/tado"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -71,7 +70,7 @@ func main() {
 		}()
 	}
 
-	s := server.New(cfg.Server.Port, cfg.Server.Images, reports.New(db))
+	s := server.New(cfg.Server.Port, db)
 	go s.Run(ctx)
 
 	sigs := make(chan os.Signal, 1)

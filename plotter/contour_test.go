@@ -12,25 +12,6 @@ import (
 )
 
 func TestContourPlotter_Plot(t *testing.T) {
-	options := plotter.Options{
-		Title: "foo",
-		AxisX: plotter.Axis{
-			Label:      "time",
-			TimeFormat: "15:04:05",
-		},
-		AxisY: plotter.Axis{
-			Label: "intensity (%)",
-		},
-		Size: plotter.Size{
-			Width:  800,
-			Height: 600,
-		},
-		ColorMap: moreland.SmoothBlueRed(),
-		Contour: plotter.Contour{
-			Ranges: []float64{1000, 2000, 3000, 4000},
-		},
-	}
-
 	for i := 0; i < 2; i++ {
 		var gpSuffix string
 		fold := i == 0
@@ -38,15 +19,28 @@ func TestContourPlotter_Plot(t *testing.T) {
 			gpSuffix = "_folded"
 		}
 
-		p := plotter.ContourPlotter{
+		p := plotter.ContourPlotter{GriddedPlotter: plotter.GriddedPlotter{
 			BasePlotter: plotter.BasePlotter{
-				Options: options,
-				Fold:    fold,
+				Title: "foo",
+				AxisX: plotter.Axis{
+					Label:      "time",
+					TimeFormat: "15:04:05",
+				},
+				AxisY: plotter.Axis{
+					Label: "intensity (%)",
+				},
+				Size: plotter.Size{
+					Width:  800,
+					Height: 600,
+				},
+				ColorMap: moreland.SmoothBlueRed(),
+				Fold:     fold,
 			},
-			XSteps: 48,
-			YSteps: 10,
-			YRange: plotter.NewRange(0, 120),
-		}
+			XResolution: 48,
+			YResolution: 10,
+			YRange:      plotter.NewRange(0, 120),
+			Ranges:      []float64{1000, 2000, 3000, 4000},
+		}}
 
 		img, err := p.Plot(buildData(200))
 		assert.NoError(t, err)

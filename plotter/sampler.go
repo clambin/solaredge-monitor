@@ -6,25 +6,25 @@ import (
 )
 
 type Sampler struct {
-	Fold     bool
-	xRange   *Range
-	yRange   *Range
-	xSamples int
-	ySamples int
-	x        []float64
-	y        []float64
-	z        []float64
+	Fold        bool
+	xRange      *Range
+	yRange      *Range
+	xResolution int
+	yResolution int
+	x           []float64
+	y           []float64
+	z           []float64
 }
 
 var _ plotter.GridXYZ = &Sampler{}
 
-func Sample(measurements []store.Measurement, fold bool, xSteps, ySteps int, xRange, yRange *Range) *Sampler {
+func Sample(measurements []store.Measurement, fold bool, xResolution, yResolution int, xRange, yRange *Range) *Sampler {
 	s := &Sampler{
-		Fold:     fold,
-		xSamples: xSteps,
-		ySamples: ySteps,
-		xRange:   xRange,
-		yRange:   yRange,
+		Fold:        fold,
+		xResolution: xResolution,
+		yResolution: yResolution,
+		xRange:      xRange,
+		yRange:      yRange,
 	}
 
 	if s.xRange == nil {
@@ -64,24 +64,24 @@ func (s *Sampler) getRange(measurements []store.Measurement, axis string) *Range
 }
 
 func (s *Sampler) makeAxes() {
-	s.x = s.xRange.GetIntervals(s.xSamples)
-	s.y = s.yRange.GetIntervals(s.ySamples)
+	s.x = s.xRange.GetIntervals(s.xResolution)
+	s.y = s.yRange.GetIntervals(s.yResolution)
 }
 
 func (s *Sampler) process(measurements []store.Measurement) {
-	xRange := (s.xRange.Max - s.xRange.Min) / float64(s.xSamples)
-	yRange := (s.yRange.Max - s.yRange.Min) / float64(s.ySamples)
+	xRange := (s.xRange.Max - s.xRange.Min) / float64(s.xResolution)
+	yRange := (s.yRange.Max - s.yRange.Min) / float64(s.yResolution)
 
-	s.z = make([]float64, s.xSamples*s.ySamples)
+	s.z = make([]float64, s.xResolution*s.yResolution)
 	zCount := make([]float64, len(s.z))
 
 	for _, measurement := range measurements {
 		t := s.getTimestamp(measurement)
-		c := getIndex(t, s.xRange.Min, xRange, s.xSamples)
-		r := getIndex(measurement.Intensity, s.yRange.Min, yRange, s.ySamples)
+		c := getIndex(t, s.xRange.Min, xRange, s.xResolution)
+		r := getIndex(measurement.Intensity, s.yRange.Min, yRange, s.yResolution)
 
-		s.z[r*s.xSamples+c] += measurement.Power
-		zCount[r*s.xSamples+c]++
+		s.z[r*s.xResolution+c] += measurement.Power
+		zCount[r*s.xResolution+c]++
 	}
 
 	for idx, count := range zCount {
@@ -104,7 +104,7 @@ func (s *Sampler) Dims() (c, r int) {
 }
 
 func (s *Sampler) Z(c, r int) float64 {
-	return s.z[r*s.xSamples+c]
+	return s.z[r*s.xResolution+c]
 }
 
 func (s *Sampler) X(c int) float64 {

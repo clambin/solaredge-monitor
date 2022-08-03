@@ -3,49 +3,34 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/clambin/solaredge-monitor/reports"
-	"github.com/clambin/solaredge-monitor/web/cache"
+	"github.com/clambin/solaredge-monitor/store"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"os"
-	"time"
 )
 
 type Server struct {
 	port    int
-	backend *reports.Reporter
-	cache   *cache.Cache
+	backend *Reporter
 }
 
-func New(port int, imagesDirectory string, backend *reports.Reporter) *Server {
-	if imagesDirectory == "" {
-		imagesDirectory, _ = os.MkdirTemp("", "")
-	}
-
+func New(port int, db store.DB) *Server {
 	return &Server{
 		port:    port,
-		backend: backend,
-		cache:   cache.New(imagesDirectory, 1*time.Hour, 5*time.Minute),
+		backend: &Reporter{DB: db},
 	}
 }
 
 func (server *Server) Run(ctx context.Context) {
-	go server.cache.Run(ctx)
-
 	r := mux.NewRouter()
 	r.Use(prometheusMiddleware)
 	r.Path("/metrics").Handler(promhttp.Handler())
-	images := http.StripPrefix("/images/", http.FileServer(http.Dir(server.cache.Directory)))
-	r.PathPrefix("/images/").Handler(images)
 	r.HandleFunc("/", server.main).Methods(http.MethodGet)
 	r.HandleFunc("/report", server.report).Methods(http.MethodGet)
-	r.HandleFunc("/summary", server.summary).Methods(http.MethodGet)
-	r.HandleFunc("/timeseries", server.timeSeries).Methods(http.MethodGet)
-	r.HandleFunc("/classify", server.classify).Methods(http.MethodGet)
+	r.HandleFunc("/plot", server.plot).Methods(http.MethodGet)
 
 	address := ":8080"
 	if server.port > 0 {
