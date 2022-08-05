@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -60,7 +61,7 @@ func TestServer_Report(t *testing.T) {
 		buffer, err = io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		gp := fmt.Sprintf("testdata/%s_%d.golden", t.Name(), index)
+		gp := filepath.Join("testdata", fmt.Sprintf("%s_%d.golden", t.Name(), index))
 		if *update {
 			err = os.WriteFile(gp, buffer, 0644)
 			require.NoError(t, err)
@@ -122,7 +123,7 @@ func TestServer_Plot(t *testing.T) {
 		buffer, err = io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		gp := fmt.Sprintf("testdata/%s_%d.golden", t.Name(), index)
+		gp := filepath.Join("testdata", fmt.Sprintf("%s_%d.golden", t.Name(), index))
 		if *update {
 			err = os.WriteFile(gp, buffer, 0644)
 			require.NoError(t, err)
