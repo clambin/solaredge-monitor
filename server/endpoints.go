@@ -29,13 +29,13 @@ func (server *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool
 	if start, err = parseTimestamp(req, "start", server.backend.GetFirst); err != nil {
 		return
 	}
-
 	if stop, err = parseTimestamp(req, "stop", server.backend.GetLast); err != nil {
 		return
 	}
 
 	if stop.Before(start) {
 		err = fmt.Errorf("start time is later than stop time")
+		return
 	}
 
 	if foldString, found := req.URL.Query()["fold"]; found {
