@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
+	"sync"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type Collector struct {
 	SolarEdge scraper.Summarizer
 	Tado      scraper.Summarizer
 	store.DB
+	Interval time.Duration
 }
 
 var (
@@ -23,8 +25,19 @@ var (
 	}, []string{"collector"})
 )
 
-func (c *Collector) Run(ctx context.Context, interval time.Duration) {
-	ticker := time.NewTicker(interval)
+func (c *Collector) Run(ctx context.Context) {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		c.SolarEdge.Run(ctx)
+		wg.Done()
+	}()
+	go func() {
+		c.Tado.Run(ctx)
+		wg.Done()
+	}()
+
+	ticker := time.NewTicker(c.Interval)
 	for running := true; running; {
 		select {
 		case <-ctx.Done():
@@ -35,6 +48,8 @@ func (c *Collector) Run(ctx context.Context, interval time.Duration) {
 	}
 	ticker.Stop()
 	c.collect()
+
+	wg.Wait()
 }
 
 func (c *Collector) collect() {

@@ -11,21 +11,23 @@ import (
 type Summarizer interface {
 	Summarize() Sample
 	Count() int
+	Run(ctx context.Context)
 }
 
 // Client collects measurements and returns a summary of those collected measurement
 type Client struct {
 	Scraper
-	summary Summary
-	lock    sync.RWMutex
+	Interval time.Duration
+	summary  Summary
+	lock     sync.RWMutex
 }
 
 var _ Summarizer = &Client{}
 
 // Run collects measurements at the specified interval and records them for latest summarizing
-func (c *Client) Run(ctx context.Context, interval time.Duration) {
+func (c *Client) Run(ctx context.Context) {
 	c.collect(ctx)
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(c.Interval)
 	for running := true; running; {
 		select {
 		case <-ctx.Done():

@@ -20,12 +20,13 @@ func TestCollector(t *testing.T) {
 	solarEdgeClient := &mockSolaredge.API{}
 	tadoClient := &mockTado.API{}
 
-	c1 := &scraper.Client{Scraper: &scraper.SolarEdgeScraper{API: solarEdgeClient}}
-	c2 := &scraper.Client{Scraper: &scraper.TadoScraper{API: tadoClient}}
+	c1 := &scraper.Client{Scraper: &scraper.SolarEdgeScraper{API: solarEdgeClient}, Interval: 10 * time.Millisecond}
+	c2 := &scraper.Client{Scraper: &scraper.TadoScraper{API: tadoClient}, Interval: 10 * time.Millisecond}
 	c := collector.Collector{
 		SolarEdge: c1,
 		Tado:      c2,
 		DB:        db,
+		Interval:  100 * time.Millisecond,
 	}
 
 	solarEdgeClient.
@@ -41,17 +42,9 @@ func TestCollector(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(1)
 	go func() {
-		c1.Run(ctx, 10*time.Millisecond)
-		wg.Done()
-	}()
-	go func() {
-		c2.Run(ctx, 10*time.Millisecond)
-		wg.Done()
-	}()
-	go func() {
-		c.Run(ctx, 100*time.Millisecond)
+		c.Run(ctx)
 		wg.Done()
 	}()
 

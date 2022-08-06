@@ -12,13 +12,13 @@ import (
 )
 
 func TestClient_Run(t *testing.T) {
-	s := scraper.Client{Scraper: &measurer{}}
+	s := scraper.Client{Scraper: &measurer{}, Interval: 10 * time.Millisecond}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		s.Run(ctx, 10*time.Millisecond)
+		s.Run(ctx)
 		wg.Done()
 	}()
 
@@ -33,12 +33,12 @@ func TestClient_Run(t *testing.T) {
 
 func TestClient_Run_Failure(t *testing.T) {
 	m := measurer{err: errors.New("fail")}
-	s := scraper.Client{Scraper: &m}
+	s := scraper.Client{Scraper: &m, Interval: 10 * time.Millisecond}
 	wg := sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	wg.Add(1)
 	go func() {
-		s.Run(ctx, 10*time.Millisecond)
+		s.Run(ctx)
 		wg.Done()
 	}()
 

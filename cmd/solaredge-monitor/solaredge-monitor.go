@@ -2,17 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/configuration"
-	"github.com/clambin/solaredge-monitor/scrape/collector"
-	"github.com/clambin/solaredge-monitor/scrape/scraper"
-	"github.com/clambin/solaredge-monitor/server"
-	"github.com/clambin/solaredge-monitor/store"
+	"github.com/clambin/solaredge-monitor/monitor"
 	"github.com/clambin/solaredge-monitor/version"
-	"github.com/clambin/tado"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -51,27 +45,22 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	db := store.NewPostgresDB(
-		cfg.Database.Host,
-		cfg.Database.Port,
-		cfg.Database.Database,
-		cfg.Database.Username,
-		cfg.Database.Password,
-	)
+	if scrape {
+		cfg.Scrape.Enabled = true
+	}
+
+	var m *monitor.Environment
+	if m, err = monitor.NewFromConfig(cfg); err != nil {
+		log.WithError(err).Fatal("failed to create monitor")
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
-
-	if scrape || cfg.Scrape.Enabled {
-		wg.Add(1)
-		go func() {
-			runScraper(ctx, cfg, db)
-			wg.Done()
-		}()
-	}
-
-	s := server.New(cfg.Server.Port, db)
-	go s.Run(ctx)
+	wg.Add(1)
+	go func() {
+		m.Run(ctx)
+		wg.Done()
+	}()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -79,30 +68,4 @@ func main() {
 	<-sigs
 	cancel()
 	wg.Wait()
-}
-
-func runScraper(ctx context.Context, cfg *configuration.Configuration, db store.DB) {
-	tadoClient := &scraper.Client{
-		Scraper: &scraper.TadoScraper{
-			API: tado.New(cfg.Tado.Username, cfg.Tado.Password, ""),
-		},
-	}
-	go tadoClient.Run(ctx, cfg.Scrape.Polling)
-
-	solarEdgeClient := &scraper.Client{
-		Scraper: &scraper.SolarEdgeScraper{
-			API: &solaredge.Client{
-				Token:      cfg.SolarEdge.Token,
-				HTTPClient: http.DefaultClient,
-			},
-		},
-	}
-	go solarEdgeClient.Run(ctx, cfg.Scrape.Polling)
-
-	coll := collector.Collector{
-		SolarEdge: solarEdgeClient,
-		Tado:      tadoClient,
-		DB:        db,
-	}
-	coll.Run(ctx, cfg.Scrape.Collection)
 }
