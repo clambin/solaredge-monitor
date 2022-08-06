@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/monitor"
+	"github.com/clambin/solaredge-monitor/scrape/collector"
+	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +39,20 @@ func TestNewFromConfigWithDB(t *testing.T) {
 	m, err := monitor.NewFromConfigWithDB(&config, db)
 	require.NoError(t, err)
 	require.NotNil(t, m)
-	assert.NotNil(t, m.Server)
+	require.NotNil(t, m.Server)
+
+	c, ok := m.Collector.(*collector.Collector)
+	require.True(t, ok)
+
+	var c1, c2 *scraper.Client
+	c1, ok = c.Tado.(*scraper.Client)
+	require.True(t, ok)
+	_, ok = c1.Scraper.(*scraper.TadoScraper)
+	require.True(t, ok)
+	c2, ok = c.SolarEdge.(*scraper.Client)
+	require.True(t, ok)
+	_, ok = c2.Scraper.(*scraper.SolarEdgeScraper)
+	require.True(t, ok)
 
 	config.Scrape.Enabled = false
 	m, err = monitor.NewFromConfigWithDB(&config, db)
