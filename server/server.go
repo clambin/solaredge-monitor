@@ -3,11 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	metricsServer "github.com/clambin/go-metrics/server"
 	"github.com/clambin/solaredge-monitor/store"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -25,9 +22,7 @@ func New(port int, db store.DB) *Server {
 }
 
 func (server *Server) Run(ctx context.Context) {
-	r := mux.NewRouter()
-	r.Use(prometheusMiddleware)
-	r.Path("/metrics").Handler(promhttp.Handler())
+	r := metricsServer.GetRouter()
 	r.HandleFunc("/", server.main).Methods(http.MethodGet)
 	r.HandleFunc("/report", server.report).Methods(http.MethodGet)
 	r.HandleFunc("/plot", server.plot).Methods(http.MethodGet)
@@ -43,22 +38,4 @@ func (server *Server) Run(ctx context.Context) {
 	}()
 
 	<-ctx.Done()
-}
-
-// Prometheus metrics
-var (
-	httpDuration = promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Name: "http_duration_seconds",
-		Help: "API duration of HTTP requests.",
-	}, []string{"path"})
-)
-
-func prometheusMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		route := mux.CurrentRoute(r)
-		path, _ := route.GetPathTemplate()
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path))
-		next.ServeHTTP(w, r)
-		timer.ObserveDuration()
-	})
 }

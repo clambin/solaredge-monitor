@@ -16,8 +16,8 @@ type Configuration struct {
 }
 
 type ServerConfiguration struct {
-	Port   int    `yaml:"port"`
-	Images string `yaml:"images"`
+	Port int `yaml:"port"`
+	//Images string `yaml:"images"`
 }
 
 type ScrapeConfiguration struct {
@@ -52,8 +52,8 @@ func LoadFromFile(filename string) (config *Configuration, err error) {
 
 	config = &Configuration{
 		Server: ServerConfiguration{
-			Port:   80,
-			Images: "/images",
+			Port: 80,
+			//Images: "/images",
 		},
 		Scrape: ScrapeConfiguration{
 			Polling:    5 * time.Minute,

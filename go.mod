@@ -1,18 +1,17 @@
 module github.com/clambin/solaredge-monitor
 
-go 1.17
+go 1.18
 
 require (
+	github.com/clambin/go-metrics v0.5.0
 	github.com/clambin/solaredge v0.6.0
 	github.com/clambin/tado v0.7.1
-	github.com/gorilla/mux v1.8.0
 	github.com/gosimple/slug v1.12.0
 	github.com/lib/pq v1.10.6
 	github.com/prometheus/client_golang v1.12.2
-	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
-	gonum.org/v1/gonum v0.11.0
+	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	gonum.org/v1/plot v0.11.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v3 v3.0.1
@@ -31,6 +30,7 @@ require (
 	github.com/go-pdf/fpdf v0.6.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

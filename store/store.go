@@ -7,7 +7,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
-	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -26,36 +25,30 @@ type Measurement struct {
 type PostgresDB struct {
 	psqlInfo string
 	database string
-	dbh      *sql.DB
+	DBH      *sql.DB
 }
 
-func NewPostgresDB(host string, port int, database string, user string, password string) *PostgresDB {
-	return &PostgresDB{
+func NewPostgresDB(host string, port int, database string, user string, password string) (db *PostgresDB, err error) {
+	db = &PostgresDB{
 		psqlInfo: fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 			host, port, user, password, database),
 		database: database,
 	}
+	err = db.initialize()
+	return db, err
 }
 
 func (db *PostgresDB) Store(measurement Measurement) (err error) {
-	db.initialize()
-
 	// Prepare the SQL statement
-	stmt, _ := db.dbh.Prepare(`INSERT INTO solar(timestamp, intensity, power) VALUES ($1, $2, $3)`)
+	stmt, _ := db.DBH.Prepare(`INSERT INTO solar(timestamp, intensity, power) VALUES ($1, $2, $3)`)
 	_, err = stmt.Exec(measurement.Timestamp, measurement.Intensity, measurement.Power)
-
-	if err != nil {
-		err = fmt.Errorf("failed to insert measurements in database: %s", err)
-	}
 
 	return err
 }
 
 func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err error) {
-	db.initialize()
-
 	var rows *sql.Rows
-	rows, err = db.dbh.Query(fmt.Sprintf(
+	rows, err = db.DBH.Query(fmt.Sprintf(
 		"SELECT timestamp, intensity, power FROM solar WHERE timestamp >= '%s' AND timestamp <= '%s' ORDER BY 1",
 		from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05")))
 
@@ -75,10 +68,8 @@ func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err e
 }
 
 func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
-	db.initialize()
-
 	var rows *sql.Rows
-	rows, err = db.dbh.Query("SELECT timestamp, intensity, power FROM solar ORDER BY 1")
+	rows, err = db.DBH.Query("SELECT timestamp, intensity, power FROM solar ORDER BY 1")
 
 	if err != nil {
 		return nil, err
@@ -95,20 +86,17 @@ func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
 	return
 }
 
-func (db *PostgresDB) initialize() {
-	if db.dbh != nil {
-		return
+func (db *PostgresDB) initialize() (err error) {
+	if db.DBH, err = sql.Open("postgres", db.psqlInfo); err == nil {
+		err = db.DBH.Ping()
 	}
-
-	var err error
-	db.dbh, err = sql.Open("postgres", db.psqlInfo)
 	if err != nil {
-		log.WithError(err).Fatalf("failed to open database '%s'", db.database)
+		return fmt.Errorf("database open: %w", err)
 	}
 
-	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(db.dbh, db.database))
+	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(db.DBH, db.database))
 
-	_, err = db.dbh.Exec(`
+	_, err = db.DBH.Exec(`
 		CREATE TABLE IF NOT EXISTS solar (
 			timestamp TIMESTAMP WITHOUT TIME ZONE,
 			intensity NUMERIC,
@@ -117,6 +105,7 @@ func (db *PostgresDB) initialize() {
 	`)
 
 	if err != nil {
-		log.WithError(err).Fatalf("unable to intialize database '%s'", db.database)
+		err = fmt.Errorf("database initialization: %w", err)
 	}
+	return err
 }

@@ -1,7 +1,6 @@
 debug: false
 server:
     port: 8080
-    images: /static
 scrape:
     enabled: true
     polling: 15m0s

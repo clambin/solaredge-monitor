@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - sampler
+      - metrics
 
 jobs:
   test:
