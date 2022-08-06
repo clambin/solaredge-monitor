@@ -2,8 +2,6 @@ package monitor_test
 
 import (
 	"context"
-	"database/sql/driver"
-	"errors"
 	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/monitor"
 	"github.com/clambin/solaredge-monitor/server"
@@ -58,8 +56,6 @@ func TestNewFromConfig(t *testing.T) {
 	}}
 	_, err := monitor.NewFromConfig(&config)
 	assert.Error(t, err)
-	dbError := driver.ErrBadConn
-	assert.True(t, errors.As(err, &dbError))
 }
 
 type fakeCollector struct {
