@@ -2,15 +2,15 @@ package collector
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/scrape/sampler"
+	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/clambin/solaredge-monitor/store"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type Collector struct {
-	SolarEdge sampler.Summarizer
-	Tado      sampler.Summarizer
+	SolarEdge scraper.Summarizer
+	Tado      scraper.Summarizer
 	store.DB
 }
 
