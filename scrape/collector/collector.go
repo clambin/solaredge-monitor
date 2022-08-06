@@ -28,13 +28,13 @@ func (c *Collector) Run(ctx context.Context, interval time.Duration) {
 	for running := true; running; {
 		select {
 		case <-ctx.Done():
-			c.collect()
 			running = false
 		case <-ticker.C:
 			c.collect()
 		}
 	}
 	ticker.Stop()
+	c.collect()
 }
 
 func (c *Collector) collect() {
@@ -43,10 +43,11 @@ func (c *Collector) collect() {
 		return
 	}
 
-	power := c.SolarEdge.Summarize()
 	collectorSamples.WithLabelValues("solaredge").Set(float64(c.SolarEdge.Count()))
+	collectorSamples.WithLabelValues("tado").Set(float64(c.Tado.Count()))
+
+	power := c.SolarEdge.Summarize()
 	intensity := c.Tado.Summarize()
-	collectorSamples.WithLabelValues("tado").Set(float64(c.SolarEdge.Count()))
 
 	ts := power.Timestamp
 	if intensity.Timestamp.Before(ts) {
