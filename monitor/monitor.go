@@ -15,8 +15,12 @@ import (
 
 type Environment struct {
 	DB        store.DB
-	Server    *server.Server
-	Collector *collector.Collector
+	Server    Runner
+	Collector Runner
+}
+
+type Runner interface {
+	Run(ctx context.Context)
 }
 
 func NewFromConfig(config *configuration.Configuration) (e *Environment, err error) {
@@ -25,6 +29,10 @@ func NewFromConfig(config *configuration.Configuration) (e *Environment, err err
 		return
 	}
 
+	return NewFromConfigWithDB(config, db)
+}
+
+func NewFromConfigWithDB(config *configuration.Configuration, db store.DB) (e *Environment, err error) {
 	e = &Environment{
 		DB:     db,
 		Server: server.New(config.Server.Port, db),

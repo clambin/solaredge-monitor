@@ -87,10 +87,6 @@ func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
 }
 
 func (db *PostgresDB) initialize() (err error) {
-	if db.DBH != nil {
-		return
-	}
-
 	if db.DBH, err = sql.Open("postgres", db.psqlInfo); err == nil {
 		err = db.DBH.Ping()
 	}
