@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/clambin/solaredge-monitor/store"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
@@ -13,6 +15,13 @@ type Collector struct {
 	Tado      scraper.Summarizer
 	store.DB
 }
+
+var (
+	collectorSamples = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: prometheus.BuildFQName("solaredge", "collector", "summary"),
+		Help: "Number of samples in a collection",
+	}, []string{"collector"})
+)
 
 func (c *Collector) Run(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
@@ -35,7 +44,9 @@ func (c *Collector) collect() {
 	}
 
 	power := c.SolarEdge.Summarize()
+	collectorSamples.WithLabelValues("solaredge").Set(float64(c.SolarEdge.Count()))
 	intensity := c.Tado.Summarize()
+	collectorSamples.WithLabelValues("tado").Set(float64(c.SolarEdge.Count()))
 
 	ts := power.Timestamp
 	if intensity.Timestamp.Before(ts) {
