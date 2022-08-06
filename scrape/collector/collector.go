@@ -61,22 +61,17 @@ func (c *Collector) collect() {
 	collectorSamples.WithLabelValues("solaredge").Set(float64(c.SolarEdge.Count()))
 	collectorSamples.WithLabelValues("tado").Set(float64(c.Tado.Count()))
 
-	power := c.SolarEdge.Summarize()
-	intensity := c.Tado.Summarize()
-
-	ts := power.Timestamp
-	if intensity.Timestamp.Before(ts) {
-		ts = intensity.Timestamp
-	}
-
 	measurement := store.Measurement{
-		Timestamp: ts,
-		Power:     power.Value,
-		Intensity: intensity.Value,
+		Timestamp: time.Now(),
+		Power:     c.SolarEdge.Summarize().Value,
+		Intensity: c.Tado.Summarize().Value,
 	}
 
 	if err := c.Store(measurement); err == nil {
-		log.WithField("measurement", measurement).Info("new entry")
+		log.WithFields(log.Fields{
+			"power":     measurement.Power,
+			"intensity": measurement.Intensity,
+		}).Info("new entry")
 	} else {
 		log.WithError(err).Warning("failed to store metrics")
 	}

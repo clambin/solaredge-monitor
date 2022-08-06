@@ -40,13 +40,13 @@ func NewFromConfigWithDB(config *configuration.Configuration, db store.DB) (e *E
 
 	if config.Scrape.Enabled {
 		e.Collector = &collector.Collector{
-			SolarEdge: &scraper.Client{
+			Tado: &scraper.Client{
 				Scraper: &scraper.TadoScraper{
 					API: tado.New(config.Tado.Username, config.Tado.Password, ""),
 				},
 				Interval: config.Scrape.Polling,
 			},
-			Tado: &scraper.Client{
+			SolarEdge: &scraper.Client{
 				Scraper: &scraper.SolarEdgeScraper{
 					API: &solaredge.Client{
 						Token:      config.SolarEdge.Token,
