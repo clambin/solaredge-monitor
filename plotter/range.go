@@ -1,7 +1,6 @@
 package plotter
 
 import (
-	"github.com/clambin/solaredge-monitor/store"
 	"math"
 )
 
@@ -17,14 +16,6 @@ func NewRange(min, max float64) *Range {
 		Max:         max,
 		initialized: true,
 	}
-}
-
-func MeasurementsRange(measurements []store.Measurement) *Range {
-	r := &Range{}
-	for _, measurement := range measurements {
-		r.Process(measurement.Power)
-	}
-	return r
 }
 
 func (r *Range) init() {

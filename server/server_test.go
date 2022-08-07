@@ -23,30 +23,25 @@ func TestServer_Handlers(t *testing.T) {
 
 	testCases := []struct {
 		path         string
-		args         string
 		responseCode int
 	}{
-		{path: "/plot/scatter", args: "type=scatter", responseCode: http.StatusOK},
+		{path: "/plot/scatter", responseCode: http.StatusOK},
 		// TODO: contour output not always the same (even though it is in plotter)?
 		// {args: "type=contour", responseCode: http.StatusOK},
 		{path: "/plot/heatmap", responseCode: http.StatusOK},
-		{path: "/plot/scatter", args: "start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK},
+		{path: "/plot/scatter?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK},
 		{path: "/plot/notatype", responseCode: http.StatusBadRequest},
-		{path: "/plot/scatter", args: "start=123&stop=123", responseCode: http.StatusBadRequest},
-		{path: "/plot/scatter", args: "start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+		{path: "/plot/scatter?start=123&stop=123", responseCode: http.StatusBadRequest},
+		{path: "/plot/scatter?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
 		{path: "/report", responseCode: http.StatusOK},
-		{path: "/report", args: "start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK},
-		{path: "/report", args: "start=123&stop=123", responseCode: http.StatusBadRequest},
-		{path: "/report", args: "start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
+		{path: "/report?start=2020-06-25T21:19:00.000Z&stop=2021-06-25T21:19:00.000Z", responseCode: http.StatusOK},
+		{path: "/report?start=123&stop=123", responseCode: http.StatusBadRequest},
+		{path: "/report?start=2021-06-25T21:19:00.000Z&stop=2020-06-25T21:19:00.000Z", responseCode: http.StatusBadRequest},
 		{path: "/", responseCode: http.StatusSeeOther},
 	}
 
 	for index, testCase := range testCases {
 		url := "http://127.0.0.1" + testCase.path
-		if testCase.args != "" {
-			url += "?" + testCase.args
-		}
-
 		rr := httptest.NewRecorder()
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		require.NoError(t, err)

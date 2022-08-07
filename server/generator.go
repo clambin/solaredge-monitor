@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/plotter"
 	"github.com/clambin/solaredge-monitor/store"
@@ -23,13 +22,7 @@ const (
 	HeatmapPlot
 )
 
-func (r *Generator) Plot(plotType PlotType, fold bool, start, stop time.Time) (image []byte, err error) {
-	buf := new(bytes.Buffer)
-	err = r.PlotToWriter(plotType, fold, start, stop, buf)
-	return buf.Bytes(), err
-}
-
-func (r *Generator) PlotToWriter(plotType PlotType, fold bool, start, stop time.Time, w io.Writer) (err error) {
+func (r *Generator) Plot(w io.Writer, plotType PlotType, fold bool, start, stop time.Time) (err error) {
 	var measurements []store.Measurement
 	if measurements, err = r.DB.Get(start, stop); err != nil {
 		return

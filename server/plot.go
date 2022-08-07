@@ -14,13 +14,26 @@ func (server *Server) plot(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = server.backend.PlotToWriter(plotType, fold, start, stop, w)
+	err = server.backend.Plot(w, plotType, fold, start, stop)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
+var plotTypes = map[string]PlotType{
+	"scatter": ScatterPlot,
+	"contour": ContourPlot,
+	"heatmap": HeatmapPlot,
+}
+
 func (server *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool, start, stop time.Time, err error) {
+	plotTypeString := mux.Vars(req)["type"]
+	var found bool
+	if plotType, found = plotTypes[plotTypeString]; !found {
+		err = fmt.Errorf("invalid plot type: %s", plotTypeString)
+		return
+	}
+
 	if start, err = parseTimestamp(req, "start", server.backend.GetFirst); err != nil {
 		return
 	}
@@ -33,20 +46,9 @@ func (server *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool
 		return
 	}
 
-	if foldString, found := req.URL.Query()["fold"]; found {
+	var foldString []string
+	if foldString, found = req.URL.Query()["fold"]; found {
 		fold = foldString[0] == "true"
-	}
-
-	v := mux.Vars(req)
-	switch v["type"] {
-	case "scatter":
-		plotType = ScatterPlot
-	case "contour":
-		plotType = ContourPlot
-	case "heatmap":
-		plotType = HeatmapPlot
-	default:
-		err = fmt.Errorf("invalid plot type: %s", v["type"])
 	}
 
 	return

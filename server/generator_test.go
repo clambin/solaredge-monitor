@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"bytes"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	"github.com/stretchr/testify/assert"
@@ -36,11 +37,15 @@ func Benchmark_Scatter(b *testing.B) {
 	stop, _ := reporter.GetLast()
 	assert.NotEqual(b, start, stop)
 
+	w := &bytes.Buffer{}
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := reporter.Plot(server.ScatterPlot, true, start, stop)
+		err := reporter.Plot(w, server.ScatterPlot, true, start, stop)
 		if err != nil {
 			b.Fatal(err)
 		}
+		w.Reset()
 	}
 }
 
@@ -51,11 +56,15 @@ func Benchmark_Contour(b *testing.B) {
 	stop, _ := reporter.GetLast()
 	assert.NotEqual(b, start, stop)
 
+	w := &bytes.Buffer{}
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := reporter.Plot(server.ContourPlot, true, start, stop)
+		err := reporter.Plot(w, server.ContourPlot, true, start, stop)
 		if err != nil {
 			b.Fatal(err)
 		}
+		w.Reset()
 	}
 }
 
@@ -66,10 +75,14 @@ func Benchmark_Heatmap(b *testing.B) {
 	stop, _ := reporter.GetLast()
 	assert.NotEqual(b, start, stop)
 
+	w := &bytes.Buffer{}
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := reporter.Plot(server.HeatmapPlot, true, start, stop)
+		err := reporter.Plot(w, server.HeatmapPlot, true, start, stop)
 		if err != nil {
 			b.Fatal(err)
 		}
+		w.Reset()
 	}
 }

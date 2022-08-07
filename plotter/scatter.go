@@ -24,18 +24,16 @@ type Legend struct {
 var _ Plotter = &ScatterPlotter{}
 
 func (s ScatterPlotter) Plot(measurement []store.Measurement) (*vgimg.PngCanvas, error) {
-	dataRange := MeasurementsRange(measurement)
-	data := measurementsToXYZs(measurement, s.Fold)
+	data, _, _, zRange := measurementsToXYZs(measurement, s.Fold)
 
 	p := s.makeBasePlot()
-	c := s.allocateColors(dataRange)
 
-	if err := s.addScatter(p, c, data, dataRange); err != nil {
+	if err := s.addScatter(p, data, &zRange); err != nil {
 		return nil, err
 	}
 
-	if dataRange.Bound() {
-		s.addLegend(p, c, dataRange)
+	if zRange.Bound() {
+		s.addLegend(p, &zRange)
 	}
 	return s.createImage(p), nil
 }
@@ -47,16 +45,19 @@ func (s ScatterPlotter) allocateColors(r *Range) palette.ColorMap {
 	return colors
 }
 
-func (s ScatterPlotter) addScatter(p *plot.Plot, c palette.ColorMap, data plotter.XYZs, r *Range) error {
+func (s ScatterPlotter) addScatter(p *plot.Plot, data plotter.XYZs, r *Range) error {
 	sc, err := plotter.NewScatter(data)
 	if err != nil {
 		return err
 	}
 
+	colors := s.ColorMap
+	colors.SetMin(r.Min)
+	colors.SetMax(r.Max)
+
 	sc.GlyphStyleFunc = func(i int) draw.GlyphStyle {
 		_, _, z := data.XYZ(i)
-		d := (z - r.Min) / (r.Max - r.Min)
-		color, _ := c.At(d*(r.Max-r.Min) + r.Min)
+		color, _ := colors.At(z)
 		return draw.GlyphStyle{Color: color, Radius: vg.Points(3), Shape: draw.CircleGlyph{}}
 	}
 
@@ -64,10 +65,10 @@ func (s ScatterPlotter) addScatter(p *plot.Plot, c palette.ColorMap, data plotte
 	return nil
 }
 
-func (s ScatterPlotter) addLegend(p *plot.Plot, c palette.ColorMap, r *Range) {
+func (s ScatterPlotter) addLegend(p *plot.Plot, r *Range) {
 	increase := int(math.Max(500, float64(s.Legend.Increase)))
 	steps := int(r.Max-r.Min) / increase
-	thumbs := plotter.PaletteThumbnailers(c.Palette(steps))
+	thumbs := plotter.PaletteThumbnailers(s.ColorMap.Palette(steps))
 	for i := len(thumbs) - 1; i >= 0; i-- {
 		var name string
 		switch i {
@@ -83,7 +84,7 @@ func (s ScatterPlotter) addLegend(p *plot.Plot, c palette.ColorMap, r *Range) {
 	p.Legend.XOffs = legendWidth
 }
 
-func measurementsToXYZs(measurements []store.Measurement, fold bool) (data plotter.XYZs) {
+func measurementsToXYZs(measurements []store.Measurement, fold bool) (data plotter.XYZs, xRange, yRange, zRange Range) {
 	data = make(plotter.XYZs, len(measurements))
 	for index, measurement := range measurements {
 		t := measurement.Timestamp.Unix()
@@ -91,8 +92,11 @@ func measurementsToXYZs(measurements []store.Measurement, fold bool) (data plott
 			t %= 24 * 3600
 		}
 		data[index].X = float64(t)
+		xRange.Process(data[index].X)
 		data[index].Y = measurement.Intensity
+		yRange.Process(data[index].Y)
 		data[index].Z = measurement.Power
+		zRange.Process(data[index].Z)
 	}
 	return
 }

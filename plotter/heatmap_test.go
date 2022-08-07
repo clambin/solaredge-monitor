@@ -12,9 +12,8 @@ import (
 )
 
 func TestHeatmapPlotter_Plot(t *testing.T) {
-	for i := 0; i < 2; i++ {
+	for _, fold := range []bool{true, false} {
 		var gpSuffix string
-		fold := i == 0
 		if fold {
 			gpSuffix = "_folded"
 		}
