@@ -23,10 +23,15 @@ type Runner interface {
 	Run(ctx context.Context)
 }
 
-func NewFromConfig(config *configuration.Configuration) (e *Environment, err error) {
-	var db store.DB
-	if db, err = newDB(config); err != nil {
-		return
+func NewFromConfig(config *configuration.Configuration) (*Environment, error) {
+	db, err := store.NewPostgresDB(
+		config.Database.Host, config.Database.Port,
+		config.Database.Database,
+		config.Database.Username, config.Database.Password,
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return NewFromConfigWithDB(config, db)
@@ -61,14 +66,6 @@ func NewFromConfigWithDB(config *configuration.Configuration, db store.DB) (e *E
 
 	}
 	return
-}
-
-func newDB(config *configuration.Configuration) (store.DB, error) {
-	return store.NewPostgresDB(
-		config.Database.Host, config.Database.Port,
-		config.Database.Database,
-		config.Database.Username, config.Database.Password,
-	)
 }
 
 func (e *Environment) Run(ctx context.Context) {

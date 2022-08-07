@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Report</title>
+  </head>
+  <body>
+    <a href="/plot/scatter?start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z">
+      <img src="/plot/scatter?start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z" alt="scatter" style="width:400px;height:400px;">
+    </a>
+    <a href="/plot/scatter?fold=true&start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z">
+      <img src="/plot/scatter?fold=true&start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z" alt="scatter" style="width:400px;height:400px;">
+    </a>
+    <p>
+    <a href="/plot/heatmap?start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z">
+      <img src="/plot/heatmap?start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z" alt="heatmap" style="width:400px;height:400px;">
+    </a>
+    <a href="/plot/heatmap?fold=true&start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z">
+      <img src="/plot/heatmap?fold=true&start=2021-01-01T00%3a00%3a00Z&stop=2021-12-31T23%3a00%3a00Z" alt="heatmap" style="width:400px;height:400px;">
+    </a>
+  </body>
+</html>

@@ -2,16 +2,10 @@ package server
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 )
-
-func (server *Server) main(w http.ResponseWriter, _ *http.Request) {
-	_, _ = w.Write([]byte(`
-<head>
-  <meta http-equiv="Refresh" content="0; URL=/report">
-</head>`))
-}
 
 func (server *Server) plot(w http.ResponseWriter, req *http.Request) {
 	plotType, fold, start, stop, err := server.parseArgs(req)
@@ -20,7 +14,8 @@ func (server *Server) plot(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err = server.backend.PlotToWriter(plotType, fold, start, stop, w); err != nil {
+	err = server.backend.PlotToWriter(plotType, fold, start, stop, w)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -42,18 +37,17 @@ func (server *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool
 		fold = foldString[0] == "true"
 	}
 
-	plotType = ScatterPlot
-	if plotTypeString, found := req.URL.Query()["type"]; found {
-		switch plotTypeString[0] {
-		case "scatter":
-			plotType = ScatterPlot
-		case "contour":
-			plotType = ContourPlot
-		case "heatmap":
-			plotType = HeatmapPlot
-		default:
-			err = fmt.Errorf("invalid plot type: %s", plotTypeString[0])
-		}
+	v := mux.Vars(req)
+	switch v["type"] {
+	case "scatter":
+		plotType = ScatterPlot
+	case "contour":
+		plotType = ContourPlot
+	case "heatmap":
+		plotType = HeatmapPlot
+	default:
+		err = fmt.Errorf("invalid plot type: %s", v["type"])
 	}
+
 	return
 }

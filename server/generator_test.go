@@ -9,7 +9,7 @@ import (
 )
 
 func TestReporter_GetFirstLast(t *testing.T) {
-	reporter := server.Reporter{DB: mockdb.NewDB()}
+	reporter := server.Generator{DB: mockdb.NewDB()}
 
 	_, err := reporter.GetFirst()
 	assert.Error(t, err)
@@ -17,7 +17,7 @@ func TestReporter_GetFirstLast(t *testing.T) {
 	_, err = reporter.GetLast()
 	assert.Error(t, err)
 
-	reporter = server.Reporter{DB: mockdb.BuildDB()}
+	reporter = server.Generator{DB: mockdb.BuildDB()}
 
 	var timestamp time.Time
 	timestamp, err = reporter.GetFirst()
@@ -30,7 +30,7 @@ func TestReporter_GetFirstLast(t *testing.T) {
 }
 
 func Benchmark_Scatter(b *testing.B) {
-	reporter := server.Reporter{DB: mockdb.BuildDB()}
+	reporter := server.Generator{DB: mockdb.BuildDB()}
 
 	start, _ := reporter.GetFirst()
 	stop, _ := reporter.GetLast()
@@ -45,7 +45,7 @@ func Benchmark_Scatter(b *testing.B) {
 }
 
 func Benchmark_Contour(b *testing.B) {
-	reporter := server.Reporter{DB: mockdb.BuildDB()}
+	reporter := server.Generator{DB: mockdb.BuildDB()}
 
 	start, _ := reporter.GetFirst()
 	stop, _ := reporter.GetLast()
@@ -60,7 +60,7 @@ func Benchmark_Contour(b *testing.B) {
 }
 
 func Benchmark_Heatmap(b *testing.B) {
-	reporter := server.Reporter{DB: mockdb.BuildDB()}
+	reporter := server.Generator{DB: mockdb.BuildDB()}
 
 	start, _ := reporter.GetFirst()
 	stop, _ := reporter.GetLast()

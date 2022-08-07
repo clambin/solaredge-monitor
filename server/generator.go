@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type Reporter struct {
+type Generator struct {
 	store.DB
 }
 
@@ -23,13 +23,13 @@ const (
 	HeatmapPlot
 )
 
-func (r *Reporter) Plot(plotType PlotType, fold bool, start, stop time.Time) (image []byte, err error) {
+func (r *Generator) Plot(plotType PlotType, fold bool, start, stop time.Time) (image []byte, err error) {
 	buf := new(bytes.Buffer)
 	err = r.PlotToWriter(plotType, fold, start, stop, buf)
 	return buf.Bytes(), err
 }
 
-func (r *Reporter) PlotToWriter(plotType PlotType, fold bool, start, stop time.Time, w io.Writer) (err error) {
+func (r *Generator) PlotToWriter(plotType PlotType, fold bool, start, stop time.Time, w io.Writer) (err error) {
 	var measurements []store.Measurement
 	if measurements, err = r.DB.Get(start, stop); err != nil {
 		return
@@ -95,7 +95,7 @@ func makePlotter(plotType PlotType, fold bool) plotter.Plotter {
 	}
 	return p
 }
-func (r *Reporter) GetFirst() (first time.Time, err error) {
+func (r *Generator) GetFirst() (first time.Time, err error) {
 	var measurements []store.Measurement
 
 	measurements, err = r.DB.GetAll()
@@ -111,7 +111,7 @@ func (r *Reporter) GetFirst() (first time.Time, err error) {
 	return measurements[0].Timestamp, nil
 }
 
-func (r *Reporter) GetLast() (first time.Time, err error) {
+func (r *Generator) GetLast() (first time.Time, err error) {
 	var measurements []store.Measurement
 
 	measurements, err = r.DB.GetAll()

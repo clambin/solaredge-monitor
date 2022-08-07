@@ -43,7 +43,7 @@ func Sample(measurements []store.Measurement, fold bool, xResolution, yResolutio
 func (s *Sampler) getTimestamp(measurement store.Measurement) float64 {
 	t := measurement.Timestamp.Unix()
 	if s.Fold {
-		t = t % (24 * 3600)
+		t %= 24 * 3600
 	}
 	return float64(t)
 }

@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
+	"html/template"
 	"net/http"
 	"time"
 )
@@ -13,18 +15,18 @@ const reportResponseTemplate = `<!DOCTYPE html>
     <title>Report</title>
   </head>
   <body>
-    <a href="/plot?type=scatter&start={{.Start}}&stop={{.Stop}}">
-      <img src="/plot?type=scatter&start={{.Start}}&stop={{.Stop}}" alt="scatter" style="width:400px;height:400px;">
+    <a href="/plot/scatter?start={{.Start}}&stop={{.Stop}}">
+      <img src="/plot/scatter?start={{.Start}}&stop={{.Stop}}" alt="scatter" style="width:400px;height:400px;">
     </a>
-    <a href="/plot?type=scatter&fold=true&start={{.Start}}&stop={{.Stop}}">
-      <img src="/plot?type=scatter&fold=true&start={{.Start}}&stop={{.Stop}}" alt="scatter" style="width:400px;height:400px;">
+    <a href="/plot/scatter?fold=true&start={{.Start}}&stop={{.Stop}}">
+      <img src="/plot/scatter?fold=true&start={{.Start}}&stop={{.Stop}}" alt="scatter" style="width:400px;height:400px;">
     </a>
     <p>
-    <a href="/plot?type=heatmap&start={{.Start}}&stop={{.Stop}}">
-      <img src="/plot?type=heatmap&start={{.Start}}&stop={{.Stop}}" alt="heatmap" style="width:400px;height:400px;">
+    <a href="/plot/heatmap?start={{.Start}}&stop={{.Stop}}">
+      <img src="/plot/heatmap?start={{.Start}}&stop={{.Stop}}" alt="heatmap" style="width:400px;height:400px;">
     </a>
-    <a href="/plot?type=heatmap&fold=true&start={{.Start}}&stop={{.Stop}}">
-      <img src="/plot?type=heatmap&fold=true&start={{.Start}}&stop={{.Stop}}" alt="heatmap" style="width:400px;height:400px;">
+    <a href="/plot/heatmap?fold=true&start={{.Start}}&stop={{.Stop}}">
+      <img src="/plot/heatmap?fold=true&start={{.Start}}&stop={{.Stop}}" alt="heatmap" style="width:400px;height:400px;">
     </a>
   </body>
 </html>`
@@ -51,4 +53,43 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 		log.WithError(err).Error("failed to create response")
 		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func (server *Server) parseRequest(req *http.Request) (start, stop time.Time, err error) {
+	if start, err = parseTimestamp(req, "start", server.backend.GetFirst); err != nil {
+		return
+	}
+
+	if stop, err = parseTimestamp(req, "stop", server.backend.GetLast); err != nil {
+		return
+	}
+
+	if stop.Before(start) {
+		err = fmt.Errorf("start time is later than stop time")
+	}
+
+	return
+}
+
+func parseTimestamp(req *http.Request, field string, dbfunc func() (time.Time, error)) (timestamp time.Time, err error) {
+	arg, ok := req.URL.Query()[field]
+
+	if !ok {
+		return dbfunc()
+	}
+
+	timestamp, err = time.Parse(time.RFC3339, arg[0])
+
+	if err != nil {
+		err = fmt.Errorf("invalid format for '%s': %w", field, err)
+	}
+	return
+}
+
+func writePageFromTemplate(w http.ResponseWriter, pageTemplate string, data interface{}) (err error) {
+	t := template.New("body")
+	if t, err = t.Parse(pageTemplate); err == nil {
+		err = t.Execute(w, data)
+	}
+	return
 }
