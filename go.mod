@@ -3,7 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.18
 
 require (
-	github.com/clambin/go-metrics v0.5.0
+	github.com/clambin/go-metrics v0.5.1
 	github.com/clambin/solaredge v0.6.0
 	github.com/clambin/tado v0.7.1
 	github.com/gorilla/mux v1.8.0
