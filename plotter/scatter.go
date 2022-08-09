@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/clambin/solaredge-monitor/store"
 	"gonum.org/v1/plot"
-	"gonum.org/v1/plot/palette"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
@@ -36,13 +35,6 @@ func (s ScatterPlotter) Plot(measurement []store.Measurement) (*vgimg.PngCanvas,
 		s.addLegend(p, &zRange)
 	}
 	return s.createImage(p), nil
-}
-
-func (s ScatterPlotter) allocateColors(r *Range) palette.ColorMap {
-	colors := s.ColorMap
-	colors.SetMin(r.Min)
-	colors.SetMax(r.Max)
-	return colors
 }
 
 func (s ScatterPlotter) addScatter(p *plot.Plot, data plotter.XYZs, r *Range) error {
