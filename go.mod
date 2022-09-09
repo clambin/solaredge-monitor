@@ -26,6 +26,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/containerd/containerd v1.6.8 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-fonts/liberation v0.2.0 // indirect
 	github.com/go-latex/latex v0.0.0-20210823091927-c0d11ff05a81 // indirect
@@ -36,6 +37,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
