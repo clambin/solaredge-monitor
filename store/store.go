@@ -96,15 +96,7 @@ func (db *PostgresDB) initialize() (err error) {
 
 	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(db.DBH, db.database))
 
-	_, err = db.DBH.Exec(`
-		CREATE TABLE IF NOT EXISTS solar (
-			timestamp TIMESTAMP WITHOUT TIME ZONE,
-			intensity NUMERIC,
-			power NUMERIC
-		)
-	`)
-
-	if err != nil {
+	if err = db.migrate(); err != nil {
 		err = fmt.Errorf("database initialization: %w", err)
 	}
 	return err
