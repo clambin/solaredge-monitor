@@ -8,7 +8,58 @@ on:
 
 jobs:
   test:
-    uses: clambin/workflows/.github/workflows/test.yaml@main
+    runs-on: ubuntu-latest
+    container: golang:1.18
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: test
+        run: |
+          export pg_host=postgres
+          export pg_port=5432
+          export pg_database=postgres
+          export pg_user=postgres
+          export pg_password=postgres
+          go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+      - uses: codecov/codecov-action@v3
+        with:
+          file: coverage.txt
+          token: ${{ secrets.CODECOV_TOKEN }}
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          args: --issues-exit-code=0
+  vet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: vet
+        run: go vet ./...
   build:
     needs: test
     uses: clambin/workflows/.github/workflows/build.yaml@main

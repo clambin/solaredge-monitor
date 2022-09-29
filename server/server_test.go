@@ -95,10 +95,7 @@ func TestServer_Run(t *testing.T) {
 			return false
 		}
 		_ = resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			return false
-		}
-		return true
+		return resp.StatusCode == http.StatusOK
 	}, time.Second, 10*time.Millisecond)
 
 	cancel()
