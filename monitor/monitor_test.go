@@ -87,7 +87,7 @@ func TestEnvironment_Run(t *testing.T) {
 	c := &fakeCollector{}
 	e := &monitor.Environment{
 		DB:        db,
-		Server:    server.New(8080, db),
+		Server:    server.New(8080, 9090, db),
 		Collector: c,
 	}
 

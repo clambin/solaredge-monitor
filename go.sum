@@ -204,8 +204,8 @@ github.com/cilium/ebpf v0.2.0/go.mod h1:To2CFviqOWL/M0gIMsvSMlqe7em/l1ALkX1PyjrX
 github.com/cilium/ebpf v0.4.0/go.mod h1:4tRaxcgiL706VnOzHOdBlY8IEAIdxINsQBcU4xJJXRs=
 github.com/cilium/ebpf v0.6.2/go.mod h1:4tRaxcgiL706VnOzHOdBlY8IEAIdxINsQBcU4xJJXRs=
 github.com/cilium/ebpf v0.7.0/go.mod h1:/oI2+1shJiTGAMgl6/RgJr36Eo1jzrRcAWbcXO2usCA=
-github.com/clambin/go-metrics v0.5.1 h1:94keFDQSSiVh+H55oKw9tr02LlOkcON4zmZh9OohLGo=
-github.com/clambin/go-metrics v0.5.1/go.mod h1:z3hpFI7lxGIHH+156BR/lPhwM+oYBgr9pP9Wov1/plc=
+github.com/clambin/go-metrics v0.6.0 h1:ACBCD9tqDWdCV3xDSCYK249AKKh3oeCUbtpjhDvojpU=
+github.com/clambin/go-metrics v0.6.0/go.mod h1:v/FFsSZlvDqUIf1NgtYwthrOb5efirZONt62uLlv6hM=
 github.com/clambin/solaredge v0.6.0 h1:2a2E4LrnWIUVWQjMHIU+j0AKeT7fFUAi6DtoEybjon0=
 github.com/clambin/solaredge v0.6.0/go.mod h1:Lr4O8/wnpWV/FdZkDbCTd4/KGqLo390O5Fk6bUiSB9A=
 github.com/clambin/tado v0.7.1 h1:aeW+LMtTAaKDWxxPn2rL6jooi8SN785WpjSnP2CaGDw=

@@ -2,9 +2,11 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -13,13 +15,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 var update = flag.Bool("update", false, "update .golden files")
 
 func TestServer_Handlers(t *testing.T) {
-	s := New(0, mockdb.BuildDB())
+	s := New(0, 0, mockdb.BuildDB())
 
 	testCases := []struct {
 		path         string
@@ -46,7 +50,7 @@ func TestServer_Handlers(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		require.NoError(t, err)
 
-		s.router.ServeHTTP(rr, req)
+		s.appServer.Handler.ServeHTTP(rr, req)
 		assert.Equal(t, testCase.responseCode, rr.Result().StatusCode, url)
 
 		if testCase.responseCode == http.StatusSeeOther {
@@ -70,6 +74,64 @@ func TestServer_Handlers(t *testing.T) {
 		golden, err = os.ReadFile(gp)
 		require.NoError(t, err)
 		assert.True(t, bytes.Equal(buffer, golden), index)
-		//assert.Equal(t, golden, buffer, index)
 	}
+}
+
+func TestServer_Run(t *testing.T) {
+	s := New(8081, 9092, mockdb.BuildDB())
+
+	var wg sync.WaitGroup
+	ctx, cancel := context.WithCancel(context.Background())
+
+	wg.Add(1)
+	go func() {
+		s.Run(ctx)
+		wg.Done()
+	}()
+
+	assert.Eventually(t, func() bool {
+		resp, err := http.Get("http://localhost:9092/metrics")
+		if err != nil {
+			return false
+		}
+		_ = resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return false
+		}
+		return true
+	}, time.Second, 10*time.Millisecond)
+
+	cancel()
+	wg.Wait()
+}
+
+func TestServer_Run_Error(t *testing.T) {
+	var exitcode int
+	var lock sync.Mutex
+
+	logger := logrus.StandardLogger()
+	logger.ExitFunc = func(code int) {
+		lock.Lock()
+		defer lock.Unlock()
+		exitcode = code
+	}
+
+	s := New(8081, 8081, mockdb.BuildDB())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		s.Run(ctx)
+		wg.Done()
+	}()
+
+	assert.Eventually(t, func() bool {
+		lock.Lock()
+		defer lock.Unlock()
+		return exitcode != 0
+	}, time.Second, 10*time.Millisecond)
+
+	cancel()
+	wg.Wait()
 }

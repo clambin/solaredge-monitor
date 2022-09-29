@@ -31,8 +31,8 @@ const reportResponseTemplate = `<!DOCTYPE html>
   </body>
 </html>`
 
-func (server *Server) report(w http.ResponseWriter, req *http.Request) {
-	start, stop, err := server.parseRequest(req)
+func (s *Server) report(w http.ResponseWriter, req *http.Request) {
+	start, stop, err := s.parseRequest(req)
 
 	if err != nil {
 		log.WithError(err).Error("failed to get determine start/stop parameters")
@@ -55,12 +55,12 @@ func (server *Server) report(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (server *Server) parseRequest(req *http.Request) (start, stop time.Time, err error) {
-	if start, err = parseTimestamp(req, "start", server.backend.GetFirst); err != nil {
+func (s *Server) parseRequest(req *http.Request) (start, stop time.Time, err error) {
+	if start, err = parseTimestamp(req, "start", s.backend.GetFirst); err != nil {
 		return
 	}
 
-	if stop, err = parseTimestamp(req, "stop", server.backend.GetLast); err != nil {
+	if stop, err = parseTimestamp(req, "stop", s.backend.GetLast); err != nil {
 		return
 	}
 

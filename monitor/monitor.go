@@ -40,7 +40,7 @@ func NewFromConfig(config *configuration.Configuration) (*Environment, error) {
 func NewFromConfigWithDB(config *configuration.Configuration, db store.DB) (e *Environment, err error) {
 	e = &Environment{
 		DB:     db,
-		Server: server.New(config.Server.Port, db),
+		Server: server.New(config.Server.Port, config.Server.PrometheusPort, db),
 	}
 
 	if config.Scrape.Enabled {

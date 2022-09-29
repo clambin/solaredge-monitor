@@ -16,7 +16,8 @@ type Configuration struct {
 }
 
 type ServerConfiguration struct {
-	Port int `yaml:"port"`
+	Port           int `yaml:"port"`
+	PrometheusPort int `yaml:"prometheusPort"`
 	//Images string `yaml:"images"`
 }
 
@@ -52,7 +53,8 @@ func LoadFromFile(filename string) (config *Configuration, err error) {
 
 	config = &Configuration{
 		Server: ServerConfiguration{
-			Port: 80,
+			Port:           80,
+			PrometheusPort: 9090,
 			//Images: "/images",
 		},
 		Scrape: ScrapeConfiguration{
