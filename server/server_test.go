@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -50,7 +50,7 @@ func TestServer_Handlers(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		require.NoError(t, err)
 
-		s.appServer.Handler.ServeHTTP(rr, req)
+		s.httpServers["app"].Handler.ServeHTTP(rr, req)
 		assert.Equal(t, testCase.responseCode, rr.Result().StatusCode, url)
 
 		if testCase.responseCode == http.StatusSeeOther {
@@ -103,14 +103,14 @@ func TestServer_Run(t *testing.T) {
 }
 
 func TestServer_Run_Error(t *testing.T) {
-	var exitcode int
+	var exitCode int
 	var lock sync.Mutex
 
-	logger := logrus.StandardLogger()
+	logger := log.StandardLogger()
 	logger.ExitFunc = func(code int) {
 		lock.Lock()
 		defer lock.Unlock()
-		exitcode = code
+		exitCode = code
 	}
 
 	s := New(8081, 8081, mockdb.BuildDB())
@@ -126,7 +126,7 @@ func TestServer_Run_Error(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		lock.Lock()
 		defer lock.Unlock()
-		return exitcode != 0
+		return exitCode != 0
 	}, time.Second, 10*time.Millisecond)
 
 	cancel()
