@@ -9,7 +9,7 @@ import (
 )
 
 func TestSummary(t *testing.T) {
-	s := scraper.Summary{}
+	var s scraper.Summary
 
 	result := s.Summarize()
 	assert.Zero(t, result.Timestamp)

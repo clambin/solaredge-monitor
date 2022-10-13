@@ -55,7 +55,7 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		m.Run(ctx)

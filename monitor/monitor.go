@@ -69,7 +69,7 @@ func NewFromConfigWithDB(config *configuration.Configuration, db store.DB) (e *E
 }
 
 func (e *Environment) Run(ctx context.Context) {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	if e.Collector != nil {
 		wg.Add(1)
 		go func() {

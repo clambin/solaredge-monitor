@@ -13,7 +13,7 @@ import (
 )
 
 func TestTadoClient(t *testing.T) {
-	api := &mocks.API{}
+	api := mocks.NewAPI(t)
 	c := scraper.TadoScraper{
 		API: api,
 	}
@@ -31,6 +31,4 @@ func TestTadoClient(t *testing.T) {
 	api.On("GetWeatherInfo", mock.AnythingOfType("*context.emptyCtx")).Return(tado.WeatherInfo{}, errors.New("fail")).Once()
 	_, err = c.Scrape(context.Background())
 	assert.Error(t, err)
-
-	mock.AssertExpectationsForObjects(t, api)
 }

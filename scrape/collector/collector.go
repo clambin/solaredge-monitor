@@ -26,7 +26,7 @@ var (
 )
 
 func (c *Collector) Run(ctx context.Context) {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		c.SolarEdge.Run(ctx)

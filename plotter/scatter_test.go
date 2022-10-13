@@ -47,7 +47,7 @@ func TestScatterPlotter_Plot(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, img)
 
-		buf := bytes.Buffer{}
+		var buf bytes.Buffer
 		_, err = img.WriteTo(&buf)
 		require.NoError(t, err)
 

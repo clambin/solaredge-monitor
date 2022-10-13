@@ -17,8 +17,8 @@ import (
 
 func TestCollector(t *testing.T) {
 	db := mockdb.NewDB()
-	solarEdgeClient := &mockSolaredge.API{}
-	tadoClient := &mockTado.API{}
+	solarEdgeClient := mockSolaredge.NewAPI(t)
+	tadoClient := mockTado.NewAPI(t)
 
 	c1 := &scraper.Client{Scraper: &scraper.SolarEdgeScraper{API: solarEdgeClient}, Interval: 10 * time.Millisecond}
 	c2 := &scraper.Client{Scraper: &scraper.TadoScraper{API: tadoClient}, Interval: 10 * time.Millisecond}
@@ -58,6 +58,4 @@ func TestCollector(t *testing.T) {
 
 	cancel()
 	wg.Wait()
-
-	mock.AssertExpectationsForObjects(t, solarEdgeClient, tadoClient)
 }

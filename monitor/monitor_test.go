@@ -84,15 +84,15 @@ func (f *fakeCollector) Run(ctx context.Context) {
 
 func TestEnvironment_Run(t *testing.T) {
 	db := mockdb.BuildDB()
-	c := &fakeCollector{}
+	var c fakeCollector
 	e := &monitor.Environment{
 		DB:        db,
 		Server:    server.New(8080, 9090, db),
-		Collector: c,
+		Collector: &c,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		e.Run(ctx)

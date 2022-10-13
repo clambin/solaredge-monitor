@@ -37,11 +37,11 @@ func Benchmark_Scatter(b *testing.B) {
 	stop, _ := reporter.GetLast()
 	assert.NotEqual(b, start, stop)
 
-	w := &bytes.Buffer{}
+	var w bytes.Buffer
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		err := reporter.Plot(w, server.ScatterPlot, true, start, stop)
+		err := reporter.Plot(&w, server.ScatterPlot, true, start, stop)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -56,11 +56,11 @@ func Benchmark_Contour(b *testing.B) {
 	stop, _ := reporter.GetLast()
 	assert.NotEqual(b, start, stop)
 
-	w := &bytes.Buffer{}
+	var w bytes.Buffer
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		err := reporter.Plot(w, server.ContourPlot, true, start, stop)
+		err := reporter.Plot(&w, server.ContourPlot, true, start, stop)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -75,11 +75,11 @@ func Benchmark_Heatmap(b *testing.B) {
 	stop, _ := reporter.GetLast()
 	assert.NotEqual(b, start, stop)
 
-	w := &bytes.Buffer{}
+	var w bytes.Buffer
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		err := reporter.Plot(w, server.HeatmapPlot, true, start, stop)
+		err := reporter.Plot(&w, server.HeatmapPlot, true, start, stop)
 		if err != nil {
 			b.Fatal(err)
 		}

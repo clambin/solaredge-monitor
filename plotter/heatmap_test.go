@@ -45,7 +45,7 @@ func TestHeatmapPlotter_Plot(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, img)
 
-		buf := bytes.Buffer{}
+		var buf bytes.Buffer
 		_, err = img.WriteTo(&buf)
 		require.NoError(t, err)
 

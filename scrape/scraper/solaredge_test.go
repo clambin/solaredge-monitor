@@ -12,7 +12,7 @@ import (
 )
 
 func TestSolarEdgeClient(t *testing.T) {
-	api := &mocks.API{}
+	api := mocks.NewAPI(t)
 	c := scraper.SolarEdgeScraper{
 		API: api,
 	}
@@ -58,6 +58,4 @@ func TestSolarEdgeClient(t *testing.T) {
 
 	sample, err = c.Scrape(ctx)
 	assert.Error(t, err)
-
-	mock.AssertExpectationsForObjects(t, api)
 }

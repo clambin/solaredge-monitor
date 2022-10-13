@@ -49,7 +49,7 @@ func (s *Sampler) getTimestamp(measurement store.Measurement) float64 {
 }
 
 func (s *Sampler) getRange(measurements []store.Measurement, axis string) *Range {
-	minMax := Range{}
+	var minMax Range
 	for _, measurement := range measurements {
 		var value float64
 		switch axis {
