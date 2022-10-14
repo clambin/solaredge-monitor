@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/clambin/go-metrics v0.6.0
 	github.com/clambin/solaredge v0.7.0
-	github.com/clambin/tado v0.7.3
+	github.com/clambin/tado v0.7.4
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/gorilla/mux v1.8.0
 	github.com/gosimple/slug v1.13.1
