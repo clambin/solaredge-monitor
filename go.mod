@@ -12,7 +12,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/prometheus/client_golang v1.13.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	gonum.org/v1/plot v0.12.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
@@ -42,7 +42,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/stretchr/objx v0.4.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
