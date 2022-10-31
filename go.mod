@@ -3,7 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.18
 
 require (
-	github.com/clambin/go-metrics v0.6.0
+	github.com/clambin/go-metrics v0.6.3
 	github.com/clambin/solaredge v0.7.0
 	github.com/clambin/tado v0.7.4
 	github.com/golang-migrate/migrate/v4 v4.15.2
@@ -39,7 +39,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
