@@ -20,7 +20,8 @@ func TestNewFromConfigWithDB(t *testing.T) {
 	db := mockdb.BuildDB()
 	config := configuration.Configuration{
 		Server: configuration.ServerConfiguration{
-			Port: 8080,
+			Port:           8080,
+			PrometheusPort: 8081,
 		},
 		Scrape: configuration.ScrapeConfiguration{
 			Enabled:    true,
@@ -53,12 +54,6 @@ func TestNewFromConfigWithDB(t *testing.T) {
 	require.True(t, ok)
 	_, ok = c2.Scraper.(*scraper.SolarEdgeScraper)
 	require.True(t, ok)
-
-	config.Scrape.Enabled = false
-	m, err = monitor.NewFromConfigWithDB(&config, db)
-	require.NoError(t, err)
-	require.NotNil(t, m)
-	assert.Nil(t, m.Collector)
 }
 
 func TestNewFromConfig(t *testing.T) {

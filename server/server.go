@@ -3,11 +3,8 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/clambin/go-metrics/server/middleware"
+	"github.com/clambin/go-common/httpserver"
 	"github.com/clambin/solaredge-monitor/store"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
@@ -24,27 +21,27 @@ func New(port, prometheusPort int, db store.DB) (s *Server) {
 		httpServers: make(HTTPServers),
 	}
 
-	r := mux.NewRouter()
-	r.Use(middleware.HTTPMetrics)
-	r.HandleFunc("/report", s.report).Methods(http.MethodGet)
-	r.HandleFunc("/plot/{type}", s.plot).Methods(http.MethodGet)
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/report", http.StatusSeeOther)
-	}).Methods(http.MethodGet)
-
-	s.httpServers["app"] = &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: r,
+	var err error
+	if s.httpServers["app"], err = httpserver.New(
+		httpserver.WithMetrics{Application: "solaredge-monitor"},
+		httpserver.WithPort{Port: port},
+		httpserver.WithHandlers{Handlers: []httpserver.Handler{
+			{Path: "/report", Handler: http.HandlerFunc(s.report)},
+			{Path: "/plot/{type}", Handler: http.HandlerFunc(s.plot)},
+			{Path: "/", Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, "/report", http.StatusSeeOther)
+			})},
+		}},
+	); err != nil {
+		log.WithError(err).Fatalf("failed to create HTTP server")
 	}
 
-	m := http.NewServeMux()
-	m.Handle("/metrics", promhttp.Handler())
-
-	s.httpServers["metrics"] = &http.Server{
-		Addr:    fmt.Sprintf(":%d", prometheusPort),
-		Handler: m,
+	if s.httpServers["metrics"], err = httpserver.New(
+		httpserver.WithPort{Port: prometheusPort},
+		httpserver.WithPrometheus{},
+	); err != nil {
+		log.WithError(err).Fatalf("failed to create Prometheus metrics server")
 	}
-
 	return s
 }
 
@@ -54,12 +51,12 @@ func (s *Server) Run(ctx context.Context) {
 	s.httpServers.Stop(5 * time.Second)
 }
 
-type HTTPServers map[string]*http.Server
+type HTTPServers map[string]*httpserver.Server
 
 func (h HTTPServers) Start() {
 	for key, server := range h {
-		go func(name string, srv *http.Server) {
-			if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		go func(name string, srv *httpserver.Server) {
+			if err := srv.Serve(); !errors.Is(err, http.ErrServerClosed) {
 				log.WithError(err).Fatalf("failed to start %s server", name)
 
 			}
@@ -69,10 +66,8 @@ func (h HTTPServers) Start() {
 
 func (h HTTPServers) Stop(timeout time.Duration) {
 	for name, srv := range h {
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		if err := srv.Shutdown(ctx); err != nil {
+		if err := srv.Shutdown(timeout); err != nil {
 			log.WithError(err).Errorf("failed to shut down %s server", name)
 		}
-		cancel()
 	}
 }

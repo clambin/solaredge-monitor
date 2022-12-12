@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - prom
+      - httpserver
 
 jobs:
   test:
