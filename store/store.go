@@ -1,7 +1,6 @@
 package store
 
 import (
-	"database/sql"
 	"embed"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
@@ -51,23 +50,9 @@ func (db *PostgresDB) Store(measurement Measurement) (err error) {
 }
 
 func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err error) {
-	var rows *sql.Rows
-	rows, err = db.DBH.Query(fmt.Sprintf(
-		"SELECT timestamp, intensity, power FROM solar WHERE timestamp >= '%s' AND timestamp <= '%s' ORDER BY 1",
-		from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05")))
-
-	if err != nil {
-		return nil, err
-	}
-
-	for err == nil && rows.Next() {
-		var measurement Measurement
-		if err = rows.Scan(&measurement.Timestamp, &measurement.Intensity, &measurement.Power); err == nil {
-			measurements = append(measurements, measurement)
-		}
-	}
-	_ = rows.Close()
-
+	err = db.DBH.Select(&measurements, fmt.Sprintf(`SELECT timestamp, intensity, power FROM solar WHERE timestamp >= '%s' AND timestamp <= '%s' ORDER BY 1`,
+		from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"),
+	))
 	return
 }
 
