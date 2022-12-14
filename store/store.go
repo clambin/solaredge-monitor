@@ -2,8 +2,12 @@ package store
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
-	// postgres driver for database/sql
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -25,7 +29,7 @@ type Measurement struct {
 type PostgresDB struct {
 	psqlInfo string
 	database string
-	DBH      *sql.DB
+	DBH      *sqlx.DB
 }
 
 func NewPostgresDB(host string, port int, database string, user string, password string) (db *PostgresDB, err error) {
@@ -39,11 +43,11 @@ func NewPostgresDB(host string, port int, database string, user string, password
 }
 
 func (db *PostgresDB) Store(measurement Measurement) (err error) {
-	// Prepare the SQL statement
-	stmt, _ := db.DBH.Prepare(`INSERT INTO solar(timestamp, intensity, power) VALUES ($1, $2, $3)`)
-	_, err = stmt.Exec(measurement.Timestamp, measurement.Intensity, measurement.Power)
-
-	return err
+	tx := db.DBH.MustBegin()
+	tx.MustExec(`INSERT INTO solar(timestamp, intensity, power) VALUES ($1, $2, $3)`,
+		measurement.Timestamp, measurement.Intensity, measurement.Power,
+	)
+	return tx.Commit()
 }
 
 func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err error) {
@@ -68,36 +72,46 @@ func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err e
 }
 
 func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
-	var rows *sql.Rows
-	rows, err = db.DBH.Query("SELECT timestamp, intensity, power FROM solar ORDER BY 1")
-
-	if err != nil {
-		return nil, err
-	}
-
-	for err == nil && rows.Next() {
-		var measurement Measurement
-		if err = rows.Scan(&measurement.Timestamp, &measurement.Intensity, &measurement.Power); err == nil {
-			measurements = append(measurements, measurement)
-		}
-	}
-	_ = rows.Close()
-
+	err = db.DBH.Select(&measurements, `SELECT timestamp, intensity, power FROM solar ORDER BY 1`)
 	return
 }
 
 func (db *PostgresDB) initialize() (err error) {
-	if db.DBH, err = sql.Open("postgres", db.psqlInfo); err == nil {
-		err = db.DBH.Ping()
+	if db.DBH, err = sqlx.Connect("postgres", db.psqlInfo); err != nil {
+		return fmt.Errorf("database connect: %w", err)
 	}
-	if err != nil {
-		return fmt.Errorf("database open: %w", err)
-	}
-
-	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(db.DBH, db.database))
 
 	if err = db.migrate(); err != nil {
-		err = fmt.Errorf("database initialization: %w", err)
+		return fmt.Errorf("database migration: %w", err)
 	}
+
+	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(db.DBH.DB, db.database))
+
+	return nil
+}
+
+//go:embed migrations/*
+var migrations embed.FS
+
+func (db *PostgresDB) migrate() error {
+	src, err := iofs.New(migrations, "migrations")
+	if err != nil {
+		return fmt.Errorf("invalid migration source: %w", err)
+	}
+
+	dbDriver, err := postgres.WithInstance(db.DBH.DB, &postgres.Config{DatabaseName: db.database})
+	if err != nil {
+		return fmt.Errorf("invalid migration target: %w", err)
+	}
+
+	m, err := migrate.NewWithInstance("migrations", src, db.database, dbDriver)
+	if err != nil {
+		return fmt.Errorf("unable to migrate database: %w", err)
+	}
+
+	if err = m.Up(); err == migrate.ErrNoChange {
+		err = nil
+	}
+
 	return err
 }
