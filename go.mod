@@ -3,7 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.18
 
 require (
-	github.com/clambin/go-common/httpserver v0.2.0
+	github.com/clambin/go-common/httpserver v0.3.0
 	github.com/clambin/solaredge v0.7.0
 	github.com/clambin/tado v0.7.4
 	github.com/golang-migrate/migrate/v4 v4.15.2
@@ -27,6 +27,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/clambin/go-common/set v0.1.2 // indirect
 	github.com/containerd/containerd v1.6.12 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-fonts/liberation v0.2.0 // indirect
