@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/clambin/go-common/httpserver v0.2.0
-	github.com/clambin/solaredge v0.7.0
+	github.com/clambin/solaredge v0.7.1
 	github.com/clambin/tado v0.7.4
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/gorilla/mux v1.8.0

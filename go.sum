@@ -207,8 +207,8 @@ github.com/cilium/ebpf v0.6.2/go.mod h1:4tRaxcgiL706VnOzHOdBlY8IEAIdxINsQBcU4xJJ
 github.com/cilium/ebpf v0.7.0/go.mod h1:/oI2+1shJiTGAMgl6/RgJr36Eo1jzrRcAWbcXO2usCA=
 github.com/clambin/go-common/httpserver v0.2.0 h1:v4VxeteodlLz7I19gLnm7Q+2275MQBPuLPK7xFBARJg=
 github.com/clambin/go-common/httpserver v0.2.0/go.mod h1:IlwlVQklRfkEbmWhsBiZWrUMHNUxkftklQDgYSCh5wU=
-github.com/clambin/solaredge v0.7.0 h1:p1KA9MAmXyWBHcVnTDfW7fUjvjwBV+gFGcbZ3RZJksc=
-github.com/clambin/solaredge v0.7.0/go.mod h1:4jXmvZWyocXo/lk9rjJx71UsYnjeY/QNjjlR1uCD5UQ=
+github.com/clambin/solaredge v0.7.1 h1:+htKgO8ifpS81S5Z3d0nu+RJ/FIAtb2aO3dKL1r6s2M=
+github.com/clambin/solaredge v0.7.1/go.mod h1:dfDEK8lYljR2SwMwEA488PK+JoZibQOSz5HCkfAmJUY=
 github.com/clambin/tado v0.7.4 h1:frl7zQ6SMIjGWhY8WrFQ2stXM72BAV8MEjvyXFhP0t0=
 github.com/clambin/tado v0.7.4/go.mod h1:4xUnBTe8oskVF+eaXnDaF0bsIq9nICTTICR8aH1FdIk=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
