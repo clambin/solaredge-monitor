@@ -209,8 +209,8 @@ github.com/clambin/go-common/httpserver v0.2.0 h1:v4VxeteodlLz7I19gLnm7Q+2275MQB
 github.com/clambin/go-common/httpserver v0.2.0/go.mod h1:IlwlVQklRfkEbmWhsBiZWrUMHNUxkftklQDgYSCh5wU=
 github.com/clambin/solaredge v0.7.0 h1:p1KA9MAmXyWBHcVnTDfW7fUjvjwBV+gFGcbZ3RZJksc=
 github.com/clambin/solaredge v0.7.0/go.mod h1:4jXmvZWyocXo/lk9rjJx71UsYnjeY/QNjjlR1uCD5UQ=
-github.com/clambin/tado v0.7.4 h1:frl7zQ6SMIjGWhY8WrFQ2stXM72BAV8MEjvyXFhP0t0=
-github.com/clambin/tado v0.7.4/go.mod h1:4xUnBTe8oskVF+eaXnDaF0bsIq9nICTTICR8aH1FdIk=
+github.com/clambin/tado v0.7.5 h1:grwSAwgto53fAgExkAVdIy/yA0b+cJBxyoU2m0MrCnc=
+github.com/clambin/tado v0.7.5/go.mod h1:kfZRs0wBwILxXtwNytLn8g5SZWoq1EXS3GLN1yr6eS8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58/go.mod h1:EOBUe0h4xcZ5GoxqC5SDxFQ8gwyZPKQoEzownBlhI80=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
