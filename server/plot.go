@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"time"
 )
@@ -27,7 +27,7 @@ var plotTypes = map[string]PlotType{
 }
 
 func (s *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool, start, stop time.Time, err error) {
-	plotTypeString := mux.Vars(req)["type"]
+	plotTypeString := chi.URLParam(req, "type")
 	var found bool
 	if plotType, found = plotTypes[plotTypeString]; !found {
 		err = fmt.Errorf("invalid plot type: %s", plotTypeString)

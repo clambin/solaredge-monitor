@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slog"
 	"html/template"
 	"net/http"
 	"time"
@@ -33,9 +33,8 @@ const reportResponseTemplate = `<!DOCTYPE html>
 
 func (s *Server) report(w http.ResponseWriter, req *http.Request) {
 	start, stop, err := s.parseRequest(req)
-
 	if err != nil {
-		log.WithError(err).Error("failed to get determine start/stop parameters")
+		slog.Error("failed to get determine start/stop parameters", err)
 		http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -50,7 +49,7 @@ func (s *Server) report(w http.ResponseWriter, req *http.Request) {
 
 	err = writePageFromTemplate(w, reportResponseTemplate, data)
 	if err != nil {
-		log.WithError(err).Error("failed to create response")
+		slog.Error("failed to create response", err)
 		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
 	}
 }

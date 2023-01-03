@@ -2,7 +2,7 @@ package scraper
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slog"
 	"sync"
 	"time"
 )
@@ -26,28 +26,28 @@ var _ Summarizer = &Client{}
 
 // Run collects measurements at the specified interval and records them for latest summarizing
 func (c *Client) Run(ctx context.Context) {
-	c.collect(ctx)
 	ticker := time.NewTicker(c.Interval)
-	for running := true; running; {
+	defer ticker.Stop()
+
+	c.collect(ctx)
+	for {
 		select {
 		case <-ctx.Done():
-			running = false
+			return
 		case <-ticker.C:
 			c.collect(ctx)
 		}
 	}
-	ticker.Stop()
 }
 
 func (c *Client) collect(ctx context.Context) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if m, err := c.Scrape(ctx); err == nil {
-		log.Debugf("received %v", m)
+	if m, err := c.Scraper.Scrape(ctx); err == nil {
 		c.summary.Add(m)
 	} else {
-		log.WithError(err).Warning("failed to measure")
+		slog.Error("failed to measure", err)
 	}
 }
 

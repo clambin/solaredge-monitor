@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slog"
 	"sync"
 	"time"
 )
@@ -54,7 +54,7 @@ func (c *Collector) Run(ctx context.Context) {
 
 func (c *Collector) collect() {
 	if c.SolarEdge.Count() == 0 || c.Tado.Count() == 0 {
-		log.Warning("partial data collection. skipping")
+		slog.Warn("partial data collection. skipping")
 		return
 	}
 
@@ -68,11 +68,8 @@ func (c *Collector) collect() {
 	}
 
 	if err := c.Store(measurement); err == nil {
-		log.WithFields(log.Fields{
-			"power":     measurement.Power,
-			"intensity": measurement.Intensity,
-		}).Info("new entry")
+		slog.Info("new entry", "power", measurement.Power, "intensity", measurement.Intensity)
 	} else {
-		log.WithError(err).Warning("failed to store metrics")
+		slog.Error("failed to store metrics", err)
 	}
 }

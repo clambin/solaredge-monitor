@@ -26,9 +26,8 @@ func getDBEnv() (values map[string]string, ok bool) {
 
 func TestStore(t *testing.T) {
 	values, ok := getDBEnv()
-	if ok == false {
-		t.Log("Could not find all DB env variables. Skipping this test")
-		return
+	if !ok {
+		t.Skip("Could not find all DB env variables. Skipping this test")
 	}
 
 	port, err := strconv.Atoi(values["pg_port"])

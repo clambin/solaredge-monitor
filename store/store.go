@@ -3,6 +3,7 @@ package store
 import (
 	"embed"
 	"fmt"
+	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -26,19 +27,48 @@ type Measurement struct {
 }
 
 type PostgresDB struct {
-	psqlInfo string
-	database string
-	DBH      *sqlx.DB
+	database  string
+	DBH       *sqlx.DB
+	collector prometheus.Collector
 }
 
-func NewPostgresDB(host string, port int, database string, user string, password string) (db *PostgresDB, err error) {
-	db = &PostgresDB{
-		psqlInfo: fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-			host, port, user, password, database),
-		database: database,
+var _ DB = &PostgresDB{}
+
+func NewPostgresDBFromConfig(cfg configuration.DBConfiguration) (db *PostgresDB, err error) {
+	return NewPostgresDB(
+		cfg.Host, cfg.Port,
+		cfg.Database,
+		cfg.Username, cfg.Password,
+	)
+}
+
+func NewPostgresDB(host string, port int, database string, user string, password string) (*PostgresDB, error) {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, database)
+	dbh, err := sqlx.Connect("postgres", psqlInfo)
+	if err != nil {
+		return nil, fmt.Errorf("database connect: %w", err)
 	}
-	err = db.initialize()
+
+	db := &PostgresDB{
+		database:  database,
+		DBH:       dbh,
+		collector: collectors.NewDBStatsCollector(dbh.DB, database),
+	}
+
+	if err = db.migrate(); err != nil {
+		return nil, fmt.Errorf("database migration: %w", err)
+	}
+
 	return db, err
+}
+
+func (db *PostgresDB) Describe(descs chan<- *prometheus.Desc) {
+	db.collector.Describe(descs)
+}
+
+func (db *PostgresDB) Collect(metrics chan<- prometheus.Metric) {
+	db.collector.Collect(metrics)
 }
 
 func (db *PostgresDB) Store(measurement Measurement) (err error) {
@@ -59,20 +89,6 @@ func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err e
 func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
 	err = db.DBH.Select(&measurements, `SELECT timestamp, intensity, power FROM solar ORDER BY 1`)
 	return
-}
-
-func (db *PostgresDB) initialize() (err error) {
-	if db.DBH, err = sqlx.Connect("postgres", db.psqlInfo); err != nil {
-		return fmt.Errorf("database connect: %w", err)
-	}
-
-	if err = db.migrate(); err != nil {
-		return fmt.Errorf("database migration: %w", err)
-	}
-
-	prometheus.DefaultRegisterer.MustRegister(collectors.NewDBStatsCollector(db.DBH.DB, db.database))
-
-	return nil
 }
 
 //go:embed migrations/*
