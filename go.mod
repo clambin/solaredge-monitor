@@ -3,12 +3,13 @@ module github.com/clambin/solaredge-monitor
 go 1.18
 
 require (
-	github.com/clambin/go-common/httpserver v0.2.0
+	github.com/clambin/go-common/httpserver v0.4.0
 	github.com/clambin/solaredge v0.7.0
 	github.com/clambin/tado v0.7.4
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/gorilla/mux v1.8.0
 	github.com/gosimple/slug v1.13.1
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.7
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
@@ -27,6 +28,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/clambin/go-common/set v0.1.2 // indirect
 	github.com/containerd/containerd v1.6.12 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-fonts/liberation v0.2.0 // indirect
@@ -37,7 +39,6 @@ require (
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
