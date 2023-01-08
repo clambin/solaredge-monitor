@@ -5,7 +5,6 @@ import (
 	"github.com/clambin/solaredge-monitor/plotter"
 	"github.com/clambin/solaredge-monitor/store"
 	"gonum.org/v1/plot/palette/moreland"
-	"gonum.org/v1/plot/vg/vgimg"
 	"io"
 	"time"
 )
@@ -22,20 +21,20 @@ const (
 	HeatmapPlot
 )
 
-func (r *Generator) Plot(w io.Writer, plotType PlotType, fold bool, start, stop time.Time) (err error) {
-	var measurements []store.Measurement
-	if measurements, err = r.DB.Get(start, stop); err != nil {
-		return
+func (r *Generator) Plot(w io.Writer, plotType PlotType, fold bool, start, stop time.Time) error {
+	measurements, err := r.DB.Get(start, stop)
+	if err != nil {
+		return err
 	}
 
 	p := makePlotter(plotType, fold)
-	var img *vgimg.PngCanvas
-	if img, err = p.Plot(measurements); err != nil {
-		return
+	img, err := p.Plot(measurements)
+	if err != nil {
+		return err
 	}
 
 	_, err = img.WriteTo(w)
-	return
+	return err
 }
 
 const (
@@ -88,33 +87,25 @@ func makePlotter(plotType PlotType, fold bool) plotter.Plotter {
 	}
 	return p
 }
-func (r *Generator) GetFirst() (first time.Time, err error) {
-	var measurements []store.Measurement
-
-	measurements, err = r.DB.GetAll()
-
+func (r *Generator) GetFirst() (time.Time, error) {
+	measurements, err := r.DB.GetAll()
 	if err == nil && len(measurements) == 0 {
 		err = fmt.Errorf("no entries found")
 	}
-
 	if err != nil {
-		return
+		return time.Time{}, err
 	}
 
 	return measurements[0].Timestamp, nil
 }
 
-func (r *Generator) GetLast() (first time.Time, err error) {
-	var measurements []store.Measurement
-
-	measurements, err = r.DB.GetAll()
-
+func (r *Generator) GetLast() (time.Time, error) {
+	measurements, err := r.DB.GetAll()
 	if err == nil && len(measurements) == 0 {
 		err = fmt.Errorf("no entries found")
 	}
-
 	if err != nil {
-		return
+		return time.Time{}, err
 	}
 
 	return measurements[len(measurements)-1].Timestamp, nil

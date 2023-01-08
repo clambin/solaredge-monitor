@@ -1,0 +1,1 @@
+ALTER TABLE solar ADD COLUMN weather TEXT;

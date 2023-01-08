@@ -2,8 +2,7 @@ package collector_test
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/scrape/collector"
-	"github.com/clambin/solaredge-monitor/scrape/scraper"
+	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	mockSolaredge "github.com/clambin/solaredge/mocks"
 	"github.com/clambin/tado"
@@ -20,13 +19,10 @@ func TestCollector(t *testing.T) {
 	solarEdgeClient := mockSolaredge.NewAPI(t)
 	tadoClient := mockTado.NewAPI(t)
 
-	c1 := &scraper.Client{Scraper: &scraper.SolarEdgeScraper{API: solarEdgeClient}, Interval: 10 * time.Millisecond}
-	c2 := &scraper.Client{Scraper: &scraper.TadoScraper{API: tadoClient}, Interval: 10 * time.Millisecond}
 	c := collector.Collector{
-		SolarEdge: c1,
-		Tado:      c2,
-		DB:        db,
-		Interval:  100 * time.Millisecond,
+		TadoAPI:      tadoClient,
+		SolarEdgeAPI: solarEdgeClient,
+		DB:           db,
 	}
 
 	solarEdgeClient.
@@ -37,18 +33,17 @@ func TestCollector(t *testing.T) {
 		Return(0.0, 0.0, 0.0, 0.0, 1500.0, nil)
 	tadoClient.
 		On("GetWeatherInfo", mock.AnythingOfType("*context.cancelCtx")).
-		Return(tado.WeatherInfo{SolarIntensity: tado.Percentage{Percentage: 55.0}}, nil)
+		Return(tado.WeatherInfo{
+			SolarIntensity: tado.Percentage{Percentage: 55.0},
+			WeatherState:   tado.Value{Value: "SUNNY"},
+		}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
-
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func() {
-		c.Run(ctx)
-		wg.Done()
-	}()
+	go func() { defer wg.Done(); c.Run(ctx, 10*time.Millisecond, 100*time.Millisecond) }()
 
-	assert.Eventually(t, func() bool { return db.Rows() > 0 }, 500*time.Millisecond, 100*time.Millisecond)
+	assert.Eventually(t, func() bool { return db.Rows() > 0 }, 500*time.Millisecond, 50*time.Millisecond)
 
 	measurements, _ := db.GetAll()
 	for _, entry := range measurements {

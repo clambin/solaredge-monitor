@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/clambin/solaredge"
+	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/configuration"
-	"github.com/clambin/solaredge-monitor/scrape/collector"
-	"github.com/clambin/solaredge-monitor/scrape/scraper"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
@@ -57,7 +56,7 @@ func main() {
 	}
 	slog.SetDefault(slog.New(opts.NewTextHandler(os.Stdout)))
 
-	slog.Info("solaredge-monitoring started", "version", version.BuildVersion)
+	slog.Info("solaredge-monitor started", "version", version.BuildVersion)
 
 	if scrape {
 		cfg.Scrape.Enabled = true
@@ -104,23 +103,13 @@ func runPrometheusServer(port int) {
 
 func runScraper(ctx context.Context, cfg *configuration.Configuration, db store.DB) {
 	c := &collector.Collector{
-		Tado: &scraper.Client{
-			Scraper: &scraper.TadoScraper{
-				API: tado.New(cfg.Tado.Username, cfg.Tado.Password, ""),
-			},
-			Interval: cfg.Scrape.Polling,
+		TadoAPI: tado.New(cfg.Tado.Username, cfg.Tado.Password, ""),
+		SolarEdgeAPI: &solaredge.Client{
+			Token:      cfg.SolarEdge.Token,
+			HTTPClient: http.DefaultClient,
 		},
-		SolarEdge: &scraper.Client{
-			Scraper: &scraper.SolarEdgeScraper{
-				API: &solaredge.Client{
-					Token:      cfg.SolarEdge.Token,
-					HTTPClient: http.DefaultClient,
-				},
-			},
-			Interval: cfg.Scrape.Polling,
-		},
-		DB:       db,
-		Interval: cfg.Scrape.Collection,
+		DB: db,
 	}
-	c.Run(ctx)
+	slog.Info("starting scraper", "poll", cfg.Scrape.Polling, "collect", cfg.Scrape.Collection)
+	c.Run(ctx, cfg.Scrape.Polling, cfg.Scrape.Collection)
 }

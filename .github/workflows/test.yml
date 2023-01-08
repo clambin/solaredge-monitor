@@ -4,8 +4,7 @@ on:
   push:
     branches-ignore:
       - master
-      - slog
-      - chi
+      - weather
   pull_request_target:
 
 jobs:

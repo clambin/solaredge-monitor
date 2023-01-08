@@ -24,6 +24,7 @@ type Measurement struct {
 	Timestamp time.Time
 	Power     float64
 	Intensity float64
+	Weather   string
 }
 
 type PostgresDB struct {
@@ -73,16 +74,18 @@ func (db *PostgresDB) Collect(metrics chan<- prometheus.Metric) {
 
 func (db *PostgresDB) Store(measurement Measurement) (err error) {
 	tx := db.DBH.MustBegin()
-	tx.MustExec(`INSERT INTO solar(timestamp, intensity, power) VALUES ($1, $2, $3)`,
-		measurement.Timestamp, measurement.Intensity, measurement.Power,
+	tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weather) VALUES ($1, $2, $3, $4)`,
+		measurement.Timestamp, measurement.Intensity, measurement.Power, measurement.Weather,
 	)
 	return tx.Commit()
 }
 
 func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err error) {
-	err = db.DBH.Select(&measurements, fmt.Sprintf(`SELECT timestamp, intensity, power FROM solar WHERE timestamp >= '%s' AND timestamp <= '%s' ORDER BY 1`,
-		from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"),
-	))
+	err = db.DBH.Select(&measurements,
+		fmt.Sprintf(`SELECT timestamp, intensity, power, COALESCE(weather, '') AS weather FROM solar WHERE timestamp >= '%s' AND timestamp <= '%s' ORDER BY 1`,
+			from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"),
+		),
+	)
 	return
 }
 

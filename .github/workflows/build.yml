@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - master
-      - slog
-      - chi
+      - weather
 
 jobs:
   test:
