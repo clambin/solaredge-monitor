@@ -1,0 +1,19 @@
+debug: true
+server:
+    port: 8080
+    prometheusPort: 9090
+scrape:
+    enabled: true
+    polling: 15m0s
+    collection: 1h0m0s
+database:
+    host: localhost
+    port: 1234
+    database: test
+    username: user
+    password: password
+tado:
+    username: tado
+    password: tadopassword
+solarEdge:
+    token: "1234"
