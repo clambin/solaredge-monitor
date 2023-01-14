@@ -85,6 +85,11 @@ func (c *Collector) collect() {
 		Weather:   c.weather.GetMostUsed(),
 	}
 
+	if measurement.Power == 0 && measurement.Intensity == 0 {
+		slog.Debug("no solar power activity. skipping measurement")
+		return
+	}
+
 	if err := c.Store(measurement); err == nil {
 		slog.Info("new entry", slog.Group("measurement",
 			slog.Float64("power", measurement.Power),
