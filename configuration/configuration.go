@@ -16,8 +16,12 @@ type Configuration struct {
 }
 
 type ServerConfiguration struct {
-	Port           int `yaml:"port"`
-	PrometheusPort int `yaml:"prometheusPort"`
+	Addr string `yaml:"addr,omitempty"`
+	// deprecated
+	Port           int    `yaml:"port,omitempty"`
+	PrometheusAddr string `yaml:"prometheusAddr,omitempty"`
+	// deprecated
+	PrometheusPort int `yaml:"prometheusPort,omitempty"`
 	//Images string `yaml:"images"`
 }
 
@@ -55,7 +59,6 @@ func LoadFromFile(filename string) (config *Configuration, err error) {
 		Server: ServerConfiguration{
 			Port:           80,
 			PrometheusPort: 9090,
-			//Images: "/images",
 		},
 		Scrape: ScrapeConfiguration{
 			Polling:    5 * time.Minute,

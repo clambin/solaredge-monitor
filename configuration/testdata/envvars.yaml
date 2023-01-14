@@ -1,6 +1,6 @@
 debug: false
 server:
-  port: 8080
+  addr: :8080
   images: /static
 scrape:
   enabled: true

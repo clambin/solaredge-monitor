@@ -38,6 +38,7 @@ func TestLoadFromFile(t *testing.T) {
 			"pg_password":   "secret",
 			"tado_password": "tadopassword",
 		}},
+		{name: "ports backward-compatibility", filename: "port.yaml", pass: true},
 		{name: "invalid file", filename: "invalid.yaml", pass: false},
 		{name: "missing file", filename: "not-a-file", pass: false},
 	}

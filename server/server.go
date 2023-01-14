@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/clambin/go-common/httpserver/middleware"
+	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,7 +21,7 @@ type Server struct {
 
 var _ prometheus.Collector = &Server{}
 
-func New(port int, db store.DB) *Server {
+func New(cfg configuration.ServerConfiguration, db store.DB) *Server {
 	s := Server{
 		backend: &Generator{DB: db},
 		metrics: middleware.NewPrometheusMetrics(middleware.PrometheusMetricsOptions{
@@ -41,8 +42,13 @@ func New(port int, db store.DB) *Server {
 		http.Redirect(w, r, "/report", http.StatusSeeOther)
 	})
 
+	addr := cfg.Addr
+	if addr == "" {
+		addr = fmt.Sprintf(":%d", cfg.Port)
+	}
+
 	s.server = &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    addr,
 		Handler: r,
 	}
 	return &s

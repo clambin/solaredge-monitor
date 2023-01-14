@@ -1,6 +1,8 @@
 debug: true
 server:
-    port: 8080
+    addr: :8080
+    port: 80
+    prometheusAddr: :9090
     prometheusPort: 9090
 scrape:
     enabled: true

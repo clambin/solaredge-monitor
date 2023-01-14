@@ -67,8 +67,7 @@ func main() {
 		slog.Error("failed to access database", err)
 		panic(err)
 	}
-	s := server.New(cfg.Server.Port, db)
-
+	s := server.New(cfg.Server, db)
 	prometheus.MustRegister(db, s)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -83,7 +82,7 @@ func main() {
 		}()
 	}
 
-	go runPrometheusServer(cfg.Server.PrometheusPort)
+	go runPrometheusServer(cfg.Server)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -93,9 +92,13 @@ func main() {
 	wg.Wait()
 }
 
-func runPrometheusServer(port int) {
+func runPrometheusServer(cfg configuration.ServerConfiguration) {
+	addr := cfg.PrometheusAddr
+	if addr == "" {
+		addr = fmt.Sprintf(":%d", cfg.PrometheusPort)
+	}
 	http.Handle("/metrics", promhttp.Handler())
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); !errors.Is(err, http.ErrServerClosed) {
+	if err := http.ListenAndServe(addr, nil); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("could not start prometheus metrics server", err)
 		panic(err)
 	}

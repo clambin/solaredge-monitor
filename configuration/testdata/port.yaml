@@ -1,7 +1,7 @@
 debug: true
 server:
-  addr: :8080
-  prometheusAddr: :9090
+  port: 8080
+  prometheusPort: 9090
   images: /static
 scrape:
   enabled: true

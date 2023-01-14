@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ import (
 var update = flag.Bool("update", false, "update .golden files")
 
 func TestServer_Handlers(t *testing.T) {
-	s := New(0, mockdb.BuildDB())
+	s := New(configuration.ServerConfiguration{}, mockdb.BuildDB())
 
 	testCases := []struct {
 		path         string
