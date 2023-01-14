@@ -1,0 +1,3 @@
+ALTER TABLE solar DROP COLUMN weatherID;
+DROP TABLE weatherIDs;
+DROP SEQUENCE weatherID;

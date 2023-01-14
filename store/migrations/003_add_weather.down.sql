@@ -1,1 +1,0 @@
-ALTER TABLE solar DROP COLUMN weather;

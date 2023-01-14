@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"strings"
 	"time"
 )
 
@@ -73,25 +74,43 @@ func (db *PostgresDB) Collect(metrics chan<- prometheus.Metric) {
 }
 
 func (db *PostgresDB) Store(measurement Measurement) (err error) {
+	weatherID, err := db.GetWeatherID(measurement.Weather)
+	if err != nil {
+		return err
+	}
+
 	tx := db.DBH.MustBegin()
-	tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weather) VALUES ($1, $2, $3, $4)`,
-		measurement.Timestamp, measurement.Intensity, measurement.Power, measurement.Weather,
+	tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
+		measurement.Timestamp, measurement.Intensity, measurement.Power, weatherID,
 	)
 	return tx.Commit()
 }
 
+func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
+	return db.Get(time.Time{}, time.Time{})
+}
+
 func (db *PostgresDB) Get(from, to time.Time) (measurements []Measurement, err error) {
 	err = db.DBH.Select(&measurements,
-		fmt.Sprintf(`SELECT timestamp, intensity, power, COALESCE(weather, '') AS weather FROM solar WHERE timestamp >= '%s' AND timestamp <= '%s' ORDER BY 1`,
-			from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"),
+		fmt.Sprintf(`SELECT timestamp, intensity, power, weather FROM solar, weatherids WHERE solar.weatherid = weatherids.id %s ORDER BY 1`,
+			getTimeClause(from, to),
 		),
 	)
 	return
 }
 
-func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
-	err = db.DBH.Select(&measurements, `SELECT timestamp, intensity, power FROM solar ORDER BY 1`)
-	return
+func getTimeClause(from, to time.Time) string {
+	var conditions []string
+	if !from.IsZero() {
+		conditions = append(conditions, fmt.Sprintf("timestamp >= '%s'", from.Format("2006-01-02 15:04:05")))
+	}
+	if !to.IsZero() {
+		conditions = append(conditions, fmt.Sprintf("timestamp <= '%s'", to.Format("2006-01-02 15:04:05")))
+	}
+	if len(conditions) == 0 {
+		return ""
+	}
+	return " AND " + strings.Join(conditions, " AND ")
 }
 
 //go:embed migrations/*
@@ -116,6 +135,5 @@ func (db *PostgresDB) migrate() error {
 	if err = m.Up(); err == migrate.ErrNoChange {
 		err = nil
 	}
-
 	return err
 }
