@@ -11,16 +11,13 @@ func (db *PostgresDB) GetWeatherID(weather string) (int, error) {
 	var weatherID int
 	row := db.DBH.QueryRow(fmt.Sprintf("SELECT id FROM weatherIDs WHERE weather = '%s'", weather))
 	err := row.Scan(&weatherID)
-	if !errors.Is(err, sql.ErrNoRows) {
-		return weatherID, err
+	if errors.Is(err, sql.ErrNoRows) {
+		slog.Debug("defining new weather type", "weather", weather)
+		if _, err = db.DBH.Exec(fmt.Sprintf("INSERT INTO weatherIDs(id, weather) VALUES(nextval('weatherid'), '%s')", weather)); err == nil {
+			weatherID, err = db.GetWeatherID(weather)
+		}
 	}
-
-	var id int
-	slog.Debug("defining new weather type", "weather", weather)
-	if _, err = db.DBH.Exec(fmt.Sprintf("INSERT INTO weatherIDs(id, weather) VALUES(nextval('weatherid'), '%s')", weather)); err == nil {
-		id, err = db.GetWeatherID(weather)
-	}
-	return id, err
+	return weatherID, err
 }
 
 func (db *PostgresDB) GetWeather(id int) (string, error) {

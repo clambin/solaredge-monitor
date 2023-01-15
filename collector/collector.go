@@ -90,13 +90,14 @@ func (c *Collector) collect() {
 		return
 	}
 
-	if err := c.Store(measurement); err == nil {
-		slog.Info("new entry", slog.Group("measurement",
-			slog.Float64("power", measurement.Power),
-			slog.Float64("intensity", measurement.Intensity),
-			slog.String("weather", measurement.Weather),
-		))
-	} else {
+	if err := c.Store(measurement); err != nil {
 		slog.Error("failed to store metrics", err)
+		return
 	}
+
+	slog.Info("new entry", slog.Group("measurement",
+		slog.Float64("power", measurement.Power),
+		slog.Float64("intensity", measurement.Intensity),
+		slog.String("weather", measurement.Weather),
+	))
 }

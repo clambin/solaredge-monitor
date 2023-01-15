@@ -26,26 +26,26 @@ func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Inf
 			return
 		case <-ticker.C:
 			if info, err := f.fetch(ctx); err == nil {
-				ch <- *info
+				ch <- info
 			}
 		}
 	}
 }
 
-func (f *Fetcher) fetch(ctx context.Context) (*Info, error) {
+func (f *Fetcher) fetch(ctx context.Context) (Info, error) {
+	var info Info
+
 	if f.siteID == 0 {
-		var err error
-		f.siteID, err = f.getSiteID(ctx)
+		siteID, err := f.getSiteID(ctx)
 		if err != nil {
-			return nil, err
+			return info, err
 		}
+		f.siteID = siteID
 	}
-	var info *Info
+
 	_, _, _, _, current, err := f.API.GetPowerOverview(ctx, f.siteID)
 	if err == nil {
-		info = &Info{
-			Power: current,
-		}
+		info.Power = current
 	}
 	return info, err
 }

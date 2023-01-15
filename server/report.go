@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"golang.org/x/exp/slog"
 	"html/template"
 	"net/http"
@@ -32,9 +31,9 @@ const reportResponseTemplate = `<!DOCTYPE html>
 </html>`
 
 func (s *Server) report(w http.ResponseWriter, req *http.Request) {
-	start, stop, err := s.parseRequest(req)
+	start, stop, err := s.parseTimestamps(req)
 	if err != nil {
-		slog.Error("failed to get determine start/stop parameters", err)
+		slog.Error("failed to determine start/stop parameters", err)
 		http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -47,48 +46,13 @@ func (s *Server) report(w http.ResponseWriter, req *http.Request) {
 		Stop:  stop.Format(time.RFC3339),
 	}
 
-	err = writePageFromTemplate(w, reportResponseTemplate, data)
+	t := template.New("body")
+	if t, err = t.Parse(reportResponseTemplate); err == nil {
+		err = t.Execute(w, data)
+	}
+
 	if err != nil {
 		slog.Error("failed to create response", err)
 		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func (s *Server) parseRequest(req *http.Request) (start, stop time.Time, err error) {
-	if start, err = parseTimestamp(req, "start", s.backend.GetFirst); err != nil {
-		return
-	}
-
-	if stop, err = parseTimestamp(req, "stop", s.backend.GetLast); err != nil {
-		return
-	}
-
-	if stop.Before(start) {
-		err = fmt.Errorf("start time is later than stop time")
-	}
-
-	return
-}
-
-func parseTimestamp(req *http.Request, field string, dbfunc func() (time.Time, error)) (timestamp time.Time, err error) {
-	arg, ok := req.URL.Query()[field]
-
-	if !ok {
-		return dbfunc()
-	}
-
-	timestamp, err = time.Parse(time.RFC3339, arg[0])
-
-	if err != nil {
-		err = fmt.Errorf("invalid format for '%s': %w", field, err)
-	}
-	return
-}
-
-func writePageFromTemplate(w http.ResponseWriter, pageTemplate string, data interface{}) (err error) {
-	t := template.New("body")
-	if t, err = t.Parse(pageTemplate); err == nil {
-		err = t.Execute(w, data)
-	}
-	return
 }

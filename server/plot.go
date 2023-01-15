@@ -8,14 +8,13 @@ import (
 )
 
 func (s *Server) plot(w http.ResponseWriter, req *http.Request) {
-	plotType, fold, start, stop, err := s.parseArgs(req)
+	plotType, fold, start, stop, err := s.parsePlotRequest(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = s.backend.Plot(w, plotType, fold, start, stop)
-	if err != nil {
+	if err = s.backend.Plot(w, plotType, fold, start, stop); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -26,7 +25,7 @@ var plotTypes = map[string]PlotType{
 	"heatmap": HeatmapPlot,
 }
 
-func (s *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool, start, stop time.Time, err error) {
+func (s *Server) parsePlotRequest(req *http.Request) (plotType PlotType, fold bool, start, stop time.Time, err error) {
 	plotTypeString := chi.URLParam(req, "type")
 	var found bool
 	if plotType, found = plotTypes[plotTypeString]; !found {
@@ -34,20 +33,12 @@ func (s *Server) parseArgs(req *http.Request) (plotType PlotType, fold bool, sta
 		return
 	}
 
-	if start, err = parseTimestamp(req, "start", s.backend.GetFirst); err != nil {
-		return
-	}
-	if stop, err = parseTimestamp(req, "stop", s.backend.GetLast); err != nil {
-		return
-	}
-
-	if stop.Before(start) {
-		err = fmt.Errorf("start time is later than stop time")
+	if start, stop, err = s.parseTimestamps(req); err != nil {
+		err = fmt.Errorf("timestamps: %w", err)
 		return
 	}
 
-	var foldString []string
-	if foldString, found = req.URL.Query()["fold"]; found {
+	if foldString, ok := req.URL.Query()["fold"]; ok {
 		fold = foldString[0] == "true"
 	}
 

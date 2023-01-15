@@ -3,86 +3,124 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector"
-	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
 	"github.com/clambin/tado"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/exp/slog"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 	"syscall"
+	"time"
+)
+
+var (
+	configFile string
+	cmd        = cobra.Command{
+		Use:   "solaredge-monitor",
+		Short: "records solar panel output vs. weather conditions",
+		Run:   Main,
+	}
 )
 
 func main() {
-	var (
-		debug          bool
-		configFileName string
-		scrape         bool
-	)
-
-	a := kingpin.New(filepath.Base(os.Args[0]), "SolarEdge power monitoring")
-	a.Version(version.BuildVersion)
-	a.HelpFlag.Short('h')
-	a.VersionFlag.Short('v')
-	a.Flag("debug", "Log debug messages").Short('d').BoolVar(&debug)
-	a.Flag("config", "Configuration file").Short('c').Required().StringVar(&configFileName)
-	a.Flag("scrape", "Scrape new measurements").Short('s').BoolVar(&scrape)
-
-	if _, err := a.Parse(os.Args[1:]); err != nil {
-		a.Usage(os.Args[1:])
+	if err := cmd.Execute(); err != nil {
+		slog.Error("failed to start", err)
 		os.Exit(1)
 	}
+}
 
-	cfg, err := configuration.LoadFromFile(configFileName)
-	if err != nil {
-		slog.Error("failed to read configuration file", err)
-		panic(err)
+func init() {
+	cobra.OnInitialize(initConfig)
+	cmd.Version = version.BuildVersion
+	cmd.Flags().StringVar(&configFile, "config", "", "Configuration file")
+	cmd.Flags().Bool("debug", false, "Log debug messages")
+	cmd.Flags().Bool("scrape", false, "Record measurements")
+	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
+	_ = viper.BindPFlag("scrape.enabled", cmd.Flags().Lookup("scrape"))
+}
+
+func initConfig() {
+	if configFile != "" {
+		viper.SetConfigFile(configFile)
+	} else {
+		viper.AddConfigPath("/etc/solaredge/")
+		viper.AddConfigPath("$HOME/.solaredge")
+		viper.AddConfigPath(".")
+		viper.SetConfigName("config")
 	}
 
+	viper.SetDefault("server.addr", ":8080")
+	viper.SetDefault("prometheus.addr", ":9090")
+	viper.SetDefault("scrape.polling", 5*time.Minute)
+	viper.SetDefault("scrape.collection", 15*time.Minute)
+	viper.SetDefault("database.port", 5432)
+	viper.SetDefault("database.database", "solar")
+	viper.SetDefault("database.username", "solar")
+	viper.SetDefault("database.password", "")
+	viper.SetDefault("solaredge.token", "")
+	viper.SetDefault("tado.username", "")
+	viper.SetDefault("tado.password", "")
+
+	viper.SetEnvPrefix("SOLAREDGE")
+	viper.AutomaticEnv()
+	if err := viper.ReadInConfig(); err != nil {
+		slog.Error("failed to read config file", err)
+		os.Exit(1)
+	}
+}
+
+func Main(_ *cobra.Command, _ []string) {
 	var opts slog.HandlerOptions
-	if debug || cfg.Debug {
+	if viper.GetBool("debug") {
 		opts.Level = slog.LevelDebug
-		opts.AddSource = true
+		//opts.AddSource = true
 	}
 	slog.SetDefault(slog.New(opts.NewTextHandler(os.Stdout)))
 
 	slog.Info("solaredge-monitor started", "version", version.BuildVersion)
 
-	if scrape {
-		cfg.Scrape.Enabled = true
-	}
+	host := viper.GetString("database.host")
+	port := viper.GetInt("database.port")
+	database := viper.GetString("database.database")
+	username := viper.GetString("database.username")
+	password := viper.GetString("database.password")
 
-	db, err := store.NewPostgresDBFromConfig(cfg.Database)
+	db, err := store.NewPostgresDB(host, port, database, username, password)
 	if err != nil {
 		slog.Error("failed to access database", err)
-		panic(err)
+		return
 	}
-	s := server.New(cfg.Server, db)
-	prometheus.MustRegister(db, s)
+	slog.Info("connected to database", slog.Group("database",
+		slog.String("host", host),
+		slog.Int("port", port),
+		slog.String("database", database),
+		slog.String("username", username),
+	))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	go s.Run(ctx)
-
 	var wg sync.WaitGroup
-	if cfg.Scrape.Enabled {
+	if viper.GetBool("scrape.enabled") {
 		wg.Add(1)
 		go func() {
-			runScraper(ctx, cfg, db)
+			runScraper(ctx, db)
 			wg.Done()
 		}()
 	}
 
-	go runPrometheusServer(cfg.Server)
+	s := server.New(db)
+	prometheus.MustRegister(db, s)
+
+	go runServer(s)
+	go runPrometheusServer()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -92,27 +130,43 @@ func main() {
 	wg.Wait()
 }
 
-func runPrometheusServer(cfg configuration.ServerConfiguration) {
-	addr := cfg.PrometheusAddr
-	if addr == "" {
-		addr = fmt.Sprintf(":%d", cfg.PrometheusPort)
-	}
-	http.Handle("/metrics", promhttp.Handler())
-	if err := http.ListenAndServe(addr, nil); !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("could not start prometheus metrics server", err)
-		panic(err)
+func runServer(s *server.Server) {
+	addr := viper.GetString("server.addr")
+	slog.Info("starting server", "addr", addr)
+	if err := http.ListenAndServe(addr, s); !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("could not start server", err)
 	}
 }
 
-func runScraper(ctx context.Context, cfg *configuration.Configuration, db store.DB) {
+func runPrometheusServer() {
+	addr := viper.GetString("prometheus.addr")
+	slog.Info("starting Prometheus metrics server", "addr", addr)
+	http.Handle("/metrics", promhttp.Handler())
+	if err := http.ListenAndServe(addr, nil); !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("could not start Prometheus metrics server", err)
+	}
+}
+
+func runScraper(ctx context.Context, db store.DB) {
 	c := &collector.Collector{
-		TadoAPI: tado.New(cfg.Tado.Username, cfg.Tado.Password, ""),
+		TadoAPI: tado.New(
+			viper.GetString("tado.username"),
+			viper.GetString("tado.password"),
+			"",
+		),
 		SolarEdgeAPI: &solaredge.Client{
-			Token:      cfg.SolarEdge.Token,
+			Token:      viper.GetString("solaredge.token"),
 			HTTPClient: http.DefaultClient,
 		},
 		DB: db,
 	}
-	slog.Info("starting scraper", "poll", cfg.Scrape.Polling, "collect", cfg.Scrape.Collection)
-	c.Run(ctx, cfg.Scrape.Polling, cfg.Scrape.Collection)
+
+	polling := viper.GetDuration("scrape.polling")
+	collect := viper.GetDuration("scrape.collection")
+
+	slog.Info("starting scraper", slog.Group("scrape",
+		slog.Duration("poll", polling),
+		slog.Duration("collect", collect),
+	))
+	c.Run(ctx, polling, collect)
 }

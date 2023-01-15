@@ -2,8 +2,8 @@ package store
 
 import (
 	"embed"
+	"errors"
 	"fmt"
-	"github.com/clambin/solaredge-monitor/configuration"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -29,20 +29,13 @@ type Measurement struct {
 }
 
 type PostgresDB struct {
-	database  string
-	DBH       *sqlx.DB
-	collector prometheus.Collector
+	prometheus.Collector
+	database string
+	DBH      *sqlx.DB
 }
 
 var _ DB = &PostgresDB{}
-
-func NewPostgresDBFromConfig(cfg configuration.DBConfiguration) (db *PostgresDB, err error) {
-	return NewPostgresDB(
-		cfg.Host, cfg.Port,
-		cfg.Database,
-		cfg.Username, cfg.Password,
-	)
-}
+var _ prometheus.Collector = &PostgresDB{}
 
 func NewPostgresDB(host string, port int, database string, user string, password string) (*PostgresDB, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -55,38 +48,26 @@ func NewPostgresDB(host string, port int, database string, user string, password
 	db := &PostgresDB{
 		database:  database,
 		DBH:       dbh,
-		collector: collectors.NewDBStatsCollector(dbh.DB, database),
+		Collector: collectors.NewDBStatsCollector(dbh.DB, database),
 	}
 
-	if err = db.migrate(); err != nil {
-		return nil, fmt.Errorf("database migration: %w", err)
-	}
-
+	err = db.migrate()
 	return db, err
 }
 
-func (db *PostgresDB) Describe(descs chan<- *prometheus.Desc) {
-	db.collector.Describe(descs)
-}
-
-func (db *PostgresDB) Collect(metrics chan<- prometheus.Metric) {
-	db.collector.Collect(metrics)
-}
-
-func (db *PostgresDB) Store(measurement Measurement) (err error) {
+func (db *PostgresDB) Store(measurement Measurement) error {
 	weatherID, err := db.GetWeatherID(measurement.Weather)
-	if err != nil {
-		return err
+	if err == nil {
+		tx := db.DBH.MustBegin()
+		tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
+			measurement.Timestamp, measurement.Intensity, measurement.Power, weatherID,
+		)
+		err = tx.Commit()
 	}
-
-	tx := db.DBH.MustBegin()
-	tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
-		measurement.Timestamp, measurement.Intensity, measurement.Power, weatherID,
-	)
-	return tx.Commit()
+	return err
 }
 
-func (db *PostgresDB) GetAll() (measurements []Measurement, err error) {
+func (db *PostgresDB) GetAll() ([]Measurement, error) {
 	return db.Get(time.Time{}, time.Time{})
 }
 
@@ -132,8 +113,12 @@ func (db *PostgresDB) migrate() error {
 		return fmt.Errorf("unable to migrate database: %w", err)
 	}
 
-	if err = m.Up(); err == migrate.ErrNoChange {
-		err = nil
+	if err = m.Up(); err != nil {
+		if errors.Is(err, migrate.ErrNoChange) {
+			err = nil
+		} else {
+			err = fmt.Errorf("database migration failed: %w", err)
+		}
 	}
 	return err
 }

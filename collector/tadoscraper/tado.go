@@ -26,21 +26,19 @@ func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Inf
 			return
 		case <-ticker.C:
 			if info, err := f.fetch(ctx); err == nil {
-				ch <- *info
+				ch <- info
 			}
 		}
 	}
 }
 
-func (f *Fetcher) fetch(ctx context.Context) (*Info, error) {
-	var info *Info
+func (f *Fetcher) fetch(ctx context.Context) (Info, error) {
+	var info Info
 	weatherInfo, err := f.API.GetWeatherInfo(ctx)
 	if err == nil {
-		info = &Info{
-			SolarIntensity: weatherInfo.SolarIntensity.Percentage,
-			Temperature:    weatherInfo.OutsideTemperature.Celsius,
-			Weather:        weatherInfo.WeatherState.Value,
-		}
+		info.SolarIntensity = weatherInfo.SolarIntensity.Percentage
+		info.Temperature = weatherInfo.OutsideTemperature.Celsius
+		info.Weather = weatherInfo.WeatherState.Value
 	}
 	return info, err
 }

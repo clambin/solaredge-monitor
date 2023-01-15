@@ -34,7 +34,13 @@ func TestStore(t *testing.T) {
 	port, err := strconv.Atoi(values["pg_port"])
 	require.NoError(t, err)
 
-	db, err := store.NewPostgresDB(values["pg_host"], port, values["pg_database"], values["pg_user"], values["pg_password"])
+	db, err := store.NewPostgresDB(
+		values["pg_host"],
+		port,
+		values["pg_database"],
+		values["pg_user"],
+		values["pg_password"],
+	)
 	require.NoError(t, err)
 
 	id, err := db.GetWeatherID("SUN")
@@ -92,5 +98,4 @@ func TestStore(t *testing.T) {
 	id, err = db.GetWeatherID("RAINING")
 	require.NoError(t, err)
 	assert.Equal(t, 4, id)
-
 }
