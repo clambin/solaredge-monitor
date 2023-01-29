@@ -17,7 +17,7 @@ type Server struct {
 	backend *Generator
 }
 
-var _ prometheus.Collector = &Server{}
+var _ prometheus.Collector = Server{}
 
 func New(db store.DB) *Server {
 	s := Server{
