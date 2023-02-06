@@ -56,7 +56,7 @@ func init() {
 	_ = viper.BindPFlag("include", cmd.PersistentFlags().Lookup("include"))
 	cmd.PersistentFlags().Float64P("ratio", "r", 0.95, "Percentage of data to use for training")
 	_ = viper.BindPFlag("ratio", cmd.PersistentFlags().Lookup("ratio"))
-	cmd.PersistentFlags().Bool("report", false, "Report individual predictions")
+	power.PersistentFlags().Bool("report", false, "Report individual predictions")
 	_ = viper.BindPFlag("report", cmd.PersistentFlags().Lookup("report"))
 }
 
