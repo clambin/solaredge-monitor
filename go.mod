@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/clambin/go-common/httpserver v0.4.2
 	github.com/clambin/solaredge v0.7.1
-	github.com/clambin/tado v0.9.0
+	github.com/clambin/tado v0.10.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/jmoiron/sqlx v1.3.5
@@ -24,6 +24,7 @@ require (
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/clambin/go-common/set v0.2.0 // indirect
 	github.com/containerd/containerd v1.6.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
