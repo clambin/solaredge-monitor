@@ -2,7 +2,7 @@ package tadoscraper
 
 import (
 	"context"
-	"github.com/clambin/tado"
+	"github.com/clambin/solaredge-monitor/tado"
 	"time"
 )
 

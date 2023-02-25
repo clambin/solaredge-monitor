@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/clambin/go-common/httpserver v0.4.2
 	github.com/clambin/solaredge v0.7.1
-	github.com/clambin/tado v0.11.0
+	github.com/clambin/tado v1.0.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/jmoiron/sqlx v1.3.5
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/exp v0.0.0-20230113213754-f9f960f08ad4
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	gonum.org/v1/plot v0.12.0
 )
 
