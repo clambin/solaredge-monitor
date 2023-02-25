@@ -2,7 +2,7 @@ package tadoscraper
 
 import (
 	"context"
-	tado2 "github.com/clambin/solaredge-monitor/tado"
+	"github.com/clambin/solaredge-monitor/tado"
 	"time"
 )
 
@@ -13,7 +13,7 @@ type Info struct {
 }
 
 type Fetcher struct {
-	tado2.API
+	tado.API
 }
 
 func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Info) {

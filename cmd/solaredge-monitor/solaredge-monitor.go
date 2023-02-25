@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
+	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/solaredge-monitor/version"
@@ -149,15 +151,15 @@ func runPrometheusServer() {
 
 func runScraper(ctx context.Context, db store.DB) {
 	c := &collector.Collector{
-		TadoAPI: tado.New(
+		TadoScraper: &tadoscraper.Fetcher{API: tado.New(
 			viper.GetString("tado.username"),
 			viper.GetString("tado.password"),
 			"",
-		),
-		SolarEdgeAPI: &solaredge.Client{
+		)},
+		SolarEdgeScraper: &solaredgescraper.Fetcher{API: &solaredge.Client{
 			Token:      viper.GetString("solaredge.token"),
 			HTTPClient: http.DefaultClient,
-		},
+		}},
 		DB: db,
 	}
 

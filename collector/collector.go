@@ -2,11 +2,9 @@ package collector
 
 import (
 	"context"
-	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
 	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
 	"github.com/clambin/solaredge-monitor/store"
-	"github.com/clambin/solaredge-monitor/tado"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/exp/slog"
@@ -15,13 +13,18 @@ import (
 )
 
 type Collector struct {
-	TadoAPI      tado.API
-	SolarEdgeAPI solaredge.API
+	TadoScraper      Scraper[tadoscraper.Info]
+	SolarEdgeScraper Scraper[solaredgescraper.Info]
+
 	//temperature  Averager
 	intensity Averager
 	power     Averager
 	weather   WordCounter
 	store.DB
+}
+
+type Scraper[T any] interface {
+	Run(ctx context.Context, duration time.Duration, info chan<- T)
 }
 
 var (
@@ -37,16 +40,14 @@ func (c *Collector) Run(ctx context.Context, scrapeInterval time.Duration, colle
 
 	tadoInfo := make(chan tadoscraper.Info, 1)
 	go func() {
-		f := tadoscraper.Fetcher{API: c.TadoAPI}
-		f.Run(ctx, scrapeInterval, tadoInfo)
-		wg.Done()
+		defer wg.Done()
+		c.TadoScraper.Run(ctx, scrapeInterval, tadoInfo)
 	}()
 
-	solaredgeInfo := make(chan solaredgescraper.Info, 1)
+	solarEdgeInfo := make(chan solaredgescraper.Info, 1)
 	go func() {
-		f := solaredgescraper.Fetcher{API: c.SolarEdgeAPI}
-		f.Run(ctx, scrapeInterval, solaredgeInfo)
-		wg.Done()
+		defer wg.Done()
+		c.SolarEdgeScraper.Run(ctx, scrapeInterval, solarEdgeInfo)
 	}()
 
 	ticker := time.NewTicker(collectInterval)
@@ -61,7 +62,7 @@ func (c *Collector) Run(ctx context.Context, scrapeInterval time.Duration, colle
 			c.intensity.Add(info.SolarIntensity)
 			//c.temperature.Add(info.Temperature)
 			c.weather.Add(info.Weather)
-		case info := <-solaredgeInfo:
+		case info := <-solarEdgeInfo:
 			c.power.Add(info.Power)
 		case <-ticker.C:
 			c.collect()

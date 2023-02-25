@@ -3,6 +3,8 @@ package collector_test
 import (
 	"context"
 	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
+	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
 	mockTado "github.com/clambin/solaredge-monitor/tado/mocks"
 	mockSolaredge "github.com/clambin/solaredge/mocks"
@@ -20,9 +22,9 @@ func TestCollector(t *testing.T) {
 	tadoClient := mockTado.NewAPI(t)
 
 	c := collector.Collector{
-		TadoAPI:      tadoClient,
-		SolarEdgeAPI: solarEdgeClient,
-		DB:           db,
+		TadoScraper:      &tadoscraper.Fetcher{API: tadoClient},
+		SolarEdgeScraper: &solaredgescraper.Fetcher{API: solarEdgeClient},
+		DB:               db,
 	}
 
 	solarEdgeClient.
