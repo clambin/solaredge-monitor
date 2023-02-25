@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
 	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
 	"github.com/clambin/solaredge-monitor/store"
-	"github.com/clambin/tado"
+	"github.com/clambin/solaredge-monitor/tado"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/exp/slog"
