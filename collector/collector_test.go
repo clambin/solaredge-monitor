@@ -2,12 +2,13 @@ package collector_test
 
 import (
 	"context"
+	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
 	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
+	solarEdgeMock "github.com/clambin/solaredge-monitor/solaredge/mocks"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
-	mockTado "github.com/clambin/solaredge-monitor/tado/mocks"
-	mockSolaredge "github.com/clambin/solaredge/mocks"
+	tadoMock "github.com/clambin/solaredge-monitor/tado/mocks"
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -18,8 +19,8 @@ import (
 
 func TestCollector(t *testing.T) {
 	db := mockdb.NewDB()
-	solarEdgeClient := mockSolaredge.NewAPI(t)
-	tadoClient := mockTado.NewAPI(t)
+	solarEdgeClient := solarEdgeMock.NewAPI(t)
+	tadoClient := tadoMock.NewAPI(t)
 
 	c := collector.Collector{
 		TadoScraper:      &tadoscraper.Fetcher{API: tadoClient},
@@ -28,11 +29,14 @@ func TestCollector(t *testing.T) {
 	}
 
 	solarEdgeClient.
-		On("GetSiteIDs", mock.AnythingOfType("*context.cancelCtx")).
-		Return([]int{100}, nil)
-	solarEdgeClient.
-		On("GetPowerOverview", mock.AnythingOfType("*context.cancelCtx"), 100).
-		Return(0.0, 0.0, 0.0, 0.0, 1500.0, nil)
+		On("GetPowerOverview", mock.AnythingOfType("*context.cancelCtx")).
+		Return(solaredge.PowerOverview{
+			CurrentPower: struct {
+				Power float64 `json:"power"`
+			}{
+				Power: 1500,
+			},
+		}, nil)
 	tadoClient.
 		On("GetWeatherInfo", mock.AnythingOfType("*context.cancelCtx")).
 		Return(tado.WeatherInfo{
