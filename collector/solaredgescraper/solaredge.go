@@ -2,7 +2,7 @@ package solaredgescraper
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/solaredge"
+	"github.com/clambin/solaredge"
 	"time"
 )
 
@@ -10,9 +10,15 @@ type Info struct {
 	Power float64
 }
 
+// API interface abstracts the solaredge API, so we can mock it during unit testing
+//
+//go:generate mockery --name API
+type API interface {
+	GetPowerOverview(context.Context) (solaredge.PowerOverview, error)
+}
+
 type Fetcher struct {
-	solaredge.API
-	siteID int
+	API
 }
 
 func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Info) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
-	"github.com/clambin/solaredge-monitor/solaredge/mocks"
+	"github.com/clambin/solaredge-monitor/collector/solaredgescraper/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"

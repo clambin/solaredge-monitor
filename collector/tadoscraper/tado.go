@@ -2,7 +2,7 @@ package tadoscraper
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/tado"
+	"github.com/clambin/tado"
 	"time"
 )
 
@@ -12,8 +12,15 @@ type Info struct {
 	Weather        string
 }
 
+// API interface abstracts the tado API, so we can mock it during unit testing
+//
+//go:generate mockery --name API
+type API interface {
+	GetWeatherInfo(ctx context.Context) (tado.WeatherInfo, error)
+}
+
 type Fetcher struct {
-	tado.API
+	API
 }
 
 func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Info) {

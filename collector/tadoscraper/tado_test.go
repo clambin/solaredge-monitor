@@ -3,7 +3,7 @@ package tadoscraper_test
 import (
 	"context"
 	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
-	"github.com/clambin/solaredge-monitor/tado/mocks"
+	"github.com/clambin/solaredge-monitor/collector/tadoscraper/mocks"
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
