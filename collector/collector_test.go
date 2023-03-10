@@ -5,7 +5,7 @@ import (
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
-	solarEdgeMock "github.com/clambin/solaredge-monitor/collector/solaredgescraper/mocks"
+	"github.com/clambin/solaredge-monitor/collector/solaredgescraper/mocks"
 	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
 	tadoMock "github.com/clambin/solaredge-monitor/collector/tadoscraper/mocks"
 	"github.com/clambin/solaredge-monitor/store/mockdb"
@@ -19,29 +19,54 @@ import (
 
 func TestCollector(t *testing.T) {
 	db := mockdb.NewDB()
-	solarEdgeClient := solarEdgeMock.NewAPI(t)
 	tadoClient := tadoMock.NewAPI(t)
+	site := mocks.NewSite(t)
 
 	c := collector.Collector{
 		TadoScraper:      &tadoscraper.Fetcher{API: tadoClient},
-		SolarEdgeScraper: &solaredgescraper.Fetcher{API: solarEdgeClient},
+		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
 		DB:               db,
 	}
 
-	solarEdgeClient.
-		On("GetPowerOverview", mock.AnythingOfType("*context.cancelCtx")).
-		Return(solaredge.PowerOverview{
-			CurrentPower: struct {
-				Power float64 `json:"power"`
-			}{
-				Power: 1500,
-			},
-		}, nil)
 	tadoClient.
 		On("GetWeatherInfo", mock.AnythingOfType("*context.cancelCtx")).
 		Return(tado.WeatherInfo{
 			SolarIntensity: tado.Percentage{Percentage: 55.0},
 			WeatherState:   tado.Value{Value: "SUNNY"},
+		}, nil)
+	site.
+		On("GetPowerOverview", mock.AnythingOfType("*context.cancelCtx")).
+		Return(solaredge.PowerOverview{
+			LastUpdateTime: solaredge.Time{},
+			LifeTimeData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 10000,
+			},
+			LastYearData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 1000,
+			},
+			LastMonthData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 100,
+			},
+			LastDayData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 10,
+			},
+			CurrentPower: struct {
+				Power float64 `json:"power"`
+			}{
+				Power: 3400,
+			},
 		}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -53,7 +78,7 @@ func TestCollector(t *testing.T) {
 
 	measurements, _ := db.GetAll()
 	for _, entry := range measurements {
-		assert.Equal(t, 1500.0, entry.Power)
+		assert.Equal(t, 3400.0, entry.Power)
 		assert.Equal(t, 55.0, entry.Intensity)
 	}
 

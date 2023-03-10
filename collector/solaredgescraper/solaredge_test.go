@@ -12,19 +12,46 @@ import (
 )
 
 func TestFetcher_Run(t *testing.T) {
-	api := mocks.NewAPI(t)
-	api.On("GetPowerOverview", mock.AnythingOfType("*context.emptyCtx")).Return(solaredge.PowerOverview{
-		CurrentPower: struct {
-			Power float64 `json:"power"`
-		}{
-			Power: 3200,
-		},
-	}, nil)
+	site := mocks.NewSite(t)
+	site.
+		On("GetPowerOverview", mock.AnythingOfType("*context.emptyCtx")).
+		Return(solaredge.PowerOverview{
+			LastUpdateTime: solaredge.Time{},
+			LifeTimeData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 10000,
+			},
+			LastYearData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 1000,
+			},
+			LastMonthData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 100,
+			},
+			LastDayData: struct {
+				Energy  float64 `json:"energy"`
+				Revenue float64 `json:"revenue"`
+			}{
+				Energy: 10,
+			},
+			CurrentPower: struct {
+				Power float64 `json:"power"`
+			}{
+				Power: 3400,
+			},
+		}, nil)
 
 	ch := make(chan solaredgescraper.Info)
-	f := solaredgescraper.Fetcher{API: api}
+	f := solaredgescraper.Fetcher{Site: site}
 	go f.Run(context.Background(), time.Millisecond, ch)
 
 	info := <-ch
-	assert.Equal(t, solaredgescraper.Info{Power: 3200}, info)
+	assert.Equal(t, solaredgescraper.Info{Power: 3400}, info)
 }

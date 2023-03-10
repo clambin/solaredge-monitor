@@ -150,17 +150,19 @@ func runPrometheusServer() {
 }
 
 func runScraper(ctx context.Context, db store.DB) {
+	site, err := getSite(ctx)
+	if err != nil {
+		slog.Error("failed to get SolarEdge site", err)
+		return
+	}
 	c := &collector.Collector{
 		TadoScraper: &tadoscraper.Fetcher{API: tado.New(
 			viper.GetString("tado.username"),
 			viper.GetString("tado.password"),
 			"",
 		)},
-		SolarEdgeScraper: &solaredgescraper.Fetcher{API: &solaredge.Client{
-			Token:      viper.GetString("solaredge.token"),
-			HTTPClient: http.DefaultClient,
-		}},
-		DB: db,
+		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
+		DB:               db,
 	}
 
 	polling := viper.GetDuration("scrape.polling")
@@ -171,4 +173,22 @@ func runScraper(ctx context.Context, db store.DB) {
 		slog.Duration("collect", collect),
 	))
 	c.Run(ctx, polling, collect)
+}
+
+func getSite(ctx context.Context) (*solaredge.Site, error) {
+	c := solaredge.Client{
+		Token:      viper.GetString("solaredge.token"),
+		HTTPClient: http.DefaultClient,
+	}
+	sites, err := c.GetSites(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(sites) == 0 {
+		return nil, errors.New("no SolarEdge sites found")
+	}
+	if len(sites) > 1 {
+		slog.Warn("more than one SolarEdge site found. Using first one", "name", sites[0].Name)
+	}
+	return &sites[0], nil
 }

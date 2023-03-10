@@ -10,15 +10,14 @@ type Info struct {
 	Power float64
 }
 
-// API interface abstracts the solaredge API, so we can mock it during unit testing
-//
-//go:generate mockery --name API
-type API interface {
-	GetPowerOverview(context.Context) (solaredge.PowerOverview, error)
+type Fetcher struct {
+	Site Site
 }
 
-type Fetcher struct {
-	API
+//go:generate mockery --name Site
+type Site interface {
+	GetID() int
+	GetPowerOverview(ctx context.Context) (solaredge.PowerOverview, error)
 }
 
 func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Info) {
@@ -39,8 +38,7 @@ func (f *Fetcher) Run(ctx context.Context, interval time.Duration, ch chan<- Inf
 
 func (f *Fetcher) fetch(ctx context.Context) (Info, error) {
 	var info Info
-
-	overview, err := f.API.GetPowerOverview(ctx)
+	overview, err := f.Site.GetPowerOverview(ctx)
 	if err == nil {
 		info.Power = overview.CurrentPower.Power
 	}
