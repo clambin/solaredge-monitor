@@ -71,6 +71,7 @@ func initConfig() {
 	viper.SetDefault("solaredge.token", "")
 	viper.SetDefault("tado.username", "")
 	viper.SetDefault("tado.password", "")
+	viper.SetDefault("tado.secret", "")
 
 	viper.SetEnvPrefix("SOLAREDGE")
 	viper.AutomaticEnv()
@@ -159,7 +160,7 @@ func runScraper(ctx context.Context, db store.DB) {
 		TadoScraper: &tadoscraper.Fetcher{API: tado.New(
 			viper.GetString("tado.username"),
 			viper.GetString("tado.password"),
-			"",
+			viper.GetString("tado.secret"),
 		)},
 		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
 		DB:               db,
