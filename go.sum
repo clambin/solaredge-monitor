@@ -213,6 +213,8 @@ github.com/clambin/go-common/set v0.2.0 h1:s4wXxKns3sb2VPCtAmmLEDs4KiHNIiot+LcKg
 github.com/clambin/go-common/set v0.2.0/go.mod h1:GFjAZynNo4BNjlx2hzDMHIU4ays7QjpJUSHXB/3b1ZE=
 github.com/clambin/solaredge v0.9.2 h1:I7JkypOSUW19Nco0n8zqTIm9GnfhxXyF/ahU5pFzGH4=
 github.com/clambin/solaredge v0.9.2/go.mod h1:vg9qD/N25lazxLVpmOfgdKYHl7T7JvQm5ViFktzEHt4=
+github.com/clambin/solaredge v1.0.0 h1:Nohb+kqqrfAdmj2pjQ9nRaC6hlSute2e8dKAjsJnKLA=
+github.com/clambin/solaredge v1.0.0/go.mod h1:vg9qD/N25lazxLVpmOfgdKYHl7T7JvQm5ViFktzEHt4=
 github.com/clambin/tado v1.0.1 h1:JknTaw/VgnIvNpQu/5SAOBtUilHLIHUKSqX3U08Xd9A=
 github.com/clambin/tado v1.0.1/go.mod h1:h71za9HjbihGxGStMDYtsiPCT3o5qYaQGEtKS3iCxzI=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
