@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/clambin/go-common/httpserver v0.4.2
-	github.com/clambin/solaredge v1.0.0
+	github.com/clambin/solaredge v1.0.1
 	github.com/clambin/tado v1.0.1
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/golang-migrate/migrate/v4 v4.15.2
