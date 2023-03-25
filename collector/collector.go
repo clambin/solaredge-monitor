@@ -92,7 +92,7 @@ func (c *Collector) collect() {
 	}
 
 	if err := c.Store(measurement); err != nil {
-		slog.Error("failed to store metrics", err)
+		slog.Error("failed to store metrics", "err", err)
 		return
 	}
 

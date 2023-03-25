@@ -33,7 +33,7 @@ const reportResponseTemplate = `<!DOCTYPE html>
 func (s *Server) report(w http.ResponseWriter, req *http.Request) {
 	start, stop, err := s.parseTimestamps(req)
 	if err != nil {
-		slog.Error("failed to determine start/stop parameters", err)
+		slog.Error("failed to determine start/stop parameters", "err", err)
 		http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -52,7 +52,7 @@ func (s *Server) report(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if err != nil {
-		slog.Error("failed to create response", err)
+		slog.Error("failed to create response", "err", err)
 		http.Error(w, "unable to display page: "+err.Error(), http.StatusInternalServerError)
 	}
 }

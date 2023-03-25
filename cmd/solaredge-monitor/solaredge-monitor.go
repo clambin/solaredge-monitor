@@ -35,7 +35,7 @@ var (
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		slog.Error("failed to start", err)
+		slog.Error("failed to start", "err", err)
 		os.Exit(1)
 	}
 }
@@ -76,7 +76,7 @@ func initConfig() {
 	viper.SetEnvPrefix("SOLAREDGE")
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err != nil {
-		slog.Error("failed to read config file", err)
+		slog.Error("failed to read config file", "err", err)
 		os.Exit(1)
 	}
 }
@@ -99,7 +99,7 @@ func Main(_ *cobra.Command, _ []string) {
 
 	db, err := store.NewPostgresDB(host, port, database, username, password)
 	if err != nil {
-		slog.Error("failed to access database", err)
+		slog.Error("failed to access database", "err", err)
 		return
 	}
 	slog.Info("connected to database", slog.Group("database",
@@ -137,7 +137,7 @@ func runServer(s *server.Server) {
 	addr := viper.GetString("server.addr")
 	slog.Info("starting server", "addr", addr)
 	if err := http.ListenAndServe(addr, s); !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("could not start server", err)
+		slog.Error("could not start server", "err", err)
 	}
 }
 
@@ -146,14 +146,14 @@ func runPrometheusServer() {
 	slog.Info("starting Prometheus metrics server", "addr", addr)
 	http.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe(addr, nil); !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("could not start Prometheus metrics server", err)
+		slog.Error("could not start Prometheus metrics server", "err", err)
 	}
 }
 
 func runScraper(ctx context.Context, db store.DB) {
 	site, err := getSite(ctx)
 	if err != nil {
-		slog.Error("failed to get SolarEdge site", err)
+		slog.Error("failed to get SolarEdge site", "err", err)
 		return
 	}
 	c := &collector.Collector{
