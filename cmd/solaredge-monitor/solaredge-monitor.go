@@ -85,9 +85,8 @@ func Main(_ *cobra.Command, _ []string) {
 	var opts slog.HandlerOptions
 	if viper.GetBool("debug") {
 		opts.Level = slog.LevelDebug
-		//opts.AddSource = true
 	}
-	slog.SetDefault(slog.New(opts.NewTextHandler(os.Stdout)))
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &opts)))
 
 	slog.Info("solaredge-monitor started", "version", version.BuildVersion)
 
