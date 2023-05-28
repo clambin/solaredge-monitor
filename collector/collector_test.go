@@ -26,6 +26,8 @@ func TestCollector(t *testing.T) {
 		TadoScraper:      &tadoscraper.Fetcher{API: tadoClient},
 		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
 		DB:               db,
+		ScrapeInterval:   10 * time.Millisecond,
+		CollectInterval:  100 * time.Millisecond,
 	}
 
 	tadoClient.
@@ -72,7 +74,7 @@ func TestCollector(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func() { defer wg.Done(); c.Run(ctx, 10*time.Millisecond, 100*time.Millisecond) }()
+	go func() { defer wg.Done(); _ = c.Run(ctx) }()
 
 	assert.Eventually(t, func() bool { return db.Rows() > 0 }, 500*time.Millisecond, 50*time.Millisecond)
 
