@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/clambin/go-common/httpserver v0.5.0
+	github.com/clambin/go-common/taskmanager v0.2.0
 	github.com/clambin/solaredge v1.0.1
 	github.com/clambin/tado v1.1.0
 	github.com/go-chi/chi/v5 v5.0.8

@@ -15,6 +15,8 @@ import (
 type Collector struct {
 	TadoScraper      Scraper[tadoscraper.Info]
 	SolarEdgeScraper Scraper[solaredgescraper.Info]
+	ScrapeInterval   time.Duration
+	CollectInterval  time.Duration
 
 	//temperature  Averager
 	intensity Averager
@@ -34,30 +36,30 @@ var (
 	}, []string{"collector"})
 )
 
-func (c *Collector) Run(ctx context.Context, scrapeInterval time.Duration, collectInterval time.Duration) {
+func (c *Collector) Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
 	tadoInfo := make(chan tadoscraper.Info, 1)
 	go func() {
 		defer wg.Done()
-		c.TadoScraper.Run(ctx, scrapeInterval, tadoInfo)
+		c.TadoScraper.Run(ctx, c.ScrapeInterval, tadoInfo)
 	}()
 
 	solarEdgeInfo := make(chan solaredgescraper.Info, 1)
 	go func() {
 		defer wg.Done()
-		c.SolarEdgeScraper.Run(ctx, scrapeInterval, solarEdgeInfo)
+		c.SolarEdgeScraper.Run(ctx, c.ScrapeInterval, solarEdgeInfo)
 	}()
 
-	ticker := time.NewTicker(collectInterval)
+	ticker := time.NewTicker(c.CollectInterval)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			wg.Wait()
 			c.collect()
-			return
+			return nil
 		case info := <-tadoInfo:
 			c.intensity.Add(info.SolarIntensity)
 			//c.temperature.Add(info.Temperature)

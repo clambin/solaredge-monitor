@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/clambin/go-common/taskmanager"
+	"github.com/clambin/go-common/taskmanager/httpserver"
+	promserver "github.com/clambin/go-common/taskmanager/prometheus"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector"
 	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
@@ -12,14 +15,12 @@ import (
 	"github.com/clambin/solaredge-monitor/version"
 	"github.com/clambin/tado"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slog"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -108,52 +109,39 @@ func Main(_ *cobra.Command, _ []string) {
 		slog.String("username", username),
 	))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	if viper.GetBool("scrape.enabled") {
-		wg.Add(1)
-		go func() {
-			runScraper(ctx, db)
-			wg.Done()
-		}()
-	}
-
 	s := server.New(db)
 	prometheus.MustRegister(db, s)
 
-	go runServer(s)
-	go runPrometheusServer()
+	tasks := []taskmanager.Task{
+		promserver.New(promserver.WithAddr(viper.GetString("prometheus.addr"))),
+		httpserver.New(viper.GetString("server.addr"), s),
+	}
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	ctx, done := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer done()
 
-	<-sigs
-	cancel()
-	wg.Wait()
-}
+	if viper.GetBool("scrape.enabled") {
+		c, err := makeScraper(ctx, db)
+		if err != nil {
+			slog.Error("failed to create collector", "err", err)
+			os.Exit(1)
+		}
+		tasks = append(tasks, c)
+	}
 
-func runServer(s *server.Server) {
-	addr := viper.GetString("server.addr")
-	slog.Info("starting server", "addr", addr)
-	if err := http.ListenAndServe(addr, s); !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("could not start server", "err", err)
+	tm := taskmanager.New(tasks...)
+
+	if err = tm.Run(ctx); err != nil {
+		slog.Error("failed to start solaredge-monitor", "err", err)
+		os.Exit(1)
 	}
 }
 
-func runPrometheusServer() {
-	addr := viper.GetString("prometheus.addr")
-	slog.Info("starting Prometheus metrics server", "addr", addr)
-	http.Handle("/metrics", promhttp.Handler())
-	if err := http.ListenAndServe(addr, nil); !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("could not start Prometheus metrics server", "err", err)
-	}
-}
-
-func runScraper(ctx context.Context, db store.DB) {
+func makeScraper(ctx context.Context, db store.DB) (*collector.Collector, error) {
 	site, err := getSite(ctx)
 	if err != nil {
 		slog.Error("failed to get SolarEdge site", "err", err)
-		return
+		return nil, err
 	}
 	c := &collector.Collector{
 		TadoScraper: &tadoscraper.Fetcher{API: tado.New(
@@ -163,16 +151,11 @@ func runScraper(ctx context.Context, db store.DB) {
 		)},
 		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
 		DB:               db,
+		ScrapeInterval:   viper.GetDuration("scrape.polling"),
+		CollectInterval:  viper.GetDuration("scrape.collection"),
 	}
 
-	polling := viper.GetDuration("scrape.polling")
-	collect := viper.GetDuration("scrape.collection")
-
-	slog.Info("starting scraper", slog.Group("scrape",
-		slog.Duration("poll", polling),
-		slog.Duration("collect", collect),
-	))
-	c.Run(ctx, polling, collect)
+	return c, nil
 }
 
 func getSite(ctx context.Context) (*solaredge.Site, error) {
