@@ -8,7 +8,7 @@ require (
 	github.com/clambin/solaredge v1.0.1
 	github.com/clambin/tado v1.1.0
 	github.com/go-chi/chi/v5 v5.0.8
-	github.com/golang-migrate/migrate/v4 v4.16.1
+	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.15.1
