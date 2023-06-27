@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/clambin/go-common/taskmanager"
 	"github.com/clambin/go-common/taskmanager/httpserver"
 	promserver "github.com/clambin/go-common/taskmanager/prometheus"
@@ -138,17 +139,23 @@ func Main(_ *cobra.Command, _ []string) {
 }
 
 func makeScraper(ctx context.Context, db store.DB) (*collector.Collector, error) {
+	tadoClient, err := tado.NewWithContext(ctx,
+		viper.GetString("tado.username"),
+		viper.GetString("tado.password"),
+		viper.GetString("tado.secret"),
+	)
+	if err != nil {
+		slog.Error("failed to connect to Tado API", "err", err)
+		return nil, fmt.Errorf("tado: %w", err)
+	}
+
 	site, err := getSite(ctx)
 	if err != nil {
 		slog.Error("failed to get SolarEdge site", "err", err)
-		return nil, err
+		return nil, fmt.Errorf("solaredge: %w", err)
 	}
 	c := &collector.Collector{
-		TadoScraper: &tadoscraper.Fetcher{API: tado.New(
-			viper.GetString("tado.username"),
-			viper.GetString("tado.password"),
-			viper.GetString("tado.secret"),
-		)},
+		TadoScraper:      &tadoscraper.Fetcher{API: tadoClient},
 		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
 		DB:               db,
 		ScrapeInterval:   viper.GetDuration("scrape.polling"),
