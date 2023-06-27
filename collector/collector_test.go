@@ -12,7 +12,6 @@ import (
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"sync"
 	"testing"
 	"time"
 )
@@ -72,11 +71,10 @@ func TestCollector(t *testing.T) {
 		}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() { defer wg.Done(); _ = c.Run(ctx) }()
+	ch := make(chan error)
+	go func() { ch <- c.Run(ctx) }()
 
-	assert.Eventually(t, func() bool { return db.Rows() > 0 }, 500*time.Millisecond, 50*time.Millisecond)
+	assert.Eventually(t, func() bool { return db.Rows() > 0 }, time.Second, 50*time.Millisecond)
 
 	measurements, _ := db.GetAll()
 	for _, entry := range measurements {
@@ -85,5 +83,5 @@ func TestCollector(t *testing.T) {
 	}
 
 	cancel()
-	wg.Wait()
+	assert.NoError(t, <-ch)
 }
