@@ -6,7 +6,6 @@ import (
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
-	"golang.org/x/exp/slog"
 	"net/http"
 	"time"
 )
@@ -32,8 +31,7 @@ func New(db store.DB) *Server {
 	}
 
 	r := chi.NewRouter()
-	//r.Use(chiMiddleware.RealIP)
-	r.Use(middleware.Logger(slog.Default()))
+	r.Use(middleware.Logger(middleware.DefaultRequestLogger))
 	r.Use(s.PrometheusMetrics.Handle)
 	r.Get("/report", s.report)
 	r.Get("/plot/{type}", s.plot)
