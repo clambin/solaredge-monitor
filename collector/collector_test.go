@@ -12,6 +12,7 @@ import (
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"golang.org/x/exp/slog"
 	"testing"
 	"time"
 )
@@ -27,6 +28,7 @@ func TestCollector(t *testing.T) {
 		DB:               db,
 		ScrapeInterval:   10 * time.Millisecond,
 		CollectInterval:  100 * time.Millisecond,
+		Logger:           slog.Default(),
 	}
 
 	tadoClient.

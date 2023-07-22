@@ -17,6 +17,7 @@ type Collector struct {
 	SolarEdgeScraper Scraper[solaredgescraper.Info]
 	ScrapeInterval   time.Duration
 	CollectInterval  time.Duration
+	Logger           *slog.Logger
 
 	//temperature  Averager
 	intensity Averager
@@ -74,7 +75,7 @@ func (c *Collector) Run(ctx context.Context) error {
 
 func (c *Collector) collect() {
 	if c.power.Count == 0 || c.intensity.Count == 0 {
-		slog.Warn("partial data collection. skipping")
+		c.Logger.Warn("partial data collection. skipping")
 		return
 	}
 
@@ -89,12 +90,12 @@ func (c *Collector) collect() {
 	}
 
 	if measurement.Power == 0 && measurement.Intensity == 0 {
-		slog.Debug("no solar power activity. skipping measurement")
+		c.Logger.Debug("no solar power activity. skipping measurement")
 		return
 	}
 
 	if err := c.Store(measurement); err != nil {
-		slog.Error("failed to store metrics", "err", err)
+		c.Logger.Error("failed to store metrics", "err", err)
 		return
 	}
 

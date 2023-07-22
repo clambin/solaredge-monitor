@@ -6,6 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 	"net/http"
 	"time"
 )
@@ -14,24 +15,25 @@ type Server struct {
 	http.Handler
 	*middleware.PrometheusMetrics
 	backend *Generator
+	logger  *slog.Logger
 }
 
 var _ prometheus.Collector = &Server{}
 
 func New(db store.DB) *Server {
 	s := Server{
-		backend: &Generator{DB: db},
 		PrometheusMetrics: middleware.NewPrometheusMetrics(middleware.PrometheusMetricsOptions{
 			Namespace:   "solaredge",
 			Subsystem:   "monitor",
 			Application: "solaredge_monitor",
 			MetricsType: middleware.Summary,
-			//Buckets:     nil,
 		}),
+		backend: &Generator{DB: db},
+		logger:  slog.Default().With("component", "web"),
 	}
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger(middleware.DefaultRequestLogger))
+	r.Use(middleware.RequestLogger(s.logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter))
 	r.Use(s.PrometheusMetrics.Handle)
 	r.Get("/report", s.report)
 	r.Get("/plot/{type}", s.plot)

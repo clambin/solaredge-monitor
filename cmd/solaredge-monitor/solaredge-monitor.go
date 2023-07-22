@@ -160,6 +160,7 @@ func makeScraper(ctx context.Context, db store.DB) (*collector.Collector, error)
 		DB:               db,
 		ScrapeInterval:   viper.GetDuration("scrape.polling"),
 		CollectInterval:  viper.GetDuration("scrape.collection"),
+		Logger:           slog.Default().With("component", "collector"),
 	}
 
 	return c, nil
