@@ -7,7 +7,7 @@ import (
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"golang.org/x/exp/slog"
+	"log/slog"
 	"sync"
 	"time"
 )
@@ -99,7 +99,7 @@ func (c *Collector) collect() {
 		return
 	}
 
-	slog.Info("new entry", slog.Group("measurement",
+	c.Logger.Info("new entry", slog.Group("measurement",
 		slog.Float64("power", measurement.Power),
 		slog.Float64("intensity", measurement.Intensity),
 		slog.String("weather", measurement.Weather),

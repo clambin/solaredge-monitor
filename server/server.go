@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
-	"golang.org/x/exp/slog"
+	"log/slog"
 	"net/http"
 	"time"
 )

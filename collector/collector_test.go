@@ -12,7 +12,7 @@ import (
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"golang.org/x/exp/slog"
+	"log/slog"
 	"testing"
 	"time"
 )

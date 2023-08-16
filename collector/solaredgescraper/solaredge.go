@@ -14,7 +14,7 @@ type Fetcher struct {
 	Site Site
 }
 
-//go:generate mockery --name Site
+//go:generate mockery --name Site --with-expecter=true
 type Site interface {
 	GetID() int
 	GetPowerOverview(ctx context.Context) (solaredge.PowerOverview, error)

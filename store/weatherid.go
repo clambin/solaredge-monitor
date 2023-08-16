@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func (db *PostgresDB) GetWeatherID(weather string) (int, error) {

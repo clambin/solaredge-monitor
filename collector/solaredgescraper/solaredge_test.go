@@ -12,41 +12,41 @@ import (
 )
 
 func TestFetcher_Run(t *testing.T) {
+	response := solaredge.PowerOverview{
+		LastUpdateTime: solaredge.Time{},
+		LifeTimeData: struct {
+			Energy  float64 `json:"energy"`
+			Revenue float64 `json:"revenue"`
+		}{
+			Energy: 10000,
+		},
+		LastYearData: struct {
+			Energy  float64 `json:"energy"`
+			Revenue float64 `json:"revenue"`
+		}{
+			Energy: 1000,
+		},
+		LastMonthData: struct {
+			Energy  float64 `json:"energy"`
+			Revenue float64 `json:"revenue"`
+		}{
+			Energy: 100,
+		},
+		LastDayData: struct {
+			Energy  float64 `json:"energy"`
+			Revenue float64 `json:"revenue"`
+		}{
+			Energy: 10,
+		},
+		CurrentPower: struct {
+			Power float64 `json:"power"`
+		}{
+			Power: 3400,
+		},
+	}
+
 	site := mocks.NewSite(t)
-	site.
-		On("GetPowerOverview", mock.AnythingOfType("*context.emptyCtx")).
-		Return(solaredge.PowerOverview{
-			LastUpdateTime: solaredge.Time{},
-			LifeTimeData: struct {
-				Energy  float64 `json:"energy"`
-				Revenue float64 `json:"revenue"`
-			}{
-				Energy: 10000,
-			},
-			LastYearData: struct {
-				Energy  float64 `json:"energy"`
-				Revenue float64 `json:"revenue"`
-			}{
-				Energy: 1000,
-			},
-			LastMonthData: struct {
-				Energy  float64 `json:"energy"`
-				Revenue float64 `json:"revenue"`
-			}{
-				Energy: 100,
-			},
-			LastDayData: struct {
-				Energy  float64 `json:"energy"`
-				Revenue float64 `json:"revenue"`
-			}{
-				Energy: 10,
-			},
-			CurrentPower: struct {
-				Power float64 `json:"power"`
-			}{
-				Power: 3400,
-			},
-		}, nil)
+	site.EXPECT().GetPowerOverview(mock.Anything).Return(response, nil)
 
 	ch := make(chan solaredgescraper.Info)
 	f := solaredgescraper.Fetcher{Site: site}

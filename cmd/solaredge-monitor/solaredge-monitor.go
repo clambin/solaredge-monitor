@@ -13,12 +13,11 @@ import (
 	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
-	"github.com/clambin/solaredge-monitor/version"
 	"github.com/clambin/tado"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/slog"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,6 +26,8 @@ import (
 )
 
 var (
+	version = "change_me"
+
 	configFile string
 	cmd        = cobra.Command{
 		Use:   "solaredge-monitor",
@@ -44,7 +45,7 @@ func main() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	cmd.Version = version.BuildVersion
+	cmd.Version = version
 	cmd.Flags().StringVar(&configFile, "config", "", "Configuration file")
 	cmd.Flags().Bool("debug", false, "Log debug messages")
 	cmd.Flags().Bool("scrape", false, "Record measurements")
@@ -90,7 +91,7 @@ func Main(_ *cobra.Command, _ []string) {
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &opts)))
 
-	slog.Info("solaredge-monitor started", "version", version.BuildVersion)
+	slog.Info("solaredge-monitor started", "version", version)
 
 	host := viper.GetString("database.host")
 	port := viper.GetInt("database.port")

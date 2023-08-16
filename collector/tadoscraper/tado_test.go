@@ -12,12 +12,14 @@ import (
 )
 
 func TestFetcher_Run(t *testing.T) {
-	api := mocks.NewAPI(t)
-	api.On("GetWeatherInfo", mock.AnythingOfType("*context.emptyCtx")).Return(tado.WeatherInfo{
+	response := tado.WeatherInfo{
 		OutsideTemperature: tado.Temperature{Celsius: 18.5},
 		SolarIntensity:     tado.Percentage{Percentage: 75.0},
 		WeatherState:       tado.Value{Value: "SUNNY"},
-	}, nil)
+	}
+
+	api := mocks.NewAPI(t)
+	api.EXPECT().GetWeatherInfo(mock.Anything).Return(response, nil)
 
 	ch := make(chan tadoscraper.Info)
 	f := tadoscraper.Fetcher{API: api}
