@@ -1,10 +1,10 @@
-package solaredgescraper_test
+package solaredgeScraper_test
 
 import (
 	"context"
 	"github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
-	"github.com/clambin/solaredge-monitor/collector/solaredgescraper/mocks"
+	"github.com/clambin/solaredge-monitor/collector/solaredgeScraper"
+	"github.com/clambin/solaredge-monitor/collector/solaredgeScraper/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -48,10 +48,10 @@ func TestFetcher_Run(t *testing.T) {
 	site := mocks.NewSite(t)
 	site.EXPECT().GetPowerOverview(mock.Anything).Return(response, nil)
 
-	ch := make(chan solaredgescraper.Info)
-	f := solaredgescraper.Fetcher{Site: site}
+	ch := make(chan solaredgeScraper.Info)
+	f := solaredgeScraper.Fetcher{Site: site}
 	go f.Run(context.Background(), time.Millisecond, ch)
 
 	info := <-ch
-	assert.Equal(t, solaredgescraper.Info{Power: 3400}, info)
+	assert.Equal(t, solaredgeScraper.Info{Power: 3400}, info)
 }

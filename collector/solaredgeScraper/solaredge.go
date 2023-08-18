@@ -1,4 +1,4 @@
-package solaredgescraper
+package solaredgeScraper
 
 import (
 	"context"

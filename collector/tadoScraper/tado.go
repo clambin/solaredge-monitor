@@ -1,4 +1,4 @@
-package tadoscraper
+package tadoScraper
 
 import (
 	"context"

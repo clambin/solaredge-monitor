@@ -2,8 +2,8 @@ package collector
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
-	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
+	"github.com/clambin/solaredge-monitor/collector/solaredgeScraper"
+	"github.com/clambin/solaredge-monitor/collector/tadoScraper"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -13,8 +13,8 @@ import (
 )
 
 type Collector struct {
-	TadoScraper      Scraper[tadoscraper.Info]
-	SolarEdgeScraper Scraper[solaredgescraper.Info]
+	TadoScraper      Scraper[tadoScraper.Info]
+	SolarEdgeScraper Scraper[solaredgeScraper.Info]
 	ScrapeInterval   time.Duration
 	CollectInterval  time.Duration
 	Logger           *slog.Logger
@@ -41,13 +41,13 @@ func (c *Collector) Run(ctx context.Context) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	tadoInfo := make(chan tadoscraper.Info, 1)
+	tadoInfo := make(chan tadoScraper.Info, 1)
 	go func() {
 		defer wg.Done()
 		c.TadoScraper.Run(ctx, c.ScrapeInterval, tadoInfo)
 	}()
 
-	solarEdgeInfo := make(chan solaredgescraper.Info, 1)
+	solarEdgeInfo := make(chan solaredgeScraper.Info, 1)
 	go func() {
 		defer wg.Done()
 		c.SolarEdgeScraper.Run(ctx, c.ScrapeInterval, solarEdgeInfo)

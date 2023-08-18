@@ -1,9 +1,9 @@
-package tadoscraper_test
+package tadoScraper_test
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
-	"github.com/clambin/solaredge-monitor/collector/tadoscraper/mocks"
+	"github.com/clambin/solaredge-monitor/collector/tadoScraper"
+	"github.com/clambin/solaredge-monitor/collector/tadoScraper/mocks"
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,10 +21,10 @@ func TestFetcher_Run(t *testing.T) {
 	api := mocks.NewAPI(t)
 	api.EXPECT().GetWeatherInfo(mock.Anything).Return(response, nil)
 
-	ch := make(chan tadoscraper.Info)
-	f := tadoscraper.Fetcher{API: api}
+	ch := make(chan tadoScraper.Info)
+	f := tadoScraper.Fetcher{API: api}
 	go f.Run(context.Background(), time.Millisecond, ch)
 
 	info := <-ch
-	assert.Equal(t, tadoscraper.Info{SolarIntensity: 75, Temperature: 18.5, Weather: "SUNNY"}, info)
+	assert.Equal(t, tadoScraper.Info{SolarIntensity: 75, Temperature: 18.5, Weather: "SUNNY"}, info)
 }

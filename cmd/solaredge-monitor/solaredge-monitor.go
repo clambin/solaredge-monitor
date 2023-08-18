@@ -9,8 +9,8 @@ import (
 	promserver "github.com/clambin/go-common/taskmanager/prometheus"
 	"github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/collector"
-	"github.com/clambin/solaredge-monitor/collector/solaredgescraper"
-	"github.com/clambin/solaredge-monitor/collector/tadoscraper"
+	"github.com/clambin/solaredge-monitor/collector/solaredgeScraper"
+	"github.com/clambin/solaredge-monitor/collector/tadoScraper"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/tado"
@@ -156,8 +156,8 @@ func makeScraper(ctx context.Context, db store.DB) (*collector.Collector, error)
 		return nil, fmt.Errorf("solaredge: %w", err)
 	}
 	c := &collector.Collector{
-		TadoScraper:      &tadoscraper.Fetcher{API: tadoClient},
-		SolarEdgeScraper: &solaredgescraper.Fetcher{Site: site},
+		TadoScraper:      &tadoScraper.Fetcher{API: tadoClient},
+		SolarEdgeScraper: &solaredgeScraper.Fetcher{Site: site},
 		DB:               db,
 		ScrapeInterval:   viper.GetDuration("scrape.polling"),
 		CollectInterval:  viper.GetDuration("scrape.collection"),
