@@ -1,13 +1,13 @@
-package collector_test
+package scraper_test
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/scraper"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestWordCounter(t *testing.T) {
-	c := collector.WordCounter{}
+	c := scraper.WordCounter{}
 
 	assert.Empty(t, c.GetMostUsed())
 

@@ -4,9 +4,7 @@ dir: "{{.InterfaceDir}}/mocks"
 mockname: "{{.InterfaceName}}"
 outpkg: "mocks"
 packages:
-  github.com/clambin/solaredge-monitor/collector/solaredgeScraper:
+  github.com/clambin/solaredge-monitor/scraper:
     interfaces:
-      Site:
-  github.com/clambin/solaredge-monitor/collector/tadoScraper:
-    interfaces:
-      API:
+      PowerGetter:
+      WeatherGetter:

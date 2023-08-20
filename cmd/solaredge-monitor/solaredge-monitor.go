@@ -8,9 +8,7 @@ import (
 	"github.com/clambin/go-common/taskmanager/httpserver"
 	promserver "github.com/clambin/go-common/taskmanager/prometheus"
 	"github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/collector"
-	"github.com/clambin/solaredge-monitor/collector/solaredgeScraper"
-	"github.com/clambin/solaredge-monitor/collector/tadoScraper"
+	"github.com/clambin/solaredge-monitor/scraper"
 	"github.com/clambin/solaredge-monitor/server"
 	"github.com/clambin/solaredge-monitor/store"
 	"github.com/clambin/tado"
@@ -32,7 +30,7 @@ var (
 	cmd        = cobra.Command{
 		Use:   "solaredge-monitor",
 		Short: "records solar panel output vs. weather conditions",
-		Run:   Main,
+		RunE:  Main,
 	}
 )
 
@@ -84,7 +82,7 @@ func initConfig() {
 	}
 }
 
-func Main(_ *cobra.Command, _ []string) {
+func Main(_ *cobra.Command, _ []string) error {
 	var opts slog.HandlerOptions
 	if viper.GetBool("debug") {
 		opts.Level = slog.LevelDebug
@@ -101,10 +99,10 @@ func Main(_ *cobra.Command, _ []string) {
 
 	db, err := store.NewPostgresDB(host, port, database, username, password)
 	if err != nil {
-		slog.Error("failed to access database", "err", err)
-		return
+		return fmt.Errorf("failed to access database: %w", err)
 	}
-	slog.Info("connected to database", slog.Group("database",
+
+	slog.Debug("connected to database", slog.Group("database",
 		slog.String("host", host),
 		slog.Int("port", port),
 		slog.String("database", database),
@@ -125,44 +123,39 @@ func Main(_ *cobra.Command, _ []string) {
 	if viper.GetBool("scrape.enabled") {
 		c, err := makeScraper(ctx, db)
 		if err != nil {
-			slog.Error("failed to create collector", "err", err)
-			os.Exit(1)
+			return fmt.Errorf("failed to create scraper: %w", err)
 		}
 		tasks = append(tasks, c)
 	}
 
 	tm := taskmanager.New(tasks...)
 
-	if err = tm.Run(ctx); err != nil {
-		slog.Error("failed to start solaredge-monitor", "err", err)
-		os.Exit(1)
+	if err = tm.Run(ctx); errors.Is(err, context.Canceled) {
+		err = nil
 	}
+	return err
 }
 
-func makeScraper(ctx context.Context, db store.DB) (*collector.Collector, error) {
+func makeScraper(ctx context.Context, db store.DB) (*taskmanager.Manager, error) {
 	tadoClient, err := tado.NewWithContext(ctx,
 		viper.GetString("tado.username"),
 		viper.GetString("tado.password"),
 		viper.GetString("tado.secret"),
 	)
 	if err != nil {
-		slog.Error("failed to connect to Tado API", "err", err)
 		return nil, fmt.Errorf("tado: %w", err)
 	}
 
 	site, err := getSite(ctx)
 	if err != nil {
-		slog.Error("failed to get SolarEdge site", "err", err)
 		return nil, fmt.Errorf("solaredge: %w", err)
 	}
-	c := &collector.Collector{
-		TadoScraper:      &tadoScraper.Fetcher{API: tadoClient},
-		SolarEdgeScraper: &solaredgeScraper.Fetcher{Site: site},
-		DB:               db,
-		ScrapeInterval:   viper.GetDuration("scrape.polling"),
-		CollectInterval:  viper.GetDuration("scrape.collection"),
-		Logger:           slog.Default().With("component", "collector"),
-	}
+	c := scraper.New(
+		site, tadoClient, db,
+		slog.Default().With("component", "scraper"),
+		viper.GetDuration("scrape.polling"),
+		viper.GetDuration("scrape.collection"),
+	)
 
 	return c, nil
 }

@@ -1,4 +1,4 @@
-package collector
+package scraper
 
 type WordCounter struct {
 	words map[string]int

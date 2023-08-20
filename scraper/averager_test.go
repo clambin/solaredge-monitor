@@ -1,14 +1,14 @@
-package collector_test
+package scraper_test
 
 import (
-	"github.com/clambin/solaredge-monitor/collector"
+	"github.com/clambin/solaredge-monitor/scraper"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"testing"
 )
 
 func TestSummary(t *testing.T) {
-	var s collector.Averager
+	var s scraper.Averager
 
 	assert.True(t, math.IsNaN(s.Average()))
 

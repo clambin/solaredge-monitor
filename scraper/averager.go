@@ -1,4 +1,4 @@
-package collector
+package scraper
 
 type Averager struct {
 	Total float64
