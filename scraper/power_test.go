@@ -33,9 +33,7 @@ func TestPowerScraper(t *testing.T) {
 }
 
 func newMockPowerGetter(t *testing.T) PowerGetter {
-	overview := solaredge.PowerOverview{CurrentPower: struct {
-		Power float64 `json:"power"`
-	}{Power: 1000}}
+	overview := solaredge.PowerOverview{CurrentPower: solaredge.CurrentPower{Power: 1000}}
 	g := mocks.NewPowerGetter(t)
 	g.EXPECT().GetPowerOverview(mock.Anything).Return(overview, nil)
 	return g
