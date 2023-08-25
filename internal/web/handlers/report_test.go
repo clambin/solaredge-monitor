@@ -30,27 +30,27 @@ func TestReportsHandler(t *testing.T) {
 		{
 			name: "start & stop",
 			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
-				"stop":  []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
+				"stop":  []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)},
 			},
 			wantCode: http.StatusOK,
-			want:     "/plot/scatter?fold=false&start=2023-08-24T00%3A00%3A00%2B02%3A00&stop=2023-08-24T12%3A00%3A00%2B02%3A00",
+			want:     "/plot/scatter?fold=false&start=2023-08-24T00%3A00%3A00Z&stop=2023-08-24T12%3A00%3A00Z",
 		},
 		{
 			name: "start",
 			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
 			},
 			wantCode: http.StatusOK,
-			want:     "/plot/scatter?fold=false&start=2023-08-24T00%3A00%3A00%2B02%3A00",
+			want:     "/plot/scatter?fold=false&start=2023-08-24T00%3A00%3A00Z",
 		},
 		{
 			name: "stop",
 			args: url.Values{
-				"stop": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"stop": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
 			},
 			wantCode: http.StatusOK,
-			want:     "/plot/scatter?fold=false&stop=2023-08-24T00%3A00%3A00%2B02%3A00",
+			want:     "/plot/scatter?fold=false&stop=2023-08-24T00%3A00%3A00Z",
 		},
 		{
 			name: "error",
