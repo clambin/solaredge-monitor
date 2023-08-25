@@ -8,9 +8,9 @@ import (
 	"github.com/clambin/go-common/taskmanager/httpserver"
 	promserver "github.com/clambin/go-common/taskmanager/prometheus"
 	"github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/scraper"
-	"github.com/clambin/solaredge-monitor/server"
-	"github.com/clambin/solaredge-monitor/store"
+	"github.com/clambin/solaredge-monitor/internal/repository"
+	"github.com/clambin/solaredge-monitor/internal/scraper"
+	server "github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/clambin/tado"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
@@ -97,7 +97,7 @@ func Main(_ *cobra.Command, _ []string) error {
 	username := viper.GetString("database.username")
 	password := viper.GetString("database.password")
 
-	db, err := store.NewPostgresDB(host, port, database, username, password)
+	db, err := repository.NewPostgresDB(host, port, database, username, password)
 	if err != nil {
 		return fmt.Errorf("failed to access database: %w", err)
 	}
@@ -109,12 +109,12 @@ func Main(_ *cobra.Command, _ []string) error {
 		slog.String("username", username),
 	))
 
-	s := server.New(db)
-	prometheus.MustRegister(db, s)
+	s := server.NewHTTPServer(db, slog.With("component", "webserver"))
+	prometheus.MustRegister(db, s.PrometheusMetrics)
 
 	tasks := []taskmanager.Task{
 		promserver.New(promserver.WithAddr(viper.GetString("prometheus.addr"))),
-		httpserver.New(viper.GetString("server.addr"), s),
+		httpserver.New(viper.GetString("server.addr"), s.Router),
 	}
 
 	ctx, done := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -136,7 +136,7 @@ func Main(_ *cobra.Command, _ []string) error {
 	return err
 }
 
-func makeScraper(ctx context.Context, db store.DB) (*taskmanager.Manager, error) {
+func makeScraper(ctx context.Context, db *repository.PostgresDB) (*taskmanager.Manager, error) {
 	tadoClient, err := tado.NewWithContext(ctx,
 		viper.GetString("tado.username"),
 		viper.GetString("tado.password"),
