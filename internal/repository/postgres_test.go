@@ -76,7 +76,7 @@ func TestStore(t *testing.T) {
 	}
 
 	var measurements []repository.Measurement
-	measurements, err = db.GetAll()
+	measurements, err = db.Get(time.Time{}, time.Time{})
 
 	require.NoError(t, err)
 	//require.Len(t, measurements, 6)

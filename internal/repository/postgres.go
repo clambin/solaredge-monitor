@@ -15,36 +15,6 @@ import (
 	"time"
 )
 
-type Measurement struct {
-	Timestamp time.Time
-	Power     float64
-	Intensity float64
-	Weather   string
-}
-
-func (m Measurement) Fold() Measurement {
-	return Measurement{
-		Timestamp: time.Date(
-			0, 0, 0,
-			m.Timestamp.Hour(), m.Timestamp.Minute(), m.Timestamp.Second(), m.Timestamp.Nanosecond(),
-			m.Timestamp.Location(),
-		),
-		Power:     m.Power,
-		Intensity: m.Intensity,
-		Weather:   m.Weather,
-	}
-}
-
-func (ms Measurements) Fold() Measurements {
-	folded := make(Measurements, len(ms))
-	for index, measurement := range ms {
-		folded[index] = measurement.Fold()
-	}
-	return folded
-}
-
-type Measurements []Measurement
-
 type PostgresDB struct {
 	prometheus.Collector
 	database string
@@ -81,10 +51,6 @@ func (db *PostgresDB) Store(measurement Measurement) error {
 		err = tx.Commit()
 	}
 	return err
-}
-
-func (db *PostgresDB) GetAll() (Measurements, error) {
-	return db.Get(time.Time{}, time.Time{})
 }
 
 func (db *PostgresDB) Get(from, to time.Time) (measurements Measurements, err error) {
