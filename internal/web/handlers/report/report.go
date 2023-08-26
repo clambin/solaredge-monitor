@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type ReportsHandler struct {
+type Handler struct {
 	Logger *slog.Logger
 }
 
@@ -21,7 +21,7 @@ type Data struct {
 //go:embed html/*
 var html embed.FS
 
-func (h ReportsHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (h Handler) Handle(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
 		h.Logger.Error("failed to determine start/stop parameters", "err", err)

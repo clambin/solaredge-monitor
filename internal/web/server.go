@@ -29,7 +29,7 @@ func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
 	r.Use(middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter))
 	r.Use(s.PrometheusMetrics.Handle)
 
-	reportsHandler := report.ReportsHandler{Logger: logger.With("component", "handler", "hander", "report")}
+	reportsHandler := report.Handler{Logger: logger.With("component", "handler", "hander", "report")}
 	r.Get("/report", reportsHandler.Handle)
 
 	scatterHandler := makePlotHandler("scatter", repo, logger)
@@ -47,8 +47,8 @@ func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
 	return &s
 }
 
-func makePlotHandler(plotType string, repo plot.Repository, logger *slog.Logger) *plot.PlotHandler {
-	return &plot.PlotHandler{
+func makePlotHandler(plotType string, repo plot.Repository, logger *slog.Logger) *plot.Handler {
+	return &plot.Handler{
 		Repository: repo,
 		Plotter:    makePlotter(plotType),
 		Logger:     logger.With("component", "handler", "handler", plotType),

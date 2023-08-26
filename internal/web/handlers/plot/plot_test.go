@@ -20,7 +20,7 @@ import (
 func TestPlotHandler(t *testing.T) {
 	r := mocks.NewRepository(t)
 	p := mocks.NewPlotter(t)
-	h := plot.PlotHandler{
+	h := plot.Handler{
 		Repository: r,
 		Plotter:    p,
 		Logger:     slog.Default(),

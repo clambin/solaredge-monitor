@@ -25,13 +25,13 @@ var _ Plotter = &plotter.ScatterPlotter{}
 var _ Plotter = &plotter.HeatmapPlotter{}
 var _ Plotter = &plotter.ContourPlotter{}
 
-type PlotHandler struct {
+type Handler struct {
 	Repository Repository
 	Plotter    Plotter
 	Logger     *slog.Logger
 }
 
-func (h PlotHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (h Handler) Handle(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

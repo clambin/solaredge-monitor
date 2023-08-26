@@ -12,7 +12,7 @@ import (
 )
 
 func TestReportsHandler(t *testing.T) {
-	h := report.ReportsHandler{
+	h := report.Handler{
 		Logger: slog.Default(),
 	}
 
