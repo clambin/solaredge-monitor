@@ -1,8 +1,9 @@
-package handlers
+package plot
 
 import (
 	"fmt"
 	"github.com/clambin/solaredge-monitor/internal/repository"
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/arguments"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
 	"gonum.org/v1/plot/vg/vgimg"
 	"log/slog"
@@ -31,21 +32,22 @@ type PlotHandler struct {
 }
 
 func (h PlotHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	args, err := parseArguments(req)
+	args, err := arguments.Parse(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	measurements, err := h.Repository.Get(args.start, args.stop)
+	measurements, err := h.Repository.Get(args.Start, args.Stop)
 	if err != nil {
 		http.Error(w, fmt.Errorf("database: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 
-	img, err := h.Plotter.Plot(measurements, args.fold)
+	img, err := h.Plotter.Plot(measurements, args.Fold)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

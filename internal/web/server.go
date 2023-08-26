@@ -2,7 +2,8 @@ package web
 
 import (
 	"github.com/clambin/go-common/httpserver/middleware"
-	"github.com/clambin/solaredge-monitor/internal/web/handlers"
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/plot"
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/report"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
 	"github.com/go-chi/chi/v5"
 	"log/slog"
@@ -14,7 +15,7 @@ type HTTPServer struct {
 	PrometheusMetrics *middleware.PrometheusMetrics
 }
 
-func NewHTTPServer(repo handlers.Repository, logger *slog.Logger) *HTTPServer {
+func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
 	s := HTTPServer{
 		PrometheusMetrics: middleware.NewPrometheusMetrics(middleware.PrometheusMetricsOptions{
 			Namespace:   "solaredge",
@@ -28,7 +29,7 @@ func NewHTTPServer(repo handlers.Repository, logger *slog.Logger) *HTTPServer {
 	r.Use(middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter))
 	r.Use(s.PrometheusMetrics.Handle)
 
-	reportsHandler := handlers.ReportsHandler{Logger: logger.With("component", "handler", "hander", "report")}
+	reportsHandler := report.ReportsHandler{Logger: logger.With("component", "handler", "hander", "report")}
 	r.Get("/report", reportsHandler.Handle)
 
 	scatterHandler := makePlotHandler("scatter", repo, logger)
@@ -46,16 +47,16 @@ func NewHTTPServer(repo handlers.Repository, logger *slog.Logger) *HTTPServer {
 	return &s
 }
 
-func makePlotHandler(plotType string, repo handlers.Repository, logger *slog.Logger) *handlers.PlotHandler {
-	return &handlers.PlotHandler{
+func makePlotHandler(plotType string, repo plot.Repository, logger *slog.Logger) *plot.PlotHandler {
+	return &plot.PlotHandler{
 		Repository: repo,
 		Plotter:    makePlotter(plotType),
 		Logger:     logger.With("component", "handler", "handler", plotType),
 	}
 }
 
-func makePlotter(plotType string) handlers.Plotter {
-	var p handlers.Plotter
+func makePlotter(plotType string) plot.Plotter {
+	var p plot.Plotter
 	switch plotType {
 	case "scatter":
 		p = plotter.ScatterPlotter{

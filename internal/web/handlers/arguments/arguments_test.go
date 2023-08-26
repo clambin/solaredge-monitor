@@ -1,6 +1,7 @@
-package handlers
+package arguments_test
 
 import (
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/arguments"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
@@ -8,13 +9,13 @@ import (
 	"time"
 )
 
-func TestParseArguments(t *testing.T) {
+func TestParse(t *testing.T) {
 	location := time.FixedZone("UK", int(time.Hour.Seconds()))
 
 	testCases := []struct {
 		name    string
 		args    url.Values
-		want    arguments
+		want    arguments.Arguments
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -25,24 +26,24 @@ func TestParseArguments(t *testing.T) {
 		{
 			name:    "start",
 			args:    url.Values{"start": []string{`2023-08-25T00:00:00+00:00`}},
-			want:    arguments{start: time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)},
+			want:    arguments.Arguments{Start: time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)},
 			wantErr: assert.NoError,
 		},
 		{
 			name:    "stop",
 			args:    url.Values{"stop": []string{`2023-08-25T00:00:00+01:00`}},
-			want:    arguments{stop: time.Date(2023, time.August, 25, 0, 0, 0, 0, location)},
+			want:    arguments.Arguments{Stop: time.Date(2023, time.August, 25, 0, 0, 0, 0, location)},
 			wantErr: assert.NoError,
 		},
 		{
 			name:    "fold",
 			args:    url.Values{"fold": []string{"true"}},
-			want:    arguments{fold: true},
+			want:    arguments.Arguments{Fold: true},
 			wantErr: assert.NoError,
 		},
 		{
 			name:    "invalid date",
-			args:    url.Values{"start": []string{`invalid-date`}},
+			args:    url.Values{"stop": []string{`invalid-date`}},
 			wantErr: assert.Error,
 		},
 		{
@@ -56,14 +57,13 @@ func TestParseArguments(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/?"+tt.args.Encode(), nil)
 
-			t.Log(req.URL.String())
-			args, err := parseArguments(req)
+			args, err := arguments.Parse(req)
 			tt.wantErr(t, err)
 
 			if err == nil {
-				assert.True(t, tt.want.start.Equal(args.start))
-				assert.True(t, tt.want.stop.Equal(args.stop))
-				assert.Equal(t, tt.want.fold, args.fold)
+				assert.True(t, tt.want.Start.Equal(args.Start))
+				assert.True(t, tt.want.Stop.Equal(args.Stop))
+				assert.Equal(t, tt.want.Fold, args.Fold)
 			}
 		})
 	}

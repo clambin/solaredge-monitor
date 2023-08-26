@@ -1,7 +1,7 @@
-package handlers_test
+package report_test
 
 import (
-	"github.com/clambin/solaredge-monitor/internal/web/handlers"
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/report"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"net/http"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestReportsHandler(t *testing.T) {
-	h := handlers.ReportsHandler{
+	h := report.ReportsHandler{
 		Logger: slog.Default(),
 	}
 
@@ -50,7 +50,7 @@ func TestReportsHandler(t *testing.T) {
 				"stop": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
 			},
 			wantCode: http.StatusOK,
-			want:     "/plot/scatter?fold=false&stop=2023-08-24T00%3A00%3A00Z",
+			want:     "/plot/scatter?fold=false&start=0001-01-01T00%3A00%3A00Z&stop=2023-08-24T00%3A00%3A00Z",
 		},
 		{
 			name: "error",

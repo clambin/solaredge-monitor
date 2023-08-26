@@ -75,3 +75,20 @@ func makeMeasurements(count int) repository.Measurements {
 	}
 	return measurements
 }
+
+func BenchmarkHTTPServer(b *testing.B) {
+	repo := mocks.NewRepository(b)
+	measurements := makeMeasurements(100)
+	repo.EXPECT().Get(mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(measurements, nil)
+	s := web.NewHTTPServer(repo, slog.Default())
+
+	for i := 0; i < b.N; i++ {
+		req, _ := http.NewRequest(http.MethodGet, "/plot/heatmap", nil)
+		resp := httptest.NewRecorder()
+		s.Router.ServeHTTP(resp, req)
+		if resp.Code != http.StatusOK {
+			b.Fail()
+		}
+	}
+
+}
