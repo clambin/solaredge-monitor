@@ -47,8 +47,8 @@ func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
 	return &s
 }
 
-func makePlotHandler(plotType string, repo plot.Repository, logger *slog.Logger) *plot.Handler {
-	return &plot.Handler{
+func makePlotHandler(plotType string, repo plot.Repository, logger *slog.Logger) plot.Handler {
+	return plot.Handler{
 		Repository: repo,
 		Plotter:    makePlotter(plotType),
 		Logger:     logger.With("component", "handler", "handler", plotType),

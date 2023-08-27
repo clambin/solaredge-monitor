@@ -15,10 +15,12 @@ type Handler struct {
 }
 
 type Data struct {
-	Args string
+	PlotTypes []string
+	FoldTypes []string
+	Args      string
 }
 
-//go:embed html/*
+//go:embed templates/*
 var html embed.FS
 
 func (h Handler) Handle(w http.ResponseWriter, req *http.Request) {
@@ -36,8 +38,12 @@ func (h Handler) Handle(w http.ResponseWriter, req *http.Request) {
 	values.Add("start", args.Start.Format(time.RFC3339))
 	values.Add("stop", args.Stop.Format(time.RFC3339))
 
-	tmpl := template.Must(template.ParseFS(html, "html/report.html"))
-	data := Data{Args: values.Encode()}
+	tmpl := template.Must(template.ParseFS(html, "templates/report.html"))
+	data := Data{
+		PlotTypes: []string{"scatter", "heatmap"},
+		FoldTypes: []string{"false", "true"},
+		Args:      values.Encode(),
+	}
 
 	//	w.WriteHeader(http.StatusOK)
 	if err = tmpl.Execute(w, data); err != nil {
