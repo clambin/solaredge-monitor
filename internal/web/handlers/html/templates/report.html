@@ -11,7 +11,7 @@
 {{ range $plot := $plotTypes }}
 {{ range $fold := $foldTypes }}
 <a href="/plot/{{$plot}}?={{$fold}}&{{$args}}">
-    <img src="/plot/{{$plot}}?fold={{$fold}}&{{$args}}" alt="scatter" style="width:400px;height:400px;">
+    <img src="/plotter/{{$plot}}?fold={{$fold}}&{{$args}}" alt="scatter" style="width:400px;height:400px;">
 </a>
 {{ end }}
 <p></p>

@@ -2,8 +2,8 @@ package web
 
 import (
 	"github.com/clambin/go-common/httpserver/middleware"
-	"github.com/clambin/solaredge-monitor/internal/web/handlers/plot"
-	"github.com/clambin/solaredge-monitor/internal/web/handlers/report"
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/html"
+	plotterHandler "github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
 	"github.com/go-chi/chi/v5"
 	"log/slog"
@@ -15,7 +15,7 @@ type HTTPServer struct {
 	PrometheusMetrics *middleware.PrometheusMetrics
 }
 
-func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
+func NewHTTPServer(repo plotterHandler.Repository, logger *slog.Logger) *HTTPServer {
 	s := HTTPServer{
 		PrometheusMetrics: middleware.NewPrometheusMetrics(middleware.PrometheusMetricsOptions{
 			Namespace:   "solaredge",
@@ -29,14 +29,17 @@ func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
 	r.Use(middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter))
 	r.Use(s.PrometheusMetrics.Handle)
 
-	reportsHandler := report.Handler{Logger: logger.With("component", "handler", "hander", "report")}
+	reportsHandler := html.ReportHandler{Logger: logger.With("component", "handler", "handler", "report")}
 	r.Get("/report", reportsHandler.Handle)
 
+	plotHandler := html.PlotHandler{Logger: logger.With("component", "handler", "handler", "plot")}
+	r.Get("/plot/{plotType}", plotHandler.Handle)
+
 	scatterHandler := makePlotHandler("scatter", repo, logger)
-	r.Get("/plot/scatter", scatterHandler.Handle)
+	r.Get("/plotter/scatter", scatterHandler.Handle)
 
 	heatmapHandler := makePlotHandler("heatmap", repo, logger)
-	r.Get("/plot/heatmap", heatmapHandler.Handle)
+	r.Get("/plotter/heatmap", heatmapHandler.Handle)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/report", http.StatusSeeOther)
@@ -47,16 +50,16 @@ func NewHTTPServer(repo plot.Repository, logger *slog.Logger) *HTTPServer {
 	return &s
 }
 
-func makePlotHandler(plotType string, repo plot.Repository, logger *slog.Logger) plot.Handler {
-	return plot.Handler{
+func makePlotHandler(plotType string, repo plotterHandler.Repository, logger *slog.Logger) plotterHandler.Handler {
+	return plotterHandler.Handler{
 		Repository: repo,
 		Plotter:    makePlotter(plotType),
 		Logger:     logger.With("component", "handler", "handler", plotType),
 	}
 }
 
-func makePlotter(plotType string) plot.Plotter {
-	var p plot.Plotter
+func makePlotter(plotType string) plotterHandler.Plotter {
+	var p plotterHandler.Plotter
 	switch plotType {
 	case "scatter":
 		p = plotter.ScatterPlotter{

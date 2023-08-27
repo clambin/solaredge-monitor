@@ -1,7 +1,6 @@
-package report
+package html
 
 import (
-	"embed"
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/arguments"
 	"log/slog"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-type Handler struct {
+type ReportHandler struct {
 	Logger *slog.Logger
 }
 
@@ -20,10 +19,7 @@ type Data struct {
 	Args      string
 }
 
-//go:embed templates/*
-var html embed.FS
-
-func (h Handler) Handle(w http.ResponseWriter, req *http.Request) {
+func (h ReportHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
 		h.Logger.Error("failed to determine start/stop parameters", "err", err)

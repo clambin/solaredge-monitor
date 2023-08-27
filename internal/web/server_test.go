@@ -36,17 +36,17 @@ func TestNewHTTPServer(t *testing.T) {
 		},
 		{
 			name:           "scatter",
-			target:         "/plot/scatter?fold=true",
+			target:         "/plotter/scatter?fold=true",
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "heatmap",
-			target:         "/plot/heatmap?fold=false",
+			target:         "/plotter/heatmap?fold=false",
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "contour",
-			target:         "/plot/contour",
+			target:         "/plotter/contour",
 			wantStatusCode: http.StatusNotFound,
 		},
 	}
