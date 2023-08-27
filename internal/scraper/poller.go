@@ -7,16 +7,16 @@ import (
 	"time"
 )
 
-type Poller interface {
-	Poll(ctx context.Context) error
-}
-
 var _ taskmanager.Task = &daemon{}
 
 type daemon struct {
 	Interval time.Duration
 	Poller
 	Logger *slog.Logger
+}
+
+type Poller interface {
+	Poll(ctx context.Context) error
 }
 
 func (d *daemon) Run(ctx context.Context) error {

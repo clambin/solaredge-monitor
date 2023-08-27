@@ -1,10 +1,10 @@
-package plot_test
+package plotter_test
 
 import (
 	"errors"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/mocks"
-	"github.com/clambin/solaredge-monitor/internal/web/handlers/plot"
+	"github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,7 +20,7 @@ import (
 func TestPlotHandler(t *testing.T) {
 	r := mocks.NewRepository(t)
 	p := mocks.NewPlotter(t)
-	h := plot.Handler{
+	h := plotter.Handler{
 		Repository: r,
 		Plotter:    p,
 		Logger:     slog.Default(),

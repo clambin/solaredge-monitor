@@ -24,20 +24,20 @@ type PostgresDB struct {
 var _ prometheus.Collector = &PostgresDB{}
 
 func NewPostgresDB(host string, port int, database string, user string, password string) (*PostgresDB, error) {
+	var db *PostgresDB
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, database)
 	dbh, err := sqlx.Connect("postgres", psqlInfo)
-	if err != nil {
-		return nil, fmt.Errorf("database connect: %w", err)
+	if err == nil {
+		db = &PostgresDB{
+			database:  database,
+			DBH:       dbh,
+			Collector: collectors.NewDBStatsCollector(dbh.DB, database),
+		}
+		err = db.migrate()
 	}
 
-	db := &PostgresDB{
-		database:  database,
-		DBH:       dbh,
-		Collector: collectors.NewDBStatsCollector(dbh.DB, database),
-	}
-
-	err = db.migrate()
 	return db, err
 }
 
