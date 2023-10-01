@@ -1,0 +1,15 @@
+with-expecter: true
+filename: "{{.InterfaceName}}.go"
+dir: "{{.InterfaceDir}}/mocks"
+mockname: "{{.InterfaceName}}"
+outpkg: "mocks"
+packages:
+  github.com/clambin/solaredge-monitor/internal/scraper:
+    interfaces:
+      Repository:
+      PowerGetter:
+      WeatherGetter:
+  github.com/clambin/solaredge-monitor/internal/web/handlers:
+    interfaces:
+      Repository:
+      Plotter:

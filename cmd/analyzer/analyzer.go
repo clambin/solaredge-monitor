@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/clambin/solaredge-monitor/analyzer"
-	"github.com/clambin/solaredge-monitor/store"
-	"github.com/clambin/solaredge-monitor/version"
+	analyzer2 "github.com/clambin/solaredge-monitor/internal/analyzer"
+	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/slog"
+	"log/slog"
 	"math"
 	"math/rand"
 	"os"
@@ -19,6 +18,7 @@ import (
 )
 
 var (
+	version    = "change-me"
 	configFile string
 	cmd        = cobra.Command{
 		Use:   "analyzer",
@@ -48,7 +48,7 @@ func init() {
 	cmd.AddCommand(&weather)
 
 	cobra.OnInitialize(initConfig)
-	cmd.Version = version.BuildVersion
+	cmd.Version = version
 	cmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Configuration file")
 	cmd.PersistentFlags().BoolP("debug", "d", false, "Log debug messages")
 	_ = viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug"))
@@ -89,9 +89,9 @@ func PredictPower(_ *cobra.Command, _ []string) {
 		opts.Level = slog.LevelDebug
 		//opts.AddSource = true
 	}
-	slog.SetDefault(slog.New(opts.NewTextHandler(os.Stdout)))
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &opts)))
 
-	slog.Debug("analyzer started", "version", version.BuildVersion)
+	slog.Debug("analyzer started", "version", version)
 
 	host := viper.GetString("database.host")
 	port := viper.GetInt("database.port")
@@ -99,7 +99,7 @@ func PredictPower(_ *cobra.Command, _ []string) {
 	username := viper.GetString("database.username")
 	password := viper.GetString("database.password")
 
-	db, err := store.NewPostgresDB(host, port, database, username, password)
+	db, err := repository.NewPostgresDB(host, port, database, username, password)
 	if err != nil {
 		slog.Error("failed to access database", err)
 		return
@@ -111,7 +111,7 @@ func PredictPower(_ *cobra.Command, _ []string) {
 		slog.String("username", username),
 	))
 
-	measurements, err := db.GetAll()
+	measurements, err := db.Get(time.Time{}, time.Time{})
 	if err != nil {
 		slog.Error("failed to get data", err)
 		return
@@ -135,7 +135,7 @@ func PredictPower(_ *cobra.Command, _ []string) {
 	}
 	slog.Debug("records split", "training", len(trainingMeasurements), "test", len(testMeasurements))
 
-	a := analyzer.NewPowerPredictor()
+	a := analyzer2.NewPowerPredictor()
 	a.Train(trainingMeasurements)
 	slog.Debug("trained")
 
@@ -171,9 +171,9 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 		opts.Level = slog.LevelDebug
 		//opts.AddSource = true
 	}
-	slog.SetDefault(slog.New(opts.NewTextHandler(os.Stdout)))
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &opts)))
 
-	slog.Debug("analyzer started", "version", version.BuildVersion)
+	slog.Debug("analyzer started", "version", version)
 
 	host := viper.GetString("database.host")
 	port := viper.GetInt("database.port")
@@ -181,7 +181,7 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 	username := viper.GetString("database.username")
 	password := viper.GetString("database.password")
 
-	db, err := store.NewPostgresDB(host, port, database, username, password)
+	db, err := repository.NewPostgresDB(host, port, database, username, password)
 	if err != nil {
 		slog.Error("failed to access database", err)
 		return
@@ -193,7 +193,7 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 		slog.String("username", username),
 	))
 
-	measurements, err := db.GetAll()
+	measurements, err := db.Get(time.Time{}, time.Time{})
 	if err != nil {
 		slog.Error("failed to get data", err)
 		return
@@ -204,7 +204,7 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 		measurements = removeUnknown(measurements)
 	}
 
-	allData := analyzer.AnalyzeMeasurements(measurements)
+	allData := analyzer2.AnalyzeMeasurements(measurements)
 	trainData, testData := base.InstancesTrainTestSplit(allData, .95)
 	if r, _ := trainData.Size(); r == 0 {
 		slog.Warn("no training data. please increase ratio")
@@ -215,7 +215,7 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	w := analyzer.NewWeatherClassifier()
+	w := analyzer2.NewWeatherClassifier()
 
 	if err = w.Fit(trainData); err != nil {
 		slog.Error("training failed", err)
@@ -237,8 +237,8 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 	fmt.Println(evaluation.GetSummary(confusionMat))
 }
 
-func removeUnknown(measurements []store.Measurement) []store.Measurement {
-	var filtered []store.Measurement
+func removeUnknown(measurements []repository.Measurement) []repository.Measurement {
+	var filtered []repository.Measurement
 	for _, measurement := range measurements {
 		if measurement.Weather != "UNKNOWN" {
 			filtered = append(filtered, measurement)
@@ -247,9 +247,9 @@ func removeUnknown(measurements []store.Measurement) []store.Measurement {
 	return filtered
 }
 
-func splitMeasurements(measurements []store.Measurement, ratio float64) ([]store.Measurement, []store.Measurement) {
-	trainingData := make([]store.Measurement, 0)
-	testData := make([]store.Measurement, 0)
+func splitMeasurements(measurements []repository.Measurement, ratio float64) ([]repository.Measurement, []repository.Measurement) {
+	trainingData := make([]repository.Measurement, 0)
+	testData := make([]repository.Measurement, 0)
 
 	for _, measurement := range measurements {
 		if rand.Float64() < ratio {
@@ -262,7 +262,7 @@ func splitMeasurements(measurements []store.Measurement, ratio float64) ([]store
 	return trainingData, testData
 }
 
-func report(measurements []store.Measurement, predict []store.Measurement) {
+func report(measurements []repository.Measurement, predict []repository.Measurement) {
 	for i, measurement := range measurements {
 		fmt.Printf("%s - %3.0f%% %15s measured: %7.0f forecast: %7.0f\n",
 			measurement.Timestamp.Format(time.RFC3339),

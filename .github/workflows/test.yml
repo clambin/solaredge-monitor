@@ -4,13 +4,13 @@ on:
   push:
     branches-ignore:
       - master
-      - viper2
+      - html
   pull_request_target:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: golang:1.20
+    container: golang:1.21
     services:
       postgres:
         image: postgres
@@ -26,10 +26,10 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
-          go-version: "1.20"
+          go-version: "1.21"
       - name: test
         run: |
           export pg_host=postgres
@@ -45,19 +45,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
-          go-version: "1.20"
+          go-version: "1.21"
       - uses: golangci/golangci-lint-action@v3
         with:
           args: --issues-exit-code=0
   vet:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
-          go-version: "1.20"
+          go-version: "1.21"
       - name: vet
         run: go vet ./...

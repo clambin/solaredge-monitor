@@ -5,6 +5,8 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/clambin/solaredge-monitor)
 ![GitHub](https://img.shields.io/github/license/clambin/solaredge-monitor?style=plastic)
 
+visualises SolarEdge power generation and weather statistics (using Tado). 
+
 ## Authors
 
 * **Christophe Lambin**
