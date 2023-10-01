@@ -22,6 +22,8 @@ func (m Measurement) Fold() Measurement {
 	}
 }
 
+type Measurements []Measurement
+
 func (ms Measurements) Fold() Measurements {
 	folded := make(Measurements, len(ms))
 	for index, measurement := range ms {
@@ -29,5 +31,3 @@ func (ms Measurements) Fold() Measurements {
 	}
 	return folded
 }
-
-type Measurements []Measurement

@@ -24,6 +24,8 @@ func (d *daemon) Run(ctx context.Context) error {
 	defer ticker.Stop()
 
 	d.Logger.Debug("starting")
+	defer d.Logger.Debug("stopping")
+
 	for {
 		select {
 		case <-ticker.C:
@@ -31,7 +33,6 @@ func (d *daemon) Run(ctx context.Context) error {
 				d.Logger.Error("poll failed", "err", err)
 			}
 		case <-ctx.Done():
-			d.Logger.Debug("stopping")
 			return ctx.Err()
 		}
 	}

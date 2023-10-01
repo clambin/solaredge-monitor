@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+type Publisher[T any] interface {
+	Subscribe() chan T
+	Unsubscribe(chan T)
+}
+
+var _ Publisher[int] = &publisher[int]{}
 var _ taskmanager.Task = &Collector{}
 
 type Collector struct {

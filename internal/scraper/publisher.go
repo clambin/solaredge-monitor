@@ -4,13 +4,6 @@ import (
 	"sync"
 )
 
-type Publisher[T any] interface {
-	Subscribe() chan T
-	Unsubscribe(chan T)
-}
-
-var _ Publisher[int] = &publisher[int]{}
-
 type publisher[T any] struct {
 	clients map[chan T]struct{}
 	lock    sync.RWMutex
