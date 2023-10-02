@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	analyzer2 "github.com/clambin/solaredge-monitor/internal/analyzer"
+	"github.com/clambin/solaredge-monitor/internal/analyzer"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
@@ -12,7 +12,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"sort"
 	"strconv"
 	"time"
 )
@@ -37,12 +36,12 @@ func init() {
 	power := cobra.Command{
 		Use:   "power",
 		Short: "predict power output based on env metrics",
-		Run:   PredictPower,
+		Run:   predictPower,
 	}
 	weather := cobra.Command{
 		Use:   "weather",
 		Short: "predict weather output based on env & power metrics",
-		Run:   PredictWeather,
+		Run:   predictWeather,
 	}
 	cmd.AddCommand(&power)
 	cmd.AddCommand(&weather)
@@ -83,7 +82,7 @@ func initConfig() {
 	}
 }
 
-func PredictPower(_ *cobra.Command, _ []string) {
+func predictPower(_ *cobra.Command, _ []string) {
 	var opts slog.HandlerOptions
 	if viper.GetBool("debug") {
 		opts.Level = slog.LevelDebug
@@ -126,46 +125,28 @@ func PredictPower(_ *cobra.Command, _ []string) {
 
 	trainingMeasurements, testMeasurements := splitMeasurements(measurements, viper.GetFloat64("ratio"))
 	if len(trainingMeasurements) == 0 {
-		slog.Warn("no training data. please increase ratio")
+		slog.Error("no training data. please increase ratio")
 		return
 	}
 	if len(testMeasurements) == 0 {
-		slog.Warn("no test data. please decrease ratio")
+		slog.Error("no training data. please decrease ratio")
 		return
 	}
 	slog.Debug("records split", "training", len(trainingMeasurements), "test", len(testMeasurements))
 
-	a := analyzer2.NewPowerPredictor()
-	a.Train(trainingMeasurements)
-	slog.Debug("trained")
-
-	predicted := a.PredictSeries(testMeasurements)
-	slog.Debug("predicted")
-
-	sort.Slice(predicted, func(i, j int) bool {
-		return predicted[i].Timestamp.Before(predicted[j].Timestamp)
-	})
-	slog.Debug("sorted predicted")
-
-	var variance, pctVariance float64
-	for index, measurement := range testMeasurements {
-		variance += math.Abs(measurement.Power - predicted[index].Power)
-		if measurement.Power > 0 {
-			pctVariance += 100 * math.Abs(measurement.Power-predicted[index].Power) / measurement.Power
-		}
-	}
+	predicted, variance, pctVariance := analyzer.AssessPowerPrediction(trainingMeasurements, testMeasurements)
 
 	if viper.GetBool("report") {
 		report(testMeasurements, predicted)
 	}
 
 	slog.Info("calculated",
-		"delta", strconv.FormatFloat(variance/float64(len(testMeasurements)), 'f', 0, 64),
-		"variance", strconv.FormatFloat(pctVariance/float64(len(testMeasurements)), 'f', 0, 64)+"%",
+		"delta", strconv.FormatFloat(math.Abs(variance), 'f', 0, 64),
+		"variance", strconv.FormatFloat(100*math.Abs(pctVariance), 'f', 0, 64)+"%",
 	)
 }
 
-func PredictWeather(_ *cobra.Command, _ []string) {
+func predictWeather(_ *cobra.Command, _ []string) {
 	var opts slog.HandlerOptions
 	if viper.GetBool("debug") {
 		opts.Level = slog.LevelDebug
@@ -204,7 +185,7 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 		measurements = removeUnknown(measurements)
 	}
 
-	allData := analyzer2.AnalyzeMeasurements(measurements)
+	allData := analyzer.AnalyzeMeasurements(measurements)
 	trainData, testData := base.InstancesTrainTestSplit(allData, .95)
 	if r, _ := trainData.Size(); r == 0 {
 		slog.Warn("no training data. please increase ratio")
@@ -215,26 +196,16 @@ func PredictWeather(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	w := analyzer2.NewWeatherClassifier()
-
-	if err = w.Fit(trainData); err != nil {
-		slog.Error("training failed", err)
-		return
-	}
-
-	predictions, err := w.Predict(testData)
+	matrix, err := analyzer.AssessWeatherClassification(trainData, testData)
 	if err != nil {
-		slog.Error("predict failed", err)
-		return
+		slog.Error("assess failed", "err", err)
 	}
 
-	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
-	if err != nil {
-		slog.Error("Unable to get confusion matrix: %s", err)
-		return
+	_, r := testData.Size()
+	slog.Info("Accuracy", "testDats", r, "score", strconv.FormatFloat(evaluation.GetAccuracy(matrix), 'f', 3, 64))
+	if viper.GetBool("debug") {
+		fmt.Println(evaluation.GetSummary(matrix))
 	}
-
-	fmt.Println(evaluation.GetSummary(confusionMat))
 }
 
 func removeUnknown(measurements []repository.Measurement) []repository.Measurement {

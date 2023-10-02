@@ -8,6 +8,7 @@ import (
 	"github.com/clambin/go-common/taskmanager/httpserver"
 	promserver "github.com/clambin/go-common/taskmanager/prometheus"
 	"github.com/clambin/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/analyzer"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	server "github.com/clambin/solaredge-monitor/internal/web"
@@ -115,6 +116,11 @@ func Main(_ *cobra.Command, _ []string) error {
 	tasks := []taskmanager.Task{
 		promserver.New(promserver.WithAddr(viper.GetString("prometheus.addr"))),
 		httpserver.New(viper.GetString("server.addr"), s.Router),
+		&analyzer.WeatherDaemon{
+			Repository: db,
+			Interval:   time.Hour,
+			Logger:     slog.Default().With("component", "analyzer"),
+		},
 	}
 
 	ctx, done := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
