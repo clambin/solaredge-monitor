@@ -41,7 +41,7 @@ func AnalyzeMeasurements(measurements []repository.Measurement) *base.DenseInsta
 
 func AssessWeatherClassification(trainData base.FixedDataGrid, testData base.FixedDataGrid) (map[string]map[string]int, error) {
 	w := NewWeatherClassifier()
-
+	w.Weighted = true
 	if err := w.Fit(trainData); err != nil {
 		return nil, fmt.Errorf("training failed: %w", err)
 	}
@@ -65,7 +65,7 @@ type WeatherClassifier struct {
 
 func NewWeatherClassifier() *WeatherClassifier {
 	return &WeatherClassifier{
-		KNNClassifier: knn.NewKnnClassifier("euclidean", "linear", 2),
+		KNNClassifier: knn.NewKnnClassifier("manhattan", "linear", 10),
 	}
 }
 

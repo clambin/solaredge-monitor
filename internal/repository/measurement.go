@@ -22,6 +22,15 @@ func (m Measurement) Fold() Measurement {
 	}
 }
 
+func (m Measurement) CompareTimestamp(other Measurement) int {
+	if m.Timestamp.Before(other.Timestamp) {
+		return -1
+	} else if m.Timestamp.Equal(other.Timestamp) {
+		return 0
+	}
+	return 1
+}
+
 type Measurements []Measurement
 
 func (ms Measurements) Fold() Measurements {

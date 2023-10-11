@@ -5,7 +5,6 @@ import (
 	"github.com/sjwhitworth/golearn/knn"
 	"gonum.org/v1/gonum/mat"
 	"slices"
-	"sort"
 )
 
 func AssessPowerPrediction(trainingMeasurements, testMeasurements repository.Measurements) (repository.Measurements, float64, float64) {
@@ -22,18 +21,12 @@ func AssessPowerPrediction(trainingMeasurements, testMeasurements repository.Mea
 	return predicted, variance, pctVariance
 }
 
-func PredictPower(trainingMeasurements repository.Measurements, testMeasurements repository.Measurements) []repository.Measurement {
+func PredictPower(trainingMeasurements repository.Measurements, testMeasurements repository.Measurements) repository.Measurements {
 	a := NewPowerPredictor(trainingMeasurements...)
 	predicted := a.PredictSeries(testMeasurements)
 
 	slices.SortFunc(predicted, func(a, b repository.Measurement) int {
-		if a.Timestamp.Before(b.Timestamp) {
-			return -1
-		}
-		if a.Timestamp.Equal(b.Timestamp) {
-			return 0
-		}
-		return 1
+		return a.CompareTimestamp(b)
 	})
 
 	return predicted
@@ -73,7 +66,14 @@ func (p *PowerPredictor) PredictSeries(measurements []repository.Measurement) []
 	predicted := make([]repository.Measurement, 0, len(measurements))
 	const concurrentPredictions = 4
 	input := make(chan repository.Measurement)
-	output := make(chan repository.Measurement, concurrentPredictions)
+	output := make(chan repository.Measurement)
+
+	go func() {
+		for _, measurement := range measurements {
+			input <- measurement
+		}
+		close(input)
+	}()
 
 	for i := 0; i < concurrentPredictions; i++ {
 		go func() {
@@ -84,16 +84,13 @@ func (p *PowerPredictor) PredictSeries(measurements []repository.Measurement) []
 		}()
 	}
 
-	go func() {
-		for _, measurement := range measurements {
-			input <- measurement
-		}
-		close(input)
-	}()
-
 	for i := 0; i < len(measurements); i++ {
 		predicted = append(predicted, <-output)
 	}
-	sort.Slice(predicted, func(i, j int) bool { return predicted[i].Timestamp.Before(predicted[j].Timestamp) })
+
+	slices.SortFunc(predicted, func(a, b repository.Measurement) int {
+		return a.CompareTimestamp(b)
+	})
+
 	return predicted
 }
