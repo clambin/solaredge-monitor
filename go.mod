@@ -6,7 +6,7 @@ require (
 	github.com/clambin/go-common/httpserver v0.12.0
 	github.com/clambin/go-common/taskmanager v0.3.0
 	github.com/clambin/solaredge v1.0.2
-	github.com/clambin/tado v1.2.0
+	github.com/clambin/tado v1.3.0
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/jmoiron/sqlx v1.3.5
