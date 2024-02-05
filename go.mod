@@ -6,7 +6,7 @@ require (
 	github.com/clambin/go-common/httpserver v0.12.0
 	github.com/clambin/go-common/taskmanager v0.3.0
 	github.com/clambin/solaredge v1.0.2
-	github.com/clambin/tado v1.3.0
+	github.com/clambin/tado v1.3.1
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/jmoiron/sqlx v1.3.5
@@ -24,7 +24,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/clambin/go-common/set v0.2.0 // indirect
+	github.com/clambin/go-common/set v0.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-fonts/liberation v0.3.1 // indirect
@@ -57,9 +57,9 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/image v0.11.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/oauth2 v0.16.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
