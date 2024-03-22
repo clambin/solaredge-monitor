@@ -2,7 +2,6 @@ package html
 
 import (
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/arguments"
-	"github.com/go-chi/chi/v5"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -14,7 +13,7 @@ type PlotHandler struct {
 	Logger *slog.Logger
 }
 
-func (h PlotHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (h PlotHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
 		h.Logger.Error("failed to determine start/stop parameters", "err", err)
@@ -36,7 +35,7 @@ func (h PlotHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		PlotType string
 		Args     string
 	}{
-		PlotType: chi.URLParam(req, "plotType"),
+		PlotType: req.PathValue("plotType"),
 		Args:     values.Encode(),
 	}
 

@@ -5,7 +5,6 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/mocks"
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gonum.org/v1/plot/vg/vgimg"
@@ -26,8 +25,8 @@ func TestPlotHandler(t *testing.T) {
 		Logger:     slog.Default(),
 	}
 
-	m := chi.NewRouter()
-	m.Get("/plot/heatmap", h.Handle)
+	m := http.NewServeMux()
+	m.Handle("/plot/heatmap", h)
 
 	img := vgimg.PngCanvas{Canvas: vgimg.New(10, 10)}
 

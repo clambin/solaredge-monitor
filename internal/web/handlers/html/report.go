@@ -19,7 +19,7 @@ type Data struct {
 	Args      string
 }
 
-func (h ReportHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (h ReportHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
 		h.Logger.Error("failed to determine start/stop parameters", "err", err)

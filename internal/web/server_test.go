@@ -47,7 +47,7 @@ func TestNewHTTPServer(t *testing.T) {
 		{
 			name:           "contour",
 			target:         "/plotter/contour",
-			wantStatusCode: http.StatusNotFound,
+			wantStatusCode: http.StatusSeeOther,
 		},
 	}
 

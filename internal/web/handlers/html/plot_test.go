@@ -2,7 +2,6 @@ package html_test
 
 import (
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/html"
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"net/http"
@@ -16,8 +15,8 @@ func TestPlotHandler(t *testing.T) {
 	h := html.PlotHandler{
 		Logger: slog.Default(),
 	}
-	r := chi.NewRouter()
-	r.Get("/plot/{plotType}", h.Handle)
+	r := http.NewServeMux()
+	r.Handle("GET /plot/{plotType}", h)
 
 	testCases := []struct {
 		name     string
