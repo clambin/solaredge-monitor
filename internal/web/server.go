@@ -1,51 +1,45 @@
 package web
 
 import (
-	"github.com/clambin/go-common/httpserver/middleware"
+	"github.com/clambin/go-common/http/middleware"
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/html"
 	plotterHandler "github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
-	"github.com/go-chi/chi/v5"
 	"log/slog"
 	"net/http"
 )
 
 type HTTPServer struct {
 	Router            http.Handler
-	PrometheusMetrics *middleware.PrometheusMetrics
+	PrometheusMetrics middleware.ServerMetrics
 }
 
 func NewHTTPServer(repo plotterHandler.Repository, logger *slog.Logger) *HTTPServer {
 	s := HTTPServer{
-		PrometheusMetrics: middleware.NewPrometheusMetrics(middleware.PrometheusMetricsOptions{
-			Namespace:   "solaredge",
-			Subsystem:   "monitor",
-			Application: "solaredge_monitor",
-			MetricsType: middleware.Summary,
-		}),
+		PrometheusMetrics: middleware.NewDefaultServerSummaryMetrics("solaredge", "monitor", ""),
 	}
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter))
-	r.Use(s.PrometheusMetrics.Handle)
+	mw1 := middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter)
+	mw2 := middleware.WithServerMetrics(s.PrometheusMetrics)
 
+	m := http.NewServeMux()
 	reportsHandler := html.ReportHandler{Logger: logger.With("component", "handler", "handler", "report")}
-	r.Get("/report", reportsHandler.Handle)
+	m.Handle("GET /report", mw1(mw2(reportsHandler)))
 
 	plotHandler := html.PlotHandler{Logger: logger.With("component", "handler", "handler", "plot")}
-	r.Get("/plot/{plotType}", plotHandler.Handle)
+	m.Handle("GET /plot/{plotType}", mw1(mw2(plotHandler)))
 
 	scatterHandler := makePlotHandler("scatter", repo, logger)
-	r.Get("/plotter/scatter", scatterHandler.Handle)
+	m.Handle("GET /plotter/scatter", mw1(mw2(scatterHandler)))
 
 	heatmapHandler := makePlotHandler("heatmap", repo, logger)
-	r.Get("/plotter/heatmap", heatmapHandler.Handle)
+	m.Handle("GET /plotter/heatmap", mw1(mw2(heatmapHandler)))
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/report", http.StatusSeeOther)
 	})
 
-	s.Router = r
+	s.Router = m
 
 	return &s
 }

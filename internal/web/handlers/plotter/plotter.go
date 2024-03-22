@@ -31,7 +31,7 @@ type Handler struct {
 	Logger     *slog.Logger
 }
 
-func (h Handler) Handle(w http.ResponseWriter, req *http.Request) {
+func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

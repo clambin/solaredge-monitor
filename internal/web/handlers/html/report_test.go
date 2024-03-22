@@ -68,7 +68,7 @@ func TestReportsHandler(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, target.String(), nil)
 			resp := httptest.NewRecorder()
 
-			h.Handle(resp, req)
+			h.ServeHTTP(resp, req)
 			assert.Equal(t, tt.wantCode, resp.Code)
 
 			if tt.wantCode == http.StatusOK {
