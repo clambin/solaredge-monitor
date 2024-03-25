@@ -3,7 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.22.1
 
 require (
-	github.com/clambin/go-common/http v0.3.2
+	github.com/clambin/go-common/http v0.4.1
 	github.com/clambin/go-common/taskmanager v0.3.0
 	github.com/clambin/solaredge v1.0.2
 	github.com/clambin/tado v1.3.2
