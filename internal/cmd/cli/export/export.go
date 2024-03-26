@@ -61,6 +61,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	exporter := scraper.Exporter{
 		Poller:  &poller,
 		Metrics: exportMetrics,
+		Logger:  logger.With("component", "exporter"),
 	}
 
 	var group errgroup.Group

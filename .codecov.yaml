@@ -2,3 +2,4 @@ ignore:
   - "**/mocks/*.go"
   - "cmd/**/*.go"
   - "internal/cmd/**/*.go"
+  - "internal/scraper/solaredge/*.go"

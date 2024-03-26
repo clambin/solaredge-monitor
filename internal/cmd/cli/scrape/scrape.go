@@ -77,6 +77,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	exporter := scraper.Exporter{
 		Poller:  &poller,
 		Metrics: exportMetrics,
+		Logger:  logger.With("component", "exporter"),
 	}
 
 	tadoMetrics := metrics.NewRequestSummaryMetrics("solaredge", "scraper", map[string]string{"application": "tado"})

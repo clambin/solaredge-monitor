@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ func TestExporter(t *testing.T) {
 	exporter := scraper.Exporter{
 		Poller:  &p,
 		Metrics: metrics,
+		Logger:  slog.Default(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

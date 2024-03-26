@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
+	"log/slog"
 )
 
 type Exporter struct {
 	Poller  Publisher[solaredge.Update]
 	Metrics *Metrics
+	Logger  *slog.Logger
 }
 
 type Publisher[T any] interface {
@@ -19,6 +21,9 @@ type Publisher[T any] interface {
 func (e Exporter) Run(ctx context.Context) error {
 	ch := e.Poller.Subscribe()
 	defer e.Poller.Unsubscribe(ch)
+
+	e.Logger.Debug("starting exporter")
+	defer e.Logger.Debug("stopped exporter")
 
 	for {
 		select {
@@ -31,6 +36,7 @@ func (e Exporter) Run(ctx context.Context) error {
 }
 
 func (e Exporter) export(update solaredge.Update) {
+	e.Logger.Debug("exporting update")
 	for site := range update {
 		e.Metrics.currentPower.WithLabelValues(update[site].Name).Set(update[site].PowerOverview.CurrentPower.Power)
 		e.Metrics.dayEnergy.WithLabelValues(update[site].Name).Set(update[site].PowerOverview.LastDayData.Energy)
