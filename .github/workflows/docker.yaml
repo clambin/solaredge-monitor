@@ -55,9 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test
+      - lint
     strategy:
       matrix:
-        subCmd: [ export ]
+        subCmd: [ export, web ]
     steps:
       - uses: actions/checkout@v4
       - name: Version number
