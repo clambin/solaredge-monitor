@@ -7,11 +7,10 @@ ARG VERSION
 WORKDIR /build
 COPY . .
 #RUN CGO_ENABLED=0 go build -o $BINARY -ldflags \"-X main.version=$VERSION\" cmd/$BINARY/$BINARY.go
-RUN ls
 RUN chmod +x build.sh
 RUN ./build.sh $VERSION
 
 FROM alpine
-COPY --from=build /go/$BINARY /app/$BINARY
+COPY --from=build /build/$BINARY /app/$BINARY
 ENTRYPOINT ["/app/$BINARY", "$COMMAND"]
 CMD []
