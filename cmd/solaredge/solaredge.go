@@ -16,8 +16,8 @@ var (
 
 	configFile string
 	cmd        = cobra.Command{
-		Use:   "solaredge-monitor",
-		Short: "records solar panel output vs. weather conditions",
+		Use:   "solaredge",
+		Short: "solaredge metrics collector",
 	}
 )
 
