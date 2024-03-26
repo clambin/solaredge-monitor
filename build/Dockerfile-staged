@@ -1,0 +1,21 @@
+FROM golang:1.22.1 as build
+
+ARG REPO
+ARG BINARY
+ARG COMMAND
+ARG VERSION
+
+RUN mkdir -p /app/source
+RUN pwd
+COPY . /app/source
+WORKDIR /app/source
+RUN CGO_ENABLED=0 \
+    go build \
+      -o /bin/$BINARY \
+      -ldflags "-X main.version=$VERSION" \
+      $REPO/cmd/$BINARY/$BINARY.go
+
+FROM alpine
+COPY --from=build /bin/$BINARY /app/$BINARY
+ENTRYPOINT ["/app/$BINARY $COMMAND"]
+CMD []
