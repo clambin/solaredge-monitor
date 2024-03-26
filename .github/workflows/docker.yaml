@@ -87,7 +87,6 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           build-args: |
-            REPO: github.com/clambin/solaredge-monitor
-            BINARY: solaredge
-            COMMAND: ${{ matrix.subCmd }}
+            BINARY=solaredge
+            COMMAND=${{ matrix.subCmd }}
             VERSION=${{ steps.docker_meta.outputs.version }}
