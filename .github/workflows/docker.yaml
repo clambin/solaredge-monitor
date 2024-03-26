@@ -86,5 +86,5 @@ jobs:
           build-args: |
             REPO: github.com/clambin/solaredge-monitor
             BINARY: solaredge
-            COMMAND: ${{ marix.subCmd }}
+            COMMAND: ${{ matrix.subCmd }}
             VERSION=${{ steps.docker_meta.outputs.version }}
