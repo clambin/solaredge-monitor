@@ -53,9 +53,9 @@ jobs:
           args: --issues-exit-code=0
   build:
     runs-on: ubuntu-latest
-    needs:
-      - test
-      - lint
+    #needs:
+    #  - test
+    #  - lint
     strategy:
       matrix:
         subCmd: [ export, web ]

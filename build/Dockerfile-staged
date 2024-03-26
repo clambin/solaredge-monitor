@@ -6,7 +6,8 @@ ARG VERSION
 
 #WORKDIR /go
 #RUN CGO_ENABLED=0 go build -o $BINARY -ldflags \"-X main.version=$VERSION\" cmd/$BINARY/$BINARY.go
-RUN ls
+RUN ls src
+RUN find . -name Dockerfile-staged -print
 RUN chmod +x build.sh
 RUN ./build.sh $VERSION
 
