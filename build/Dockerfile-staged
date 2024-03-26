@@ -1,8 +1,7 @@
 FROM golang:1.22.1 as build
 
-ARG BINARY
-ARG COMMAND
 ARG VERSION
+ARG COMMAND
 
 WORKDIR /build
 COPY . .
@@ -11,6 +10,6 @@ RUN chmod +x build.sh
 RUN ./build.sh $VERSION
 
 FROM alpine
-COPY --from=build /build/$BINARY /app/$BINARY
-ENTRYPOINT ["/app/$BINARY", "$COMMAND"]
+COPY --from=build /build/solaredge /app/solaredge
+ENTRYPOINT ["/app/solaredge", "$COMMAND"]
 CMD []
