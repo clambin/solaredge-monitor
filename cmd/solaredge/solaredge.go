@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/clambin/solaredge-monitor/internal/cmd/cli/export"
+	"github.com/clambin/solaredge-monitor/internal/cmd/cli/scrape"
 	"github.com/clambin/solaredge-monitor/internal/cmd/cli/web"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,13 +31,11 @@ func main() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	cmd.Version = version
-	cmd.Flags().StringVar(&configFile, "config", "", "Configuration file")
-	cmd.Flags().Bool("debug", false, "Log debug messages")
-	cmd.Flags().Bool("scrape", false, "Record measurements")
-	_ = viper.BindPFlag("debug", cmd.Flags().Lookup("debug"))
-	_ = viper.BindPFlag("scrape.enabled", cmd.Flags().Lookup("scrape"))
+	cmd.PersistentFlags().StringVar(&configFile, "config", "", "Configuration file")
+	cmd.PersistentFlags().Bool("debug", false, "Log debug messages")
+	_ = viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug"))
 
-	cmd.AddCommand(&web.Cmd)
+	cmd.AddCommand(&web.Cmd, &export.Cmd, &scrape.Cmd)
 }
 
 func initConfig() {

@@ -2,38 +2,36 @@ package scraper
 
 import (
 	"context"
-	"github.com/clambin/go-common/taskmanager"
+	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
+	"github.com/clambin/solaredge-monitor/pkg/pubsub"
 	"log/slog"
 	"time"
 )
 
-var _ taskmanager.Task = &daemon{}
-
-type daemon struct {
+type Poller struct {
+	Client   SolarEdgeGetter
 	Interval time.Duration
-	Poller
-	Logger *slog.Logger
+	Logger   *slog.Logger
+	pubsub.Publisher[solaredge.Update]
+}
+type SolarEdgeGetter interface {
+	GetUpdate(context.Context) (solaredge.Update, error)
 }
 
-type Poller interface {
-	Poll(ctx context.Context) error
-}
-
-func (d *daemon) Run(ctx context.Context) error {
-	ticker := time.NewTicker(d.Interval)
-	defer ticker.Stop()
-
-	d.Logger.Debug("starting")
-	defer d.Logger.Debug("stopping")
+func (p *Poller) Run(ctx context.Context) error {
+	p.Logger.Debug("starting poller", "interval", p.Interval)
+	defer p.Logger.Debug("stopped poller")
 
 	for {
-		if err := d.Poll(ctx); err != nil {
-			d.Logger.Error("poll failed", "err", err)
+		if update, err := p.Client.GetUpdate(ctx); err == nil {
+			p.Publish(update)
+		} else {
+			p.Logger.Error("failed to get solaredge data", "err", err)
 		}
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
-		case <-ticker.C:
+			return nil
+		case <-time.After(p.Interval):
 		}
 	}
 }
