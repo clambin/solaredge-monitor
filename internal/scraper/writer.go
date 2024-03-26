@@ -28,17 +28,20 @@ type TadoGetter interface {
 }
 
 func (w *Writer) Run(ctx context.Context) error {
+	w.Logger.Debug("starting writer", "interval", w.Interval)
+	defer w.Logger.Debug("stopped writer")
+
 	ch := w.Poller.Subscribe()
 	defer w.Poller.Unsubscribe(ch)
 
-	w.Logger.Debug("starting writer")
-	defer w.Logger.Debug("stopped writer")
+	ticker := time.NewTicker(w.Interval)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case update := <-ch:
 			w.process(update)
-		case <-time.After(w.Interval):
+		case <-ticker.C:
 			if err := w.store(ctx); err != nil {
 				w.Logger.Error("failed to store update", "err", err)
 			}
@@ -51,16 +54,24 @@ func (w *Writer) Run(ctx context.Context) error {
 func (w *Writer) process(update solaredge.Update) {
 	for site := range update {
 		if site > 0 {
+			w.Logger.Debug("only one site is supporter. ignoring remaining sites")
 			return
 		}
 		w.power.Add(update[0].PowerOverview.CurrentPower.Power)
-		w.Logger.Debug("update received", "site", update[site].Name)
+		w.Logger.Debug("update received", "site", update[site].Name, "count", w.power.Count)
 	}
 }
 
 func (w *Writer) store(ctx context.Context) error {
 	if w.power.Count == 0 {
-		return fmt.Errorf("no measurements available")
+		w.Logger.Debug("no data to store")
+		return nil
+	}
+
+	power := w.power.Average()
+	if power == 0 {
+		w.Logger.Debug("not storing measurement with no power")
+		return nil
 	}
 
 	c, err := w.TadoClient.GetWeatherInfo(ctx)
@@ -70,10 +81,10 @@ func (w *Writer) store(ctx context.Context) error {
 
 	m := repository.Measurement{
 		Timestamp: time.Now(),
-		Power:     w.power.Average(),
+		Power:     power,
 		Intensity: c.SolarIntensity.Percentage,
 		Weather:   c.WeatherState.Value,
 	}
-	w.Logger.Debug("storing measurement")
+	w.Logger.Debug("storing", "measurement", m)
 	return w.Store.Store(m)
 }

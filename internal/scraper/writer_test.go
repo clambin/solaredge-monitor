@@ -29,8 +29,11 @@ func TestWriter(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch := make(chan error)
 	go func() { ch <- w.Run(ctx) }()
-	p.ch <- testUpdate
 
+	p.ch <- emptyUpdate
+	assert.Never(t, s.hasData.Load, time.Second, time.Millisecond)
+
+	p.ch <- testUpdate
 	assert.Eventually(t, s.hasData.Load, time.Second, time.Millisecond)
 	cancel()
 
