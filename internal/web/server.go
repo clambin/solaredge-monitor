@@ -1,7 +1,6 @@
 package web
 
 import (
-	"github.com/clambin/go-common/http/middleware"
 	"github.com/clambin/solaredge-monitor/internal/web/handlers/html"
 	plotterHandler "github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
@@ -9,39 +8,16 @@ import (
 	"net/http"
 )
 
-type HTTPServer struct {
-	Router            http.Handler
-	PrometheusMetrics middleware.ServerMetrics
-}
-
-func NewHTTPServer(repo plotterHandler.Repository, logger *slog.Logger) *HTTPServer {
-	s := HTTPServer{
-		PrometheusMetrics: middleware.NewDefaultServerSummaryMetrics("solaredge", "monitor", ""),
-	}
-
-	mw1 := middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter)
-	mw2 := middleware.WithServerMetrics(s.PrometheusMetrics)
-
+func New(repo plotterHandler.Repository, logger *slog.Logger) http.Handler {
 	m := http.NewServeMux()
-	reportsHandler := html.ReportHandler{Logger: logger.With("component", "handler", "handler", "report")}
-	m.Handle("GET /report", mw1(mw2(reportsHandler)))
-
-	plotHandler := html.PlotHandler{Logger: logger.With("component", "handler", "handler", "plot")}
-	m.Handle("GET /plot/{plotType}", mw1(mw2(plotHandler)))
-
-	scatterHandler := makePlotHandler("scatter", repo, logger)
-	m.Handle("GET /plotter/scatter", mw1(mw2(scatterHandler)))
-
-	heatmapHandler := makePlotHandler("heatmap", repo, logger)
-	m.Handle("GET /plotter/heatmap", mw1(mw2(heatmapHandler)))
-
+	m.Handle("GET /report", html.ReportHandler{Logger: logger.With("component", "handler", "handler", "report")})
+	m.Handle("GET /plot/{plotType}", html.PlotHandler{Logger: logger.With("component", "handler", "handler", "plot")})
+	m.Handle("GET /plotter/scatter", makePlotHandler("scatter", repo, logger))
+	m.Handle("GET /plotter/heatmap", makePlotHandler("heatmap", repo, logger))
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/report", http.StatusSeeOther)
 	})
-
-	s.Router = m
-
-	return &s
+	return m
 }
 
 func makePlotHandler(plotType string, repo plotterHandler.Repository, logger *slog.Logger) plotterHandler.Handler {

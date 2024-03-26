@@ -27,13 +27,13 @@ func (d *daemon) Run(ctx context.Context) error {
 	defer d.Logger.Debug("stopping")
 
 	for {
+		if err := d.Poll(ctx); err != nil {
+			d.Logger.Error("poll failed", "err", err)
+		}
 		select {
-		case <-ticker.C:
-			if err := d.Poll(ctx); err != nil {
-				d.Logger.Error("poll failed", "err", err)
-			}
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-ticker.C:
 		}
 	}
 }

@@ -13,15 +13,16 @@ type Arguments struct {
 }
 
 func Parse(req *http.Request) (args Arguments, err error) {
-	fold := req.URL.Query().Get("fold")
+	values := req.URL.Query()
+	fold := values.Get("fold")
 	if fold == "true" {
 		args.Fold = true
 	}
 
-	if args.Start, err = parseTimestamp(req, "start"); err != nil {
+	if args.Start, err = parseTimestamp(values.Get("start")); err != nil {
 		return Arguments{}, err
 	}
-	if args.Stop, err = parseTimestamp(req, "stop"); err != nil {
+	if args.Stop, err = parseTimestamp(values.Get("stop")); err != nil {
 		return
 	}
 
@@ -32,13 +33,12 @@ func Parse(req *http.Request) (args Arguments, err error) {
 	return
 }
 
-func parseTimestamp(req *http.Request, field string) (timestamp time.Time, err error) {
-	arg := req.URL.Query().Get(field)
+func parseTimestamp(arg string) (timestamp time.Time, err error) {
 	if arg == "" {
 		return
 	}
 	if timestamp, err = time.Parse(time.RFC3339, arg); err != nil {
-		err = fmt.Errorf("invalid format for '%s': %w", field, err)
+		err = fmt.Errorf("invalid format for '%s': %w", arg, err)
 	}
 	return timestamp, err
 }
