@@ -2,6 +2,7 @@ FROM golang:1.22.1 as build
 
 ARG VERSION
 ARG COMMAND
+ENV subCmd=$COMMAND
 
 WORKDIR /build
 COPY . .
@@ -11,5 +12,5 @@ RUN ./build.sh $VERSION
 
 FROM alpine
 COPY --from=build /build/solaredge /app/solaredge
-ENTRYPOINT ["/app/solaredge", "$COMMAND"]
+ENTRYPOINT exec /app/solaredge $subCmd
 CMD []
