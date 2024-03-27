@@ -10,6 +10,8 @@ ARG TARGETARCH
 ARG COMMAND
 
 RUN echo $COMMAND "$COMMAND"
+RUN chmod +x ./build/entrypoint-$COMMAND.sh ./bld/solaredge-$TARGETOS-$TARGETARCH
+
 COPY ./build/entrypoint-$COMMAND.sh /app/entrypoint.sh
 COPY ./bld/solaredge-$TARGETOS-$TARGETARCH /app/solaredge
 
