@@ -7,51 +7,12 @@ on:
       - refactor
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    container: golang:1.22
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_DB: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-      - name: test
-        run: |
-          export pg_host=postgres
-          export pg_port=5432
-          export pg_database=postgres
-          export pg_user=postgres
-          export pg_password=postgres
-          go test ./... -race -coverprofile=coverage.txt -covermode=atomic
-      - uses: codecov/codecov-action@v4
-        with:
-          file: coverage.txt
-          token: ${{ secrets.CODECOV_TOKEN }}
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-      - uses: golangci/golangci-lint-action@v4
-        with:
-          args: --issues-exit-code=0
   build:
+    uses: clambin/workflows/.github/workflows/build.yaml@main
+    with:
+      target: solaredge
+      docker: false
+  docker:
     runs-on: ubuntu-latest
     #needs:
     #  - test
@@ -61,6 +22,21 @@ jobs:
         subCmd: [ export, web ]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: solaredge-linux-arm
+          path: ./bld
+      - uses: actions/download-artifact@v4
+        with:
+          name: solaredge-linux-arm64
+          path: ./bld
+      - uses: actions/download-artifact@v4
+        with:
+          name: solaredge-linux-amd64
+          path: ./bld
+      - name: fix permissions
+        shell: bash
+        run: chmod +x bld/*
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3.1.0
@@ -78,8 +54,8 @@ jobs:
       - uses: docker/build-push-action@v5.3.0
         with:
           context: .
-          file: build/Dockerfile-staged
-          platforms: linux/amd64,linux/arm64 # ,linux/arm
+          file: build/Dockerfile
+          platforms: linux/amd64,linux/arm64s,linux/arm
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
