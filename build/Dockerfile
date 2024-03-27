@@ -11,7 +11,7 @@ ARG COMMAND
 
 RUN echo $COMMAND "$COMMAND"
 COPY ./build/entrypoint-$COMMAND.sh /app/entrypoint.sh
-COPY ./bld/solaredge-monitor-$TARGETOS-$TARGETARCH /app/solaredge-monitor
+COPY ./bld/solaredge-$TARGETOS-$TARGETARCH /app/solaredge
 
 EXPOSE 80
 ENTRYPOINT ["/app/entrypoint.sh"]
