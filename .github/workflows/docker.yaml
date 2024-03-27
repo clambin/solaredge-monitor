@@ -25,6 +25,8 @@ jobs:
         with:
           pattern: solaredge-*
           path: ./bld
+      - shell: bash
+        run: find ./bld -type f -print
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3.1.0

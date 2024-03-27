@@ -9,8 +9,7 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG COMMAND
 
-RUN echo $COMMAND "$COMMAND"
-
+RUN find /app -type f -print
 COPY ./build/entrypoint-$COMMAND.sh /app/entrypoint.sh
 COPY ./bld/solaredge-$TARGETOS-$TARGETARCH /app/solaredge
 RUN chmod +x /app/entrypoint.sh
