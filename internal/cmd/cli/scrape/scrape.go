@@ -24,7 +24,7 @@ import (
 var (
 	Cmd = cobra.Command{
 		Use:   "scrape",
-		Short: "collect SolarEdge data and export to Postgres",
+		Short: "collect SolarEdge data and export to Prometheus & Postgres",
 		RunE:  run,
 	}
 )
@@ -97,8 +97,18 @@ func run(cmd *cobra.Command, _ []string) error {
 		Logger:     logger.With("component", "writer"),
 	}
 
+	exportMetrics := scraper.NewMetrics()
+	prometheus.MustRegister(exportMetrics)
+
+	exporter := scraper.Exporter{
+		Poller:  &poller,
+		Metrics: exportMetrics,
+		Logger:  logger.With("component", "exporter"),
+	}
+
 	var group errgroup.Group
 	group.Go(func() error { return poller.Run(cmd.Context()) })
+	group.Go(func() error { return exporter.Run(cmd.Context()) })
 	group.Go(func() error { return writer.Run(cmd.Context()) })
 
 	return group.Wait()
