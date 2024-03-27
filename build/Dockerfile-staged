@@ -13,5 +13,5 @@ RUN ./build.sh $VERSION
 
 FROM alpine
 COPY --from=build /build/solaredge /app/solaredge
-ENTRYPOINT exec /app/solaredge $subCmd
+ENTRYPOINT /app/solaredge $subCmd
 CMD []
