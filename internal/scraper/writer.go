@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
+	"github.com/clambin/solaredge-monitor/pkg/averager"
 	"github.com/clambin/tado"
 	"log/slog"
 	"time"
@@ -16,7 +17,7 @@ type Writer struct {
 	Poller     Publisher[solaredge.Update]
 	Interval   time.Duration
 	Logger     *slog.Logger
-	power      Averager
+	power      averager.Averager[float64]
 }
 
 type Store interface {
@@ -66,7 +67,7 @@ func (w *Writer) process(update solaredge.Update) {
 }
 
 func (w *Writer) store(ctx context.Context) error {
-	if w.power.Count == 0 {
+	if w.power.Count() == 0 {
 		w.Logger.Debug("no data to store")
 		return nil
 	}
