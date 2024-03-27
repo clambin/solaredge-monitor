@@ -15,6 +15,6 @@ ENV subCmd=$COMMAND
 
 COPY --from=build /build/solaredge /app/solaredge
 RUN echo /app/solaredge ${subCmd} > /app/entrypoint.sh
-RUN exec +x /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/bin/sh", "-c", "/app/entrypoint.sh"]
 CMD []
