@@ -14,12 +14,11 @@ jobs:
       docker: false
   docker:
     runs-on: ubuntu-latest
-    #needs:
-    #  - test
-    #  - lint
+    needs:
+      - build
     strategy:
       matrix:
-        subCmd: [ export, web ]
+        subCmd: [ export, web, scrape ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4

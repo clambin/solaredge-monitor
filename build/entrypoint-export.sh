@@ -1,2 +1,2 @@
 #!/bin/sh
-/app/solaredge export "$@"
+exec /app/solaredge export "$@"

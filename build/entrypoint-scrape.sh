@@ -1,2 +1,2 @@
 #!/bin/sh
-/app/solaredge scrape "$@"
+exec /app/solaredge scrape "$@"
