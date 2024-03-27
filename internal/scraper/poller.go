@@ -23,8 +23,10 @@ func (p *Poller) Run(ctx context.Context) error {
 	defer p.Logger.Debug("stopped poller")
 
 	for {
+		start := time.Now()
 		if update, err := p.Client.GetUpdate(ctx); err == nil {
 			p.Publish(update)
+			p.Logger.Debug("poll done", "duration", time.Since(start))
 		} else {
 			p.Logger.Error("failed to get solaredge data", "err", err)
 		}
