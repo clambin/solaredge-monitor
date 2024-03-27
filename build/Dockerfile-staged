@@ -14,5 +14,7 @@ ARG COMMAND
 ENV subCmd=$COMMAND
 
 COPY --from=build /build/solaredge /app/solaredge
-ENTRYPOINT ["/app/solaredge", "${subCmd}"]
+RUN echo /app/solaredge ${subCmd} > /app/entrypoint.sh
+RUN exec +x /app/entrypoint.sh
+ENTRYPOINT ["/bin/sh", "-c", "/app/entrypoint.sh"]
 CMD []
