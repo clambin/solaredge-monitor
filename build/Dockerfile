@@ -13,7 +13,8 @@ RUN echo $COMMAND "$COMMAND"
 
 COPY ./build/entrypoint-$COMMAND.sh /app/entrypoint.sh
 COPY ./bld/solaredge-$TARGETOS-$TARGETARCH /app/solaredge
-RUN chmod +x /app/*
+RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/solaredge
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD []
