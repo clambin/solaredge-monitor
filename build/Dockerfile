@@ -15,6 +15,7 @@ COPY ./build/entrypoint-$COMMAND.sh /app/entrypoint.sh
 COPY ./bld/solaredge-$TARGETOS-$TARGETARCH /app/solaredge
 RUN chmod +x /app/entrypoint.sh
 RUN chmod +x /app/solaredge
+RUN ls -l /app
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD []

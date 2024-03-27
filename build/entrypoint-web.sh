@@ -1,2 +1,5 @@
 #!/bin/sh
-exec /app/solaredge web "$@"
+
+ls -l /app
+
+/app/solaredge web "$@"
