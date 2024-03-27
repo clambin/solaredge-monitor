@@ -5,7 +5,7 @@ import (
 	"github.com/clambin/go-common/http/metrics"
 	"github.com/clambin/go-common/http/roundtripper"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
-	solaredge2 "github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/clambin/solaredge-monitor/pkg/pubsub"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -49,10 +49,10 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	poller := scraper.Poller{
-		Client:    solaredge2.New(viper.GetString("polling.token"), &httpClient),
+		Client:    solaredge.New(viper.GetString("polling.token"), &httpClient),
 		Interval:  viper.GetDuration("polling.interval"),
 		Logger:    logger.With("component", "poller"),
-		Publisher: pubsub.Publisher[solaredge2.Update]{},
+		Publisher: pubsub.Publisher[solaredge.Update]{},
 	}
 
 	exportMetrics := scraper.NewMetrics()
