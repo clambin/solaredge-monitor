@@ -1,17 +1,18 @@
 FROM golang:1.22.1 as build
 
 ARG VERSION
-ARG COMMAND
-ENV subCmd=$COMMAND
 
 WORKDIR /build
 COPY . .
-#RUN CGO_ENABLED=0 go build -o $BINARY -ldflags \"-X main.version=$VERSION\" cmd/$BINARY/$BINARY.go
-RUN echo $VERSION $COMMAND $subCmd ${subCmd}
 RUN chmod +x build.sh
 RUN ./build.sh $VERSION
 
 FROM alpine
+
+RUN echo $VERSION $COMMAND ${subCmd}
+ARG COMMAND
+ENV subCmd=$COMMAND
+
 COPY --from=build /build/solaredge /app/solaredge
-ENTRYPOINT ["/app/solaredge", "$subCmd"]
+ENTRYPOINT ["/app/solaredge", "${subCmd}"]
 CMD []
