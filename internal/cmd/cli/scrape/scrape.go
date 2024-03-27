@@ -106,6 +106,9 @@ func run(cmd *cobra.Command, _ []string) error {
 		Logger:  logger.With("component", "exporter"),
 	}
 
+	logger.Info("starting solaredge scraper", "version", cmd.Root().Version)
+	defer logger.Info("stopping solaredge scraper")
+
 	var group errgroup.Group
 	group.Go(func() error { return poller.Run(cmd.Context()) })
 	group.Go(func() error { return exporter.Run(cmd.Context()) })
