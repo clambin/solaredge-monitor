@@ -65,8 +65,8 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	poller := scraper.Poller{
-		Client:    solaredge2.New(viper.GetString("solaredge.token"), &httpClient),
-		Interval:  viper.GetDuration("scrape.polling"),
+		Client:    solaredge2.New(viper.GetString("polling.token"), &httpClient),
+		Interval:  viper.GetDuration("polling.interval"),
 		Logger:    logger.With("component", "poller"),
 		Publisher: pubsub.Publisher[solaredge2.Update]{},
 	}
@@ -93,7 +93,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		Store:      repo,
 		TadoClient: tadoClient,
 		Poller:     &poller,
-		Interval:   viper.GetDuration("scrape.collection"),
+		Interval:   viper.GetDuration("scrape.interval"),
 		Logger:     logger.With("component", "writer"),
 	}
 

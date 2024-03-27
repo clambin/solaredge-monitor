@@ -49,8 +49,8 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	poller := scraper.Poller{
-		Client:    solaredge2.New(viper.GetString("solaredge.token"), &httpClient),
-		Interval:  viper.GetDuration("scrape.polling"),
+		Client:    solaredge2.New(viper.GetString("polling.token"), &httpClient),
+		Interval:  viper.GetDuration("polling.interval"),
 		Logger:    logger.With("component", "poller"),
 		Publisher: pubsub.Publisher[solaredge2.Update]{},
 	}

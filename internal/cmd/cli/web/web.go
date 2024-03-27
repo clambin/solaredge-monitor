@@ -60,7 +60,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	logger.Info("starting solaredge web server", "version", cmd.Root().Version)
 	defer logger.Info("stopping solaredge web server")
 
-	err = http.ListenAndServe(viper.GetString("server.addr"), mw1(mw2(server.New(repo, logger))))
+	err = http.ListenAndServe(viper.GetString("web.addr"), mw1(mw2(server.New(repo, logger))))
 	if errors.Is(err, http.ErrServerClosed) {
 		err = nil
 	}
