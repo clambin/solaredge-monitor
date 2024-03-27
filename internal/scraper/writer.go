@@ -46,6 +46,9 @@ func (w *Writer) Run(ctx context.Context) error {
 				w.Logger.Error("failed to store update", "err", err)
 			}
 		case <-ctx.Done():
+			if err := w.store(ctx); err != nil {
+				w.Logger.Error("failed to store update", "err", err)
+			}
 			return nil
 		}
 	}
