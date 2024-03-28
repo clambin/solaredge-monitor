@@ -57,10 +57,11 @@ var _ scraper.TadoGetter = tadoClient{}
 
 type tadoClient struct {
 	weatherInfo tado.WeatherInfo
+	err         error
 }
 
 func (t tadoClient) GetWeatherInfo(_ context.Context) (tado.WeatherInfo, error) {
-	return t.weatherInfo, nil
+	return t.weatherInfo, t.err
 }
 
 var (
