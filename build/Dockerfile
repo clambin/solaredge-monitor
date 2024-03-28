@@ -8,8 +8,6 @@ WORKDIR /app
 ARG TARGETOS
 ARG TARGETARCH
 
-COPY ./bld/solaredge-monitor-$TARGETOS-$TARGETARCH /app/solaredge-monitor
-
-EXPOSE 80
-ENTRYPOINT ["/app/solaredge-monitor"]
+COPY ./bld/solaredge-$TARGETOS-$TARGETARCH /app/solaredge
+ENTRYPOINT ["/app/solaredge"]
 CMD []

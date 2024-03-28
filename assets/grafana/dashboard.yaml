@@ -1,0 +1,97 @@
+apiVersion: k8s.kevingomez.fr/v1
+kind: GrafanaDashboard
+metadata:
+    annotations:
+        dark/folder: Home Automation
+    name: solaredge
+    namespace: development
+spec:
+    title: Solar Panels
+    tags: [generated,yaml]
+    auto_refresh: 5m
+    time:
+        - now-6h
+        - now
+    rows:
+        - name: Overview
+          panels:
+            - stat:
+                title: Output
+                span: 3
+                targets:
+                    - prometheus:
+                        query: avg by (siteid) (solaredge_current_power)
+                unit: watt
+                thresholds:
+                    - color: green
+            - stat:
+                title: Today
+                span: 3
+                targets:
+                    - prometheus:
+                        query: avg by (siteid) (solaredge_day_energy)
+                unit: watth
+                thresholds:
+                    - color: green
+            - stat:
+                title: Month
+                span: 3
+                targets:
+                    - prometheus:
+                        query: avg by (siteid) (solaredge_month_energy)
+                unit: watth
+                thresholds:
+                    - color: green
+            - stat:
+                title: Year
+                span: 3
+                targets:
+                    - prometheus:
+                        query: avg by (siteid) (solaredge_year_energy)
+                unit: watth
+                threshold_mode: absolute
+                thresholds:
+                    - color: green
+            - timeseries:
+                title: Output (W)
+                span: 9
+                targets:
+                    - prometheus:
+                        query: avg by (siteid) (solaredge_current_power)
+                legend: [hide]
+                axis:
+                    unit: watt
+            - timeseries:
+                title: Temperature
+                span: 3
+                targets:
+                    - prometheus:
+                        query: avg by (site) (solaredge_inverter_temperature)
+                legend: [hide]
+                axis:
+                    unit: celsius
+            - timeseries:
+                title: Output (V, A)
+                span: 9
+                targets:
+                    - prometheus:
+                        query: avg by (site) (solaredge_inverter_ac_voltage)
+                        legend: AC voltage
+                    - prometheus:
+                        query: avg by (site) (solaredge_inverter_dc_voltage)
+                        legend: DC voltage
+                    - prometheus:
+                        query: avg by (site) (solaredge_inverter_ac_current)
+                        legend: AC current
+                legend: [as_list, to_bottom]
+                axis:
+                    min: 0
+                    unit: volt
+                overrides:
+                    - match: {field_name: DC voltage}
+                      properties:
+                        axis_display: left
+                    - match: {field_name: AC current}
+                      properties:
+                        unit: amp
+                        axis_display: right

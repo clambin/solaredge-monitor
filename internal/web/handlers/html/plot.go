@@ -13,6 +13,8 @@ type PlotHandler struct {
 	Logger *slog.Logger
 }
 
+var tmpl = template.Must(template.ParseFS(html, "templates/plot.html"))
+
 func (h PlotHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	args, err := arguments.Parse(req)
 	if err != nil {
@@ -39,7 +41,6 @@ func (h PlotHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		Args:     values.Encode(),
 	}
 
-	tmpl := template.Must(template.ParseFS(html, "templates/plot.html"))
 	//	w.WriteHeader(http.StatusOK)
 	if err = tmpl.Execute(w, data); err != nil {
 		h.Logger.Error("failed to generate page", "err", err)

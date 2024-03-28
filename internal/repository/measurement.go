@@ -1,12 +1,26 @@
 package repository
 
-import "time"
+import (
+	"log/slog"
+	"time"
+)
+
+var _ slog.LogValuer = Measurement{}
 
 type Measurement struct {
 	Timestamp time.Time
 	Power     float64
 	Intensity float64
 	Weather   string
+}
+
+func (m Measurement) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Time("timestamp", m.Timestamp),
+		slog.Float64("power", m.Power),
+		slog.Float64("intensity", m.Intensity),
+		slog.String("weather", m.Weather),
+	)
 }
 
 func (m Measurement) Fold() Measurement {

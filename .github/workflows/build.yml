@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - http
+      - refactor
 
 jobs:
   test:
@@ -55,5 +55,5 @@ jobs:
     needs: test
     uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
-      target: solaredge-monitor
+      target: solaredge
 

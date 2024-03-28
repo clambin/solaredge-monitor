@@ -3,9 +3,8 @@ package web_test
 import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
-	"github.com/clambin/solaredge-monitor/internal/web/handlers/mocks"
+	plotterHandler "github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -14,12 +13,7 @@ import (
 )
 
 func TestNewHTTPServer(t *testing.T) {
-	repo := mocks.NewRepository(t)
-	measurements := makeMeasurements(100)
-	repo.EXPECT().Get(mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(measurements, nil)
-	s := web.NewHTTPServer(repo, slog.Default())
-
-	testCases := []struct {
+	tests := []struct {
 		name           string
 		target         string
 		wantStatusCode int
@@ -51,11 +45,15 @@ func TestNewHTTPServer(t *testing.T) {
 		},
 	}
 
-	for _, tt := range testCases {
+	r := repo{measurements: makeMeasurements(100)}
+	s := web.New(r, slog.Default())
+
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			req, _ := http.NewRequest(http.MethodGet, tt.target, nil)
 			resp := httptest.NewRecorder()
-			s.Router.ServeHTTP(resp, req)
+			s.ServeHTTP(resp, req)
 			assert.Equal(t, tt.wantStatusCode, resp.Code)
 		})
 	}
@@ -64,7 +62,7 @@ func TestNewHTTPServer(t *testing.T) {
 func makeMeasurements(count int) repository.Measurements {
 	measurements := make(repository.Measurements, count)
 	timestamp := time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		measurements[i] = repository.Measurement{
 			Timestamp: timestamp,
 			Power:     1000,
@@ -77,18 +75,25 @@ func makeMeasurements(count int) repository.Measurements {
 }
 
 func BenchmarkHTTPServer(b *testing.B) {
-	repo := mocks.NewRepository(b)
-	measurements := makeMeasurements(100)
-	repo.EXPECT().Get(mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(measurements, nil)
-	s := web.NewHTTPServer(repo, slog.Default())
+	r := repo{measurements: makeMeasurements(100)}
+	s := web.New(r, slog.Default())
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		req, _ := http.NewRequest(http.MethodGet, "/plot/heatmap", nil)
 		resp := httptest.NewRecorder()
-		s.Router.ServeHTTP(resp, req)
+		s.ServeHTTP(resp, req)
 		if resp.Code != http.StatusOK {
 			b.Fail()
 		}
 	}
+}
 
+var _ plotterHandler.Repository = repo{}
+
+type repo struct {
+	measurements repository.Measurements
+}
+
+func (r repo) Get(_, _ time.Time) (repository.Measurements, error) {
+	return r.measurements, nil
 }

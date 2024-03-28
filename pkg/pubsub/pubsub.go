@@ -1,15 +1,13 @@
-package scraper
+package pubsub
 
-import (
-	"sync"
-)
+import "sync"
 
-type publisher[T any] struct {
+type Publisher[T any] struct {
 	clients map[chan T]struct{}
 	lock    sync.RWMutex
 }
 
-func (p *publisher[T]) Subscribe() chan T {
+func (p *Publisher[T]) Subscribe() chan T {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	if p.clients == nil {
@@ -20,18 +18,16 @@ func (p *publisher[T]) Subscribe() chan T {
 	return ch
 }
 
-func (p *publisher[T]) Unsubscribe(ch chan T) {
+func (p *Publisher[T]) Unsubscribe(ch chan T) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	delete(p.clients, ch)
 }
 
-func (p *publisher[T]) Publish(data T) {
+func (p *Publisher[T]) Publish(data T) {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
 	for ch := range p.clients {
-		go func(ch chan T) {
-			ch <- data
-		}(ch)
+		ch <- data
 	}
 }
