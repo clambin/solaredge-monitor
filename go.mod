@@ -3,8 +3,8 @@ module github.com/clambin/solaredge-monitor
 go 1.22.1
 
 require (
-	github.com/clambin/go-common/http v0.4.2
-	github.com/clambin/go-common/testutils v0.0.0-20240328162546-7dcbd87e4174
+	github.com/clambin/go-common/http v0.4.3
+	github.com/clambin/go-common/testutils v0.1.0
 	github.com/clambin/solaredge v1.0.3
 	github.com/clambin/tado v1.3.2
 	github.com/golang-migrate/migrate/v4 v4.17.0
