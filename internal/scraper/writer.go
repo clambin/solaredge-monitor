@@ -69,14 +69,14 @@ func (w *Writer) process(ctx context.Context, update solaredge.Update) {
 		w.Logger.Error("failed to get weather info", "err", err)
 	}
 
-	for site := range update {
-		if site == 0 {
-			w.power.Add(update[site].PowerOverview.CurrentPower.Power)
-			w.Logger.Debug("update received", "site", update[site].Name, "count", w.power.Count())
-		}
-		w.Logger.Debug("only one site is supported. ignoring remaining sites")
-		break
+	if len(update) > 0 {
+		w.power.Add(update[0].PowerOverview.CurrentPower.Power)
+		w.Logger.Debug("update received", "site", update[0].Name, "count", w.power.Count())
 	}
+	if len(update) > 1 {
+		w.Logger.Debug("only one site is supported. ignoring remaining sites")
+	}
+
 }
 
 func (w *Writer) store() error {
