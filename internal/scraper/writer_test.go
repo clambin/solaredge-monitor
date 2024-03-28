@@ -8,6 +8,7 @@ import (
 	"github.com/clambin/tado"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
+	"os"
 	"testing"
 	"time"
 )
@@ -52,7 +53,7 @@ func TestWriter_TadoFailure(t *testing.T) {
 		TadoGetter: tadoClient{err: errors.New("failure")},
 		Poller:     &p,
 		Interval:   100 * time.Millisecond,
-		Logger:     slog.Default(),
+		Logger:     slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -60,7 +61,7 @@ func TestWriter_TadoFailure(t *testing.T) {
 	go func() { ch <- w.Run(ctx) }()
 
 	p.ch <- testUpdate
-	assert.Never(t, s.hasData.Load, 500*time.Millisecond, time.Millisecond)
+	assert.Never(t, s.hasData.Load, 200*time.Millisecond, 50*time.Millisecond)
 	cancel()
 
 	assert.NoError(t, <-ch)

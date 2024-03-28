@@ -41,16 +41,13 @@ func (w *Writer) Run(ctx context.Context) error {
 	for {
 		select {
 		case update := <-ch:
-			w.process(update)
+			w.process(ctx, update)
 		case <-ticker.C:
-			if err := w.getWeatherInfo(ctx); err != nil {
-				w.Logger.Error("failed to get weather info", "err", err)
-				break
-			}
 			if err := w.store(); err != nil {
 				w.Logger.Error("failed to store update", "err", err)
 			}
 		case <-ctx.Done():
+			w.Logger.Debug("shutting down. saving partial data")
 			if err := w.store(); err != nil {
 				w.Logger.Error("failed to store update", "err", err)
 			}
@@ -67,7 +64,11 @@ func (w *Writer) getWeatherInfo(ctx context.Context) error {
 	return err
 }
 
-func (w *Writer) process(update solaredge.Update) {
+func (w *Writer) process(ctx context.Context, update solaredge.Update) {
+	if err := w.getWeatherInfo(ctx); err != nil {
+		w.Logger.Error("failed to get weather info", "err", err)
+	}
+
 	for site := range update {
 		if site > 0 {
 			w.Logger.Debug("only one site is supported. ignoring remaining sites")
@@ -79,11 +80,14 @@ func (w *Writer) process(update solaredge.Update) {
 }
 
 func (w *Writer) store() error {
-	if w.lastWeather == nil || w.power.Count() == 0 {
+	if w.lastWeather == nil {
+		w.Logger.Debug("no weather info to store")
+		return nil
+	}
+	if w.power.Count() == 0 {
 		w.Logger.Debug("no data to store")
 		return nil
 	}
-
 	power := w.power.Average()
 	if power == 0 {
 		w.Logger.Debug("not storing measurement with no power")
