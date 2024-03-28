@@ -2,7 +2,6 @@ package scraper
 
 import (
 	"context"
-	"fmt"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/clambin/solaredge-monitor/pkg/averager"
@@ -12,12 +11,13 @@ import (
 )
 
 type Writer struct {
-	Store      Store
-	TadoClient TadoGetter
-	Poller     Publisher[solaredge.Update]
-	Interval   time.Duration
-	Logger     *slog.Logger
-	power      averager.Averager[float64]
+	Store
+	TadoGetter
+	Poller      Publisher[solaredge.Update]
+	Interval    time.Duration
+	Logger      *slog.Logger
+	power       averager.Averager[float64]
+	lastWeather *tado.WeatherInfo
 }
 
 type Store interface {
@@ -41,13 +41,14 @@ func (w *Writer) Run(ctx context.Context) error {
 	for {
 		select {
 		case update := <-ch:
-			w.process(update)
+			w.process(ctx, update)
 		case <-ticker.C:
-			if err := w.store(ctx); err != nil {
+			if err := w.store(); err != nil {
 				w.Logger.Error("failed to store update", "err", err)
 			}
 		case <-ctx.Done():
-			if err := w.store(ctx); err != nil {
+			w.Logger.Debug("shutting down. saving partial data")
+			if err := w.store(); err != nil {
 				w.Logger.Error("failed to store update", "err", err)
 			}
 			return nil
@@ -55,40 +56,50 @@ func (w *Writer) Run(ctx context.Context) error {
 	}
 }
 
-func (w *Writer) process(update solaredge.Update) {
+func (w *Writer) getWeatherInfo(ctx context.Context) error {
+	weatherInfo, err := w.TadoGetter.GetWeatherInfo(ctx)
+	if err == nil {
+		w.lastWeather = &weatherInfo
+	}
+	return err
+}
+
+func (w *Writer) process(ctx context.Context, update solaredge.Update) {
+	if err := w.getWeatherInfo(ctx); err != nil {
+		w.Logger.Error("failed to get weather info", "err", err)
+	}
+
 	for site := range update {
-		if site > 0 {
-			w.Logger.Debug("only one site is supporter. ignoring remaining sites")
-			return
+		if site == 0 {
+			w.power.Add(update[site].PowerOverview.CurrentPower.Power)
+			w.Logger.Debug("update received", "site", update[site].Name, "count", w.power.Count())
 		}
-		w.power.Add(update[0].PowerOverview.CurrentPower.Power)
-		w.Logger.Debug("update received", "site", update[site].Name, "count", w.power.Count())
+		w.Logger.Debug("only one site is supported. ignoring remaining sites")
+		break
 	}
 }
 
-func (w *Writer) store(ctx context.Context) error {
+func (w *Writer) store() error {
+	if w.lastWeather == nil {
+		w.Logger.Debug("no weather info to store")
+		return nil
+	}
 	if w.power.Count() == 0 {
 		w.Logger.Debug("no data to store")
 		return nil
 	}
-
 	power := w.power.Average()
 	if power == 0 {
 		w.Logger.Debug("not storing measurement with no power")
 		return nil
 	}
 
-	c, err := w.TadoClient.GetWeatherInfo(ctx)
-	if err != nil {
-		return fmt.Errorf("tado: %w", err)
-	}
-
 	m := repository.Measurement{
 		Timestamp: time.Now(),
 		Power:     power,
-		Intensity: c.SolarIntensity.Percentage,
-		Weather:   c.WeatherState.Value,
+		Intensity: w.lastWeather.SolarIntensity.Percentage,
+		Weather:   w.lastWeather.WeatherState.Value,
 	}
-	w.Logger.Debug("storing", "measurement", m)
+	w.Logger.Info("storing", "measurement", m)
 	return w.Store.Store(m)
 }

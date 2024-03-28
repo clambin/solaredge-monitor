@@ -15,6 +15,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -32,6 +34,9 @@ func run(cmd *cobra.Command, _ []string) error {
 		opts.Level = slog.LevelDebug
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &opts))
+
+	logger.Info("starting solaredge exporter", "version", cmd.Root().Version)
+	defer logger.Info("stopping solaredge exporter")
 
 	go func() {
 		err := http.ListenAndServe(viper.GetString("prometheus.addr"), promhttp.Handler())
@@ -64,12 +69,12 @@ func run(cmd *cobra.Command, _ []string) error {
 		Logger:  logger.With("component", "exporter"),
 	}
 
-	logger.Info("starting solaredge exporter", "version", cmd.Root().Version)
-	defer logger.Info("stopping solaredge exporter")
+	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 
 	var group errgroup.Group
-	group.Go(func() error { return poller.Run(cmd.Context()) })
-	group.Go(func() error { return exporter.Run(cmd.Context()) })
+	group.Go(func() error { return poller.Run(ctx) })
+	group.Go(func() error { return exporter.Run(ctx) })
 
 	return group.Wait()
 }

@@ -31,6 +31,9 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &opts))
 
+	logger.Info("starting solaredge web server", "version", cmd.Root().Version)
+	defer logger.Info("stopping solaredge web server")
+
 	go func() {
 		err := http.ListenAndServe(viper.GetString("prometheus.addr"), promhttp.Handler())
 		if !errors.Is(err, http.ErrServerClosed) {
@@ -56,9 +59,6 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	mw1 := middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)
 	mw2 := middleware.WithRequestMetrics(serverMetrics)
-
-	logger.Info("starting solaredge web server", "version", cmd.Root().Version)
-	defer logger.Info("stopping solaredge web server")
 
 	err = http.ListenAndServe(viper.GetString("web.addr"), mw1(mw2(server.New(repo, logger))))
 	if errors.Is(err, http.ErrServerClosed) {
