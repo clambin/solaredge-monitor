@@ -1,0 +1,139 @@
+apiVersion: k8s.kevingomez.fr/v1
+kind: GrafanaDashboard
+metadata:
+    annotations:
+        dark/folder: Home Automation
+    name: solaredge-internal
+    namespace: development
+spec:
+    title: solaredge - internal
+    tags: [generated,yaml]
+    auto_refresh: 5m
+    time:
+        - now-6h
+        - now
+    rows:
+        - name: scraper
+          panels:
+            - timeseries:
+                title: solaredge requests
+                span: 6
+                targets:
+                    - prometheus:
+                        query: sum by (code) (rate(solaredge_scraper_http_requests_total{application="solaredge"}[$__rate_interval]))
+                        legend: __auto
+                legend: [as_list, to_bottom]
+                visualization:
+                    gradient_mode: none
+                    tooltip: single_series
+                    stack: none
+                    fill_opacity: 0
+                    point_size: 5
+                    line_interpolation: linear
+                    line_width: 1
+                axis:
+                    display: auto
+                    scale: linear
+                    unit: reqps
+            - timeseries:
+                title: solaredge latency
+                span: 6
+                targets:
+                    - prometheus:
+                        query: avg (solaredge_scraper_http_request_duration_seconds_sum{application="solaredge",code="200"} / solaredge_scraper_http_request_duration_seconds_count)
+                        legend: __auto
+                legend: [hide]
+                visualization:
+                    gradient_mode: none
+                    tooltip: single_series
+                    stack: none
+                    fill_opacity: 0
+                    point_size: 5
+                    line_interpolation: linear
+                    line_width: 1
+                axis:
+                    display: auto
+                    scale: linear
+                    unit: s
+            - timeseries:
+                title: tado requests
+                span: 6
+                targets:
+                    - prometheus:
+                        query: sum by (code) (rate(solaredge_scraper_http_requests_total{application="tado"}[$__rate_interval]))
+                        legend: __auto
+                legend: [as_list, to_bottom]
+                visualization:
+                    gradient_mode: none
+                    tooltip: single_series
+                    stack: none
+                    fill_opacity: 0
+                    point_size: 5
+                    line_interpolation: linear
+                    line_width: 1
+                axis:
+                    display: auto
+                    scale: linear
+                    unit: reqps
+            - timeseries:
+                title: tado latency
+                span: 6
+                targets:
+                    - prometheus:
+                        query: avg (solaredge_scraper_http_request_duration_seconds_sum{application="tado"} / solaredge_scraper_http_request_duration_seconds_count)
+                        legend: __auto
+                legend: [hide]
+                visualization:
+                    gradient_mode: none
+                    tooltip: single_series
+                    stack: none
+                    fill_opacity: 0
+                    point_size: 5
+                    line_interpolation: linear
+                    line_width: 1
+                axis:
+                    display: auto
+                    scale: linear
+                    unit: s
+        - name: web
+          panels:
+            - timeseries:
+                title: rate
+                span: 6
+                targets:
+                    - prometheus:
+                        query: sum by (path) (rate(solaredge_web_http_requests_total[$__rate_interval]))
+                        legend: __auto
+                legend: [as_list, to_bottom]
+                visualization:
+                    gradient_mode: none
+                    tooltip: single_series
+                    stack: none
+                    fill_opacity: 0
+                    point_size: 5
+                    line_interpolation: linear
+                    line_width: 1
+                axis:
+                    display: auto
+                    scale: linear
+                    unit: reqps
+            - timeseries:
+                title: latency
+                span: 6
+                targets:
+                    - prometheus:
+                        query: avg by (path) (solaredge_web_http_request_duration_seconds_sum / solaredge_web_http_request_duration_seconds_count)
+                        legend: __auto
+                legend: [as_list, to_bottom]
+                visualization:
+                    gradient_mode: none
+                    tooltip: single_series
+                    stack: none
+                    fill_opacity: 0
+                    point_size: 5
+                    line_interpolation: linear
+                    line_width: 1
+                axis:
+                    display: auto
+                    scale: linear
+                    unit: s
