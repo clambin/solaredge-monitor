@@ -62,7 +62,7 @@ func (w *Writer) process(update solaredge.Update) {
 			return
 		}
 		w.power.Add(update[0].PowerOverview.CurrentPower.Power)
-		w.Logger.Debug("update received", "site", update[site].Name, "count", w.power.Count)
+		w.Logger.Debug("update received", "site", update[site].Name, "count", w.power.Count())
 	}
 }
 
