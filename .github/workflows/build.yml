@@ -52,7 +52,7 @@ jobs:
         with:
           args: --issues-exit-code=0
   build:
-    needs: test
+    needs: [test,lint]
     uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
       target: solaredge
