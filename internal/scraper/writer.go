@@ -96,6 +96,6 @@ func (w *Writer) store() error {
 		Intensity: w.lastWeather.SolarIntensity.Percentage,
 		Weather:   w.lastWeather.WeatherState.Value,
 	}
-	w.Logger.Debug("storing", "measurement", m)
+	w.Logger.Info("storing", "measurement", m)
 	return w.Store.Store(m)
 }
