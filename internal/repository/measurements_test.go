@@ -39,6 +39,6 @@ func TestMeasurement_LogValue(t *testing.T) {
 	l := logtester.New(&output, slog.LevelInfo)
 	l.Info("measurement", "measurement", m)
 
-	assert.Equal(t, `level=INFO msg=measurement measurement.timestamp=2024-03-26T12:00:00.000Z measurement.power=3000 measurement.intensity=0.8 measurement.weather=SUNNY
+	assert.Equal(t, `level=INFO msg=measurement measurement.power=3000 measurement.intensity=0.8 measurement.weather=SUNNY
 `, output.String())
 }

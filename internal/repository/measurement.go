@@ -16,7 +16,7 @@ type Measurement struct {
 
 func (m Measurement) LogValue() slog.Value {
 	return slog.GroupValue(
-		slog.Time("timestamp", m.Timestamp),
+		//slog.Time("timestamp", m.Timestamp),
 		slog.Float64("power", m.Power),
 		slog.Float64("intensity", m.Intensity),
 		slog.String("weather", m.Weather),
