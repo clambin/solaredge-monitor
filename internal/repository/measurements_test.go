@@ -2,8 +2,8 @@ package repository_test
 
 import (
 	"bytes"
+	"github.com/clambin/go-common/testutils"
 	"github.com/clambin/solaredge-monitor/internal/repository"
-	"github.com/clambin/solaredge-monitor/pkg/logtester"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"testing"
@@ -36,7 +36,7 @@ func TestMeasurement_LogValue(t *testing.T) {
 	}
 
 	var output bytes.Buffer
-	l := logtester.New(&output, slog.LevelInfo)
+	l := testutils.NewTextLogger(&output, slog.LevelInfo)
 	l.Info("measurement", "measurement", m)
 
 	assert.Equal(t, `level=INFO msg=measurement measurement.power=3000 measurement.intensity=0.8 measurement.weather=SUNNY
