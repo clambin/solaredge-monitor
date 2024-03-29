@@ -1,0 +1,14 @@
+name: Test
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - build
+  pull_request_target:
+
+jobs:
+  test:
+    uses: ./.github/workflows/test-reuse.yaml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

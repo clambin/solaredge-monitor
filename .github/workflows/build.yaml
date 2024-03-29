@@ -1,0 +1,19 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      - build
+
+jobs:
+  test:
+    uses: ./.github/workflows/test-reuse.yaml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  build:
+    needs: [test]
+    uses: clambin/workflows/.github/workflows/build.yaml@docker
+    with:
+      image: ghcr.io/clambin/solaredge
+
