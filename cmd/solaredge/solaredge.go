@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/solaredge-monitor/internal/cmd/cli/export"
 	"github.com/clambin/solaredge-monitor/internal/cmd/cli/scrape"
 	"github.com/clambin/solaredge-monitor/internal/cmd/cli/web"
-	"github.com/clambin/solaredge-monitor/pkg/serpent"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
@@ -19,6 +19,9 @@ var (
 	cmd        = cobra.Command{
 		Use:   "solaredge",
 		Short: "solaredge metrics collector",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			charmer.SetTextLogger(cmd, viper.GetBool("debug"))
+		},
 	}
 )
 
@@ -29,7 +32,7 @@ func main() {
 	}
 }
 
-var arguments = serpent.Arguments{
+var arguments = charmer.Arguments{
 	"debug":             {Default: false, Help: "Log debug messages"},
 	"prometheus.addr":   {Default: ":9090", Help: "Prometheus metrics endpoint"},
 	"database.host":     {Default: "postgres", Help: "Postgres database host"},
@@ -50,7 +53,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	cmd.Version = version
 	cmd.PersistentFlags().StringVar(&configFile, "config", "", "Configuration file")
-	if err := serpent.SetPersistentFlags(&cmd, viper.GetViper(), arguments); err != nil {
+	if err := charmer.SetPersistentFlags(&cmd, viper.GetViper(), arguments); err != nil {
 		panic(err)
 	}
 	cmd.AddCommand(&web.Cmd, &export.Cmd, &scrape.Cmd)
@@ -66,7 +69,7 @@ func initConfig() {
 		viper.SetConfigName("config")
 	}
 
-	if err := serpent.SetDefaults(viper.GetViper(), arguments); err != nil {
+	if err := charmer.SetDefaults(viper.GetViper(), arguments); err != nil {
 		panic(err)
 	}
 

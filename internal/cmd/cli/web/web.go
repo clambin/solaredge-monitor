@@ -3,17 +3,17 @@ package web
 import (
 	"errors"
 	"fmt"
+	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/http/metrics"
 	"github.com/clambin/go-common/http/middleware"
 	"github.com/clambin/solaredge-monitor/internal/repository"
-	server "github.com/clambin/solaredge-monitor/internal/web"
+	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
 	"net/http"
-	"os"
 )
 
 var (
@@ -25,11 +25,7 @@ var (
 )
 
 func run(cmd *cobra.Command, _ []string) error {
-	var opts slog.HandlerOptions
-	if viper.GetBool("debug") {
-		opts.Level = slog.LevelDebug
-	}
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &opts))
+	logger := charmer.GetLogger(cmd)
 
 	logger.Info("starting solaredge web server", "version", cmd.Root().Version)
 	defer logger.Info("stopping solaredge web server")
@@ -60,7 +56,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	mw1 := middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)
 	mw2 := middleware.WithRequestMetrics(serverMetrics)
 
-	err = http.ListenAndServe(viper.GetString("web.addr"), mw1(mw2(server.New(repo, logger))))
+	err = http.ListenAndServe(viper.GetString("web.addr"), mw1(mw2(web.New(repo, logger))))
 	if errors.Is(err, http.ErrServerClosed) {
 		err = nil
 	}
