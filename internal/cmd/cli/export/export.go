@@ -2,6 +2,7 @@ package export
 
 import (
 	"errors"
+	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/http/metrics"
 	"github.com/clambin/go-common/http/roundtripper"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
@@ -12,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,11 +29,7 @@ var (
 )
 
 func run(cmd *cobra.Command, _ []string) error {
-	var opts slog.HandlerOptions
-	if viper.GetBool("debug") {
-		opts.Level = slog.LevelDebug
-	}
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &opts))
+	logger := charmer.GetLogger(cmd)
 
 	logger.Info("starting solaredge exporter", "version", cmd.Root().Version)
 	defer logger.Info("stopping solaredge exporter")
