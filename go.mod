@@ -1,6 +1,6 @@
 module github.com/clambin/solaredge-monitor
 
-go 1.22.1
+go 1.22.2
 
 require (
 	github.com/clambin/go-common/http v0.4.3
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.7.0
 	gonum.org/v1/plot v0.14.0
 )
 
