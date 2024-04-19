@@ -8,7 +8,7 @@ require (
 	github.com/clambin/go-common/testutils v0.1.0
 	github.com/clambin/solaredge v1.0.3
 	github.com/clambin/tado v1.3.2
-	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.19.0
