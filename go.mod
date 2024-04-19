@@ -3,6 +3,7 @@ module github.com/clambin/solaredge-monitor
 go 1.22.2
 
 require (
+	github.com/clambin/go-common/charmer v0.1.0
 	github.com/clambin/go-common/http v0.4.3
 	github.com/clambin/go-common/testutils v0.1.0
 	github.com/clambin/solaredge v1.0.3
@@ -25,7 +26,6 @@ require (
 	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/clambin/go-common/cache v0.3.0 // indirect
-	github.com/clambin/go-common/charmer v0.1.0 // indirect
 	github.com/clambin/go-common/set v0.4.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -58,7 +58,7 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/image v0.11.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
