@@ -3,7 +3,6 @@ package web_test
 import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
-	plotterHandler "github.com/clambin/solaredge-monitor/internal/web/handlers/plotter"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"net/http"
@@ -88,7 +87,7 @@ func BenchmarkHTTPServer(b *testing.B) {
 	}
 }
 
-var _ plotterHandler.Repository = repo{}
+var _ web.Repository = repo{}
 
 type repo struct {
 	measurements repository.Measurements

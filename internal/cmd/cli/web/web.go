@@ -53,11 +53,13 @@ func run(cmd *cobra.Command, _ []string) error {
 	serverMetrics := metrics.NewRequestSummaryMetrics("solaredge", "web", nil)
 	prometheus.MustRegister(serverMetrics)
 
-	mw1 := middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)
-	mw2 := middleware.WithRequestMetrics(serverMetrics)
-
-	err = http.ListenAndServe(viper.GetString("web.addr"), mw1(mw2(web.New(repo, logger))))
-	if errors.Is(err, http.ErrServerClosed) {
+	if err = http.ListenAndServe(viper.GetString("web.addr"),
+		middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)(
+			middleware.WithRequestMetrics(serverMetrics)(
+				web.New(repo, logger),
+			),
+		),
+	); errors.Is(err, http.ErrServerClosed) {
 		err = nil
 	}
 	return err

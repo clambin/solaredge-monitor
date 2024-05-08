@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - logging
+      - refactor
 
 jobs:
   test:
