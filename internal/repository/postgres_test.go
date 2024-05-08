@@ -2,31 +2,16 @@ package repository_test
 
 import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
+	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
 	"strconv"
 	"testing"
 	"time"
 )
 
-func getDBEnv() (values map[string]string, ok bool) {
-	values = make(map[string]string, 0)
-	envVars := []string{"pg_host", "pg_port", "pg_database", "pg_user", "pg_password"}
-
-	for _, envVar := range envVars {
-		value, found := os.LookupEnv(envVar)
-		if !found {
-			return values, false
-		}
-		values[envVar] = value
-	}
-
-	return values, true
-}
-
 func TestStore(t *testing.T) {
-	values, ok := getDBEnv()
+	values, ok := testutils.DBEnv()
 	if !ok {
 		t.Skip("Could not find all DB env variables. Skipping this test")
 	}

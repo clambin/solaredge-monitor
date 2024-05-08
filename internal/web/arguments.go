@@ -38,7 +38,7 @@ func parseTimestamp(arg string) (timestamp time.Time, err error) {
 		return
 	}
 	if timestamp, err = time.Parse(time.RFC3339, arg); err != nil {
-		err = fmt.Errorf("invalid format for '%s': %w", arg, err)
+		err = fmt.Errorf("invalid format for %q: %w", arg, err)
 	}
 	return timestamp, err
 }
