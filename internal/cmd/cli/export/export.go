@@ -14,9 +14,6 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -65,12 +62,9 @@ func run(cmd *cobra.Command, _ []string) error {
 		Logger:  logger.With("component", "exporter"),
 	}
 
-	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
-
 	var group errgroup.Group
-	group.Go(func() error { return poller.Run(ctx) })
-	group.Go(func() error { return exporter.Run(ctx) })
+	group.Go(func() error { return poller.Run(cmd.Context()) })
+	group.Go(func() error { return exporter.Run(cmd.Context()) })
 
 	return group.Wait()
 }
