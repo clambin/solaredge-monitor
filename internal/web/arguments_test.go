@@ -1,7 +1,6 @@
-package web_test
+package web
 
 import (
-	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
@@ -15,7 +14,7 @@ func TestParse(t *testing.T) {
 	testCases := []struct {
 		name    string
 		args    url.Values
-		want    web.Arguments
+		want    arguments
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -26,19 +25,19 @@ func TestParse(t *testing.T) {
 		{
 			name:    "start",
 			args:    url.Values{"start": []string{`2023-08-25T00:00:00+00:00`}},
-			want:    web.Arguments{Start: time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)},
+			want:    arguments{start: time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)},
 			wantErr: assert.NoError,
 		},
 		{
 			name:    "stop",
 			args:    url.Values{"stop": []string{`2023-08-25T00:00:00+01:00`}},
-			want:    web.Arguments{Stop: time.Date(2023, time.August, 25, 0, 0, 0, 0, location)},
+			want:    arguments{stop: time.Date(2023, time.August, 25, 0, 0, 0, 0, location)},
 			wantErr: assert.NoError,
 		},
 		{
 			name:    "fold",
 			args:    url.Values{"fold": []string{"true"}},
-			want:    web.Arguments{Fold: true},
+			want:    arguments{fold: true},
 			wantErr: assert.NoError,
 		},
 		{
@@ -57,13 +56,13 @@ func TestParse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/?"+tt.args.Encode(), nil)
 
-			args, err := web.Parse(req)
+			args, err := parseArguments(req)
 			tt.wantErr(t, err)
 
 			if err == nil {
-				assert.True(t, tt.want.Start.Equal(args.Start))
-				assert.True(t, tt.want.Stop.Equal(args.Stop))
-				assert.Equal(t, tt.want.Fold, args.Fold)
+				assert.True(t, tt.want.start.Equal(args.start))
+				assert.True(t, tt.want.stop.Equal(args.stop))
+				assert.Equal(t, tt.want.fold, args.fold)
 			}
 		})
 	}

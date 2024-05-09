@@ -20,22 +20,22 @@ var tmpl = template.Must(template.ParseFS(html, "templates/plot.html"))
 
 func PlotHandler(logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		args, err := Parse(r)
+		args, err := parseArguments(r)
 		if err != nil {
 			logger.Error("failed to determine start/stop parameters", "err", err)
 			http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if args.Stop.IsZero() {
-			args.Stop = time.Now()
+		if args.stop.IsZero() {
+			args.stop = time.Now()
 		}
 		values := make(url.Values)
-		if args.Fold {
+		if args.fold {
 			values.Add("fold", "true")
 		}
-		values.Add("start", args.Start.Format(time.RFC3339))
-		values.Add("stop", args.Stop.Format(time.RFC3339))
+		values.Add("start", args.start.Format(time.RFC3339))
+		values.Add("stop", args.stop.Format(time.RFC3339))
 
 		data := struct {
 			PlotType string
@@ -61,19 +61,19 @@ func ReportHandler(logger *slog.Logger) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		args, err := Parse(r)
+		args, err := parseArguments(r)
 		if err != nil {
 			logger.Error("failed to determine start/stop parameters", "err", err)
 			http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if args.Stop.IsZero() {
-			args.Stop = time.Now()
+		if args.stop.IsZero() {
+			args.stop = time.Now()
 		}
 		values := make(url.Values)
-		values.Add("start", args.Start.Format(time.RFC3339))
-		values.Add("stop", args.Stop.Format(time.RFC3339))
+		values.Add("start", args.start.Format(time.RFC3339))
+		values.Add("stop", args.stop.Format(time.RFC3339))
 
 		reportTemplate := template.Must(template.ParseFS(html, "templates/report.html"))
 		data := Data{
@@ -110,20 +110,20 @@ func PlotterHandler(
 	logger *slog.Logger,
 ) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		args, err := Parse(r)
+		args, err := parseArguments(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		measurements, err := repository.Get(args.Start, args.Stop)
+		measurements, err := repository.Get(args.start, args.stop)
 		if err != nil {
 			logger.Error("failed to get measurements from database", "err", err)
 			http.Error(w, fmt.Errorf("database: %w", err).Error(), http.StatusInternalServerError)
 			return
 		}
 
-		img, err := plotter.Plot(measurements, args.Fold)
+		img, err := plotter.Plot(measurements, args.fold)
 		if err != nil {
 			logger.Error("failed to generate plot", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
