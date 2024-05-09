@@ -14,7 +14,7 @@ func TestMeasurements_Fold(t *testing.T) {
 	const size = 2 * 365
 	measurements := make(repository.Measurements, size)
 	timestamp := time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		measurements[i] = repository.Measurement{Timestamp: timestamp}
 		timestamp = timestamp.Add(time.Hour)
 	}

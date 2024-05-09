@@ -48,7 +48,7 @@ func TestScatterPlotter_Plot(t *testing.T) {
 
 func buildData(count int) (measurements repository.Measurements) {
 	timestamp := time.Date(2022, time.July, 31, 0, 0, 0, 0, time.UTC)
-	for hour := 0; hour < count; hour++ {
+	for hour := range count {
 		var intensity float64
 		hourOfDay := hour % 24
 		if hourOfDay > 5 && hourOfDay < 21 {

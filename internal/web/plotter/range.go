@@ -40,7 +40,7 @@ func (r *Range) GetIntervals(steps int) []float64 {
 	values := make([]float64, steps)
 	delta := (r.Max - r.Min) / float64(steps)
 	value := r.Min
-	for i := 0; i < steps; i++ {
+	for i := range steps {
 		values[i] = value
 		value += delta
 	}

@@ -49,7 +49,7 @@ func TestStore(t *testing.T) {
 
 	first := timestamp
 
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		err = db.Store(repository.Measurement{
 			Timestamp: timestamp,
 			Power:     float64(i),
