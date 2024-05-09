@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/solaredge-monitor/internal/cmd/cli/export"
 	"github.com/clambin/solaredge-monitor/internal/cmd/cli/scrape"
@@ -9,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -26,6 +29,10 @@ var (
 )
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	cmd.SetContext(ctx)
+
 	if err := cmd.Execute(); err != nil {
 		slog.Error("failed to start", "err", err)
 		os.Exit(1)

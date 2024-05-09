@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/clambin/go-common/charmer"
@@ -14,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 var (
@@ -33,6 +35,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	go func() {
 		err := http.ListenAndServe(viper.GetString("prometheus.addr"), promhttp.Handler())
 		if !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("failed to start prometheus server", "err", err)
 			panic(err)
 		}
 	}()
@@ -53,12 +56,24 @@ func run(cmd *cobra.Command, _ []string) error {
 	serverMetrics := metrics.NewRequestSummaryMetrics("solaredge", "web", nil)
 	prometheus.MustRegister(serverMetrics)
 
-	mw1 := middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)
-	mw2 := middleware.WithRequestMetrics(serverMetrics)
+	h := web.New(repo, logger)
+	h = middleware.WithRequestMetrics(serverMetrics)(h)
+	h = middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)(h)
 
-	err = http.ListenAndServe(viper.GetString("web.addr"), mw1(mw2(web.New(repo, logger))))
-	if errors.Is(err, http.ErrServerClosed) {
-		err = nil
+	server := http.Server{Addr: viper.GetString("web.addr"), Handler: h}
+	go func() {
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("error starting web server", "err", err)
+		}
+	}()
+
+	<-cmd.Context().Done()
+
+	ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
+	defer cancel()
+	if err = server.Shutdown(ctx); err != nil {
+		logger.Error("error shutting down web server", "err", err)
 	}
+
 	return err
 }
