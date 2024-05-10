@@ -6,7 +6,7 @@ toolchain go1.22.3
 
 require (
 	github.com/clambin/go-common/charmer v0.2.0
-	github.com/clambin/go-common/http v0.4.3
+	github.com/clambin/go-common/http v0.4.4
 	github.com/clambin/go-common/testutils v0.1.0
 	github.com/clambin/solaredge v1.0.3
 	github.com/clambin/tado v1.3.3
@@ -27,7 +27,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/clambin/go-common/cache v0.3.0 // indirect
+	github.com/clambin/go-common/cache v0.4.0 // indirect
 	github.com/clambin/go-common/set v0.4.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
