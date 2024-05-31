@@ -54,7 +54,7 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	logger.Debug("connected to database")
 
-	solarEdgeMetrics := metrics.NewRequestSummaryMetrics("solaredge", "scraper", map[string]string{"application": "solaredge"})
+	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "solaredge"}})
 	prometheus.MustRegister(solarEdgeMetrics)
 
 	httpClient := http.Client{
@@ -69,7 +69,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		Publisher: pubsub.Publisher[solaredge.Update]{},
 	}
 
-	tadoMetrics := metrics.NewRequestSummaryMetrics("solaredge", "scraper", map[string]string{"application": "tado"})
+	tadoMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "tado"}})
 	prometheus.MustRegister(tadoMetrics)
 
 	tadoClient, err := tado.New(
