@@ -53,7 +53,7 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	logger.Debug("connected to database")
 
-	serverMetrics := metrics.NewRequestSummaryMetrics("solaredge", "web", nil)
+	serverMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "web"})
 	prometheus.MustRegister(serverMetrics)
 
 	h := web.New(repo, logger)

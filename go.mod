@@ -6,7 +6,7 @@ toolchain go1.22.3
 
 require (
 	github.com/clambin/go-common/charmer v0.2.0
-	github.com/clambin/go-common/http v0.4.4
+	github.com/clambin/go-common/http v0.5.0
 	github.com/clambin/go-common/testutils v0.1.0
 	github.com/clambin/solaredge v1.0.3
 	github.com/clambin/tado v1.3.3

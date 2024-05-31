@@ -38,7 +38,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	}()
 
-	solarEdgeMetrics := metrics.NewRequestSummaryMetrics("solaredge", "scraper", map[string]string{"application": "solaredge"})
+	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "exporter", ConstLabels: prometheus.Labels{"application": "solaredge"}})
 	prometheus.MustRegister(solarEdgeMetrics)
 
 	httpClient := http.Client{
