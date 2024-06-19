@@ -7,8 +7,9 @@ import (
 )
 
 func addRoutes(m *http.ServeMux, repo Repository, imageCache *ImageCache, logger *slog.Logger) {
-	m.Handle("GET /report", ReportHandler(logger.With("component", "handler", "handler", "report")))
-	m.Handle("GET /plot/{plotType}", PlotHandler(logger.With("component", "handler", "handler", "plot")))
+	logger = logger.With("component", "handler")
+	m.Handle("GET /report", ReportHandler(logger.With("handler", "report")))
+	m.Handle("GET /plot/{plotType}", PlotHandler(logger.With("handler", "plot")))
 	m.Handle("GET /plotter/scatter",
 		imageCache.Middleware("scatter", logger.With("cache", "scatter"))(
 			makePlotterHandler("scatter", repo, logger),
@@ -25,7 +26,7 @@ func addRoutes(m *http.ServeMux, repo Repository, imageCache *ImageCache, logger
 }
 
 func makePlotterHandler(plotType string, repo Repository, logger *slog.Logger) http.Handler {
-	return PlotterHandler(repo, makePlotter(plotType), logger.With("component", "handler", "handler", plotType))
+	return PlotterHandler(repo, makePlotter(plotType), logger.With("handler", plotType))
 }
 
 func makePlotter(plotType string) Plotter {
