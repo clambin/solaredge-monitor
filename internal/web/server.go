@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func New(repo Repository, logger *slog.Logger) http.Handler {
+func New(repo Repository, imageCache *ImageCache, logger *slog.Logger) http.Handler {
 	mux := http.NewServeMux()
-	addRoutes(mux, repo, logger)
+	addRoutes(mux, repo, imageCache, logger)
 	return mux
 }

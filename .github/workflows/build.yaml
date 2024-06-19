@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - build
+      - cache
 
 jobs:
   test:
@@ -13,7 +13,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   build:
     needs: [test]
-    uses: clambin/workflows/.github/workflows/build.yaml@docker
+    uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
       image: ghcr.io/clambin/solaredge
 

@@ -45,7 +45,7 @@ func TestNewHTTPServer(t *testing.T) {
 	}
 
 	r := repo{measurements: makeMeasurements(100)}
-	s := web.New(r, slog.Default())
+	s := web.New(r, nil, slog.Default())
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -75,7 +75,7 @@ func makeMeasurements(count int) repository.Measurements {
 
 func BenchmarkHTTPServer(b *testing.B) {
 	r := repo{measurements: makeMeasurements(100)}
-	s := web.New(r, slog.Default())
+	s := web.New(r, nil, slog.Default())
 
 	for range b.N {
 		req, _ := http.NewRequest(http.MethodGet, "/plot/heatmap", nil)
