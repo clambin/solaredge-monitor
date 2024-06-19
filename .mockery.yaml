@@ -8,3 +8,4 @@ packages:
     interfaces:
       Plotter:
       Repository:
+      RedisClient:
