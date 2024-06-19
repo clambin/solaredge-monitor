@@ -68,11 +68,13 @@ func (c *ImageCache) Middleware(plotType string, logger *slog.Logger) func(next 
 				return
 			}
 
-			duper := &teeResponseWriter{w: w}
+			duper := &teeResponseWriter{ResponseWriter: w}
 			next.ServeHTTP(duper, r)
 
-			if err = c.Set(r.Context(), key, duper.dupe.Bytes()); err != nil {
-				logger.Error("failed to cache image", "key", key, "err", err)
+			if duper.dupe.Len() > 0 {
+				if err = c.Set(r.Context(), key, duper.dupe.Bytes()); err != nil {
+					logger.Error("failed to cache image", "key", key, "err", err)
+				}
 			}
 		})
 	}
@@ -81,19 +83,11 @@ func (c *ImageCache) Middleware(plotType string, logger *slog.Logger) func(next 
 var _ http.ResponseWriter = &teeResponseWriter{}
 
 type teeResponseWriter struct {
-	w    http.ResponseWriter
+	http.ResponseWriter
 	dupe bytes.Buffer
-}
-
-func (t *teeResponseWriter) Header() http.Header {
-	return t.w.Header()
 }
 
 func (t *teeResponseWriter) Write(bytes []byte) (int, error) {
 	_, _ = t.dupe.Write(bytes)
-	return t.w.Write(bytes)
-}
-
-func (t *teeResponseWriter) WriteHeader(statusCode int) {
-	t.w.WriteHeader(statusCode)
+	return t.ResponseWriter.Write(bytes)
 }
