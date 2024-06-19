@@ -58,43 +58,73 @@ func TestImageCache(t *testing.T) {
 }
 
 func TestImageCache_Middleware(t *testing.T) {
-	redisClient := mocks.NewRedisClient(t)
-	c := ImageCache{Client: redisClient, TTL: time.Hour}
-
-	f := c.Middleware("scatter", slog.Default())(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte("hello world"))
-	}))
-
 	ctx := context.Background()
 	const wantKey = "|scatter|false|0001-01-01T00:00:00Z|0001-01-01T00:00:00Z"
-	redisClient.EXPECT().Get(ctx, wantKey).RunAndReturn(func(ctx context.Context, _ string) *redis.StringCmd {
-		cmd := redis.NewStringCmd(ctx)
-		cmd.SetErr(redis.Nil)
-		return cmd
-	}).Once()
-	redisClient.EXPECT().Set(ctx, wantKey, []byte("hello world"), time.Hour).RunAndReturn(func(ctx context.Context, _ string, _ interface{}, _ time.Duration) *redis.StatusCmd {
-		cmd := redis.NewStatusCmd(ctx)
-		return cmd
-	})
+	const response = "hello world"
 
-	r, _ := http.NewRequestWithContext(ctx, http.MethodGet, "/foo", nil)
-	w := httptest.NewRecorder()
-	f.ServeHTTP(w, r)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "hello world", w.Body.String())
+	tests := []struct {
+		name           string
+		prep           func(*mocks.RedisClient)
+		args           string
+		wantStatusCode int
+		wantBody       string
+	}{
+		{
+			name: "miss",
+			prep: func(c *mocks.RedisClient) {
+				c.EXPECT().Get(ctx, wantKey).RunAndReturn(func(ctx context.Context, _ string) *redis.StringCmd {
+					cmd := redis.NewStringCmd(ctx)
+					cmd.SetErr(redis.Nil)
+					return cmd
+				}).Once()
+				c.EXPECT().Set(ctx, wantKey, []byte(response), time.Hour).RunAndReturn(func(ctx context.Context, _ string, _ interface{}, _ time.Duration) *redis.StatusCmd {
+					cmd := redis.NewStatusCmd(ctx)
+					return cmd
+				})
+			},
+			wantStatusCode: http.StatusOK,
+			wantBody:       response,
+		},
+		{
+			name: "hit",
+			prep: func(c *mocks.RedisClient) {
+				c.EXPECT().Get(ctx, wantKey).RunAndReturn(func(ctx context.Context, _ string) *redis.StringCmd {
+					cmd := redis.NewStringCmd(ctx)
+					cmd.SetVal("hello world")
+					return cmd
+				}).Once()
+			},
+			wantStatusCode: http.StatusOK,
+			wantBody:       response,
+		},
+		{
+			name:           "invalid args",
+			prep:           func(c *mocks.RedisClient) {},
+			args:           "?start=foo",
+			wantStatusCode: http.StatusBadRequest,
+		},
+	}
 
-	redisClient.EXPECT().Get(ctx, wantKey).RunAndReturn(func(ctx context.Context, _ string) *redis.StringCmd {
-		cmd := redis.NewStringCmd(ctx)
-		cmd.SetVal("hello world")
-		return cmd
-	}).Once()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			redisClient := mocks.NewRedisClient(t)
+			c := ImageCache{Client: redisClient, TTL: time.Hour}
+			f := c.Middleware("scatter", slog.Default())(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(response))
+			}))
 
-	r, _ = http.NewRequestWithContext(ctx, http.MethodGet, "/foo", nil)
-	w = httptest.NewRecorder()
-	f.ServeHTTP(w, r)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "hello world", w.Body.String())
+			tt.prep(redisClient)
 
+			r, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost/foo"+tt.args, nil)
+			w := httptest.NewRecorder()
+			f.ServeHTTP(w, r)
+			assert.Equal(t, tt.wantStatusCode, w.Code)
+			if w.Code == http.StatusOK {
+				assert.Equal(t, response, w.Body.String())
+			}
+		})
+	}
 }
 
 func TestImageCache_getKey(t *testing.T) {
