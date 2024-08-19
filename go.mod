@@ -7,7 +7,7 @@ require (
 	github.com/clambin/go-common/http v0.5.0
 	github.com/clambin/go-common/testutils v0.1.0
 	github.com/clambin/solaredge v1.0.3
-	github.com/clambin/tado v1.3.3
+	github.com/clambin/tado v1.4.1
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
@@ -63,7 +63,7 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
