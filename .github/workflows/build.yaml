@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - cache
+      - go123
 
 jobs:
   test:
@@ -13,7 +13,6 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   build:
     needs: [test]
-    uses: clambin/workflows/.github/workflows/build.yaml@main
+    uses: clambin/workflows/.github/workflows/build.yaml@go1.23
     with:
       image: ghcr.io/clambin/solaredge
-

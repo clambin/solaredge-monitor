@@ -1,6 +1,6 @@
 module github.com/clambin/solaredge-monitor
 
-go 1.22.4
+go 1.23
 
 require (
 	github.com/clambin/go-common/charmer v0.2.0
