@@ -63,3 +63,18 @@ func buildData(count int) (measurements repository.Measurements) {
 	}
 	return measurements
 }
+
+func BenchmarkScatterPlotter_Plot(b *testing.B) {
+	data := buildData(200)
+	//b.ResetTimer()
+	for range b.N {
+		p := plotter.ScatterPlotter{
+			BasePlotter: plotter.NewBasePlotter("foo"),
+			Legend:      plotter.Legend{Increase: 100},
+		}
+		_, err := p.Plot(data, false)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}

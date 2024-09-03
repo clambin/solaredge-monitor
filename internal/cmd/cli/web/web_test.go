@@ -15,11 +15,11 @@ import (
 )
 
 func Test_run(t *testing.T) {
-	dbenv, ok := testutils.DBEnv()
+	dbEnv, ok := testutils.DBEnv()
 	if !ok {
 		t.SkipNow()
 	}
-	initViper(viper.GetViper(), dbenv)
+	initViper(viper.GetViper(), dbEnv)
 
 	cmd := cobra.Command{}
 	ctx, cancel := context.WithCancel(context.Background())
