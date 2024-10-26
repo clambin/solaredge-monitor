@@ -13,6 +13,6 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   build:
     needs: [test]
-    uses: clambin/workflows/.github/workflows/build.yaml@go1.23
+    uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
       image: ghcr.io/clambin/solaredge
