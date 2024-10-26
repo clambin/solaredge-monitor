@@ -1,9 +1,10 @@
-name: Release
+name: Build
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
+      - go123
 
 jobs:
   test:
@@ -12,10 +13,6 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   build:
     needs: [test]
-    uses: clambin/workflows/.github/workflows/build.yaml@main
+    uses: clambin/workflows/.github/workflows/build.yaml@go1.23
     with:
       image: ghcr.io/clambin/solaredge
-  release:
-    needs:
-      - build
-    uses: clambin/workflows/.github/workflows/release.yaml@main
