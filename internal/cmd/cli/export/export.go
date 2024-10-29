@@ -1,10 +1,10 @@
 package export
 
 import (
-	"errors"
 	"github.com/clambin/go-common/charmer"
-	"github.com/clambin/go-common/http/metrics"
-	"github.com/clambin/go-common/http/roundtripper"
+	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/go-common/httputils/metrics"
+	"github.com/clambin/go-common/httputils/roundtripper"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/clambin/solaredge-monitor/pkg/pubsub"
@@ -31,13 +31,6 @@ func run(cmd *cobra.Command, _ []string) error {
 	logger.Info("starting solaredge exporter", "version", cmd.Root().Version)
 	defer logger.Info("stopping solaredge exporter")
 
-	go func() {
-		err := http.ListenAndServe(viper.GetString("prometheus.addr"), promhttp.Handler())
-		if !errors.Is(err, http.ErrServerClosed) {
-			panic(err)
-		}
-	}()
-
 	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "exporter", ConstLabels: prometheus.Labels{"application": "solaredge"}})
 	prometheus.MustRegister(solarEdgeMetrics)
 
@@ -63,6 +56,9 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	var group errgroup.Group
+	group.Go(func() error {
+		return httputils.RunServer(cmd.Context(), &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+	})
 	group.Go(func() error { return poller.Run(cmd.Context()) })
 	group.Go(func() error { return exporter.Run(cmd.Context()) })
 

@@ -5,7 +5,7 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/clambin/solaredge-monitor/pkg/averager"
-	"github.com/clambin/tado"
+	tadov2 "github.com/clambin/tado/v2"
 	"log/slog"
 	"time"
 )
@@ -17,7 +17,8 @@ type Writer struct {
 	Interval    time.Duration
 	Logger      *slog.Logger
 	power       averager.Averager[float64]
-	lastWeather *tado.WeatherInfo
+	lastWeather *tadov2.Weather
+	HomeId      tadov2.HomeId
 }
 
 type Store interface {
@@ -25,7 +26,7 @@ type Store interface {
 }
 
 type TadoGetter interface {
-	GetWeatherInfo(context.Context) (tado.WeatherInfo, error)
+	GetWeatherWithResponse(ctx context.Context, homeId tadov2.HomeId, reqEditors ...tadov2.RequestEditorFn) (*tadov2.GetWeatherResponse, error)
 }
 
 func (w *Writer) Run(ctx context.Context) error {
@@ -57,9 +58,9 @@ func (w *Writer) Run(ctx context.Context) error {
 }
 
 func (w *Writer) getWeatherInfo(ctx context.Context) error {
-	weatherInfo, err := w.TadoGetter.GetWeatherInfo(ctx)
+	response, err := w.TadoGetter.GetWeatherWithResponse(ctx, w.HomeId)
 	if err == nil {
-		w.lastWeather = &weatherInfo
+		w.lastWeather = response.JSON200
 	}
 	return err
 }
@@ -97,8 +98,8 @@ func (w *Writer) store() error {
 	m := repository.Measurement{
 		Timestamp: time.Now(),
 		Power:     power,
-		Intensity: w.lastWeather.SolarIntensity.Percentage,
-		Weather:   w.lastWeather.WeatherState.Value,
+		Intensity: float64(*w.lastWeather.SolarIntensity.Percentage),
+		Weather:   string(*w.lastWeather.WeatherState.Value),
 	}
 	w.Logger.Info("storing", "measurement", m)
 	return w.Store.Store(m)

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	"github.com/clambin/tado"
+	tadov2 "github.com/clambin/tado/v2"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"os"
@@ -13,15 +13,19 @@ import (
 	"time"
 )
 
+func VarP[T any](t T) *T {
+	return &t
+}
+
 func TestWriter(t *testing.T) {
 	p := poller{ch: make(chan solaredge.Update)}
 	s := store{}
 	w := scraper.Writer{
 		Store: &s,
-		TadoGetter: tadoClient{weatherInfo: tado.WeatherInfo{
-			OutsideTemperature: tado.Temperature{Celsius: 23.0},
-			SolarIntensity:     tado.Percentage{Percentage: 75},
-			WeatherState:       tado.Value{Value: "SUNNY"},
+		TadoGetter: tadoClient{weatherInfo: tadov2.Weather{
+			OutsideTemperature: &tadov2.TemperatureDataPoint{Celsius: VarP[float32](23.0)},
+			SolarIntensity:     &tadov2.PercentageDataPoint{Percentage: VarP[float32](75)},
+			WeatherState:       &tadov2.WeatherStateDataPoint{Value: VarP[tadov2.WeatherState](tadov2.SUN)},
 		}},
 		Poller:   &p,
 		Interval: 100 * time.Millisecond,
@@ -40,7 +44,7 @@ func TestWriter(t *testing.T) {
 	cancel()
 
 	assert.NoError(t, <-ch)
-	assert.Equal(t, "SUNNY", s.measurement.Weather)
+	assert.Equal(t, "SUN", s.measurement.Weather)
 	assert.Equal(t, 75.0, s.measurement.Intensity)
 	assert.Equal(t, 3000.0, s.measurement.Power)
 }
