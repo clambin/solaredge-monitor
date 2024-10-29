@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/clambin/go-common/charmer v0.2.0
 	github.com/clambin/go-common/http v0.6.0
-	github.com/clambin/go-common/testutils v0.1.0
+	github.com/clambin/go-common/testutils v0.2.0
 	github.com/clambin/solaredge v1.0.3
 	github.com/clambin/tado v1.4.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
