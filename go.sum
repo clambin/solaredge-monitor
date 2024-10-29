@@ -31,8 +31,8 @@ github.com/clambin/go-common/http v0.6.0 h1:3t0PgQ8s+icCxCmWcivzqHjooVV+U9gNyX5/
 github.com/clambin/go-common/http v0.6.0/go.mod h1:hjkBNKFB2ctnqXj+jaHb1pGogE75k0SC7/CrbSgjpXw=
 github.com/clambin/go-common/set v0.4.3 h1:Sm9lkAJsh82j40RDpfQIziHyHjwr07+KsQF6vgCVXm4=
 github.com/clambin/go-common/set v0.4.3/go.mod h1:Q5GpBoM7B7abNV2Wzys+wQMInBHMoHyh/h0Cn2OmY4A=
-github.com/clambin/go-common/testutils v0.1.0 h1:/nGWaOCIhW+Ew1c2NU7GLY/YPb8dp9SV8+MTgWksAgk=
-github.com/clambin/go-common/testutils v0.1.0/go.mod h1:bV0j8D4zhNkleCeluFKLBeLQ0L/dqkxbaR/joLn8kzg=
+github.com/clambin/go-common/testutils v0.2.0 h1:0gVsKwyHQ9Tfmtt4sVf7lnhgNs3dttIvMTH3XuV6u0w=
+github.com/clambin/go-common/testutils v0.2.0/go.mod h1:bV0j8D4zhNkleCeluFKLBeLQ0L/dqkxbaR/joLn8kzg=
 github.com/clambin/solaredge v1.0.3 h1:rrN7PL35XXlb8Wt/h0b0sO807N1mRz2RWNlMcWTn8TI=
 github.com/clambin/solaredge v1.0.3/go.mod h1:9gphI1A0gzuPo8FtY/r3772rS+fc6NwvqMzK+1o+Foc=
 github.com/clambin/tado v1.4.1 h1:aLJLuahv8VLa9/2SJg7GLNZ/aFsGL90/qf890S39q68=
