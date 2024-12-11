@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -15,14 +16,18 @@ import (
 )
 
 func Test_run(t *testing.T) {
-	dbEnv, ok := testutils.DBEnv()
-	if !ok {
-		t.SkipNow()
-	}
-	initViper(viper.GetViper(), dbEnv)
+	ctx, cancel := context.WithCancel(context.Background())
+	c, err := testutils.NewTestPostgresDB(ctx, "solaredge", "solaredge", "solaredge")
+	require.NoError(t, err)
+	initViper(viper.GetViper(), map[string]string{
+		"pg_host":     "localhost",
+		"pg_port":     strconv.Itoa(c.Port),
+		"pg_database": "solaredge",
+		"pg_user":     "solaredge",
+		"pg_password": "solaredge",
+	})
 
 	cmd := cobra.Command{}
-	ctx, cancel := context.WithCancel(context.Background())
 	cmd.SetContext(ctx)
 	charmer.SetLogger(&cmd, slog.Default())
 	ch := make(chan error)
@@ -35,7 +40,7 @@ func Test_run(t *testing.T) {
 		return err == nil
 	}, time.Second, 100*time.Millisecond)
 
-	_, err := http.Get("http://localhost" + viper.GetString("prometheus.addr") + "/metrics")
+	_, err = http.Get("http://localhost" + viper.GetString("prometheus.addr") + "/metrics")
 	assert.NoError(t, err)
 	cancel()
 	assert.NoError(t, <-ch)
