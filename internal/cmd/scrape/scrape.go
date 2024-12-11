@@ -1,21 +1,25 @@
 package scrape
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/clambin/go-common/charmer"
-	"github.com/clambin/go-common/http/metrics"
-	"github.com/clambin/go-common/http/roundtripper"
+	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/go-common/httputils/metrics"
+	"github.com/clambin/go-common/httputils/roundtripper"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/clambin/solaredge-monitor/pkg/pubsub"
-	"github.com/clambin/tado"
+	"github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -33,13 +37,6 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	logger.Info("starting solaredge scraper", "version", cmd.Root().Version)
 	defer logger.Info("stopping solaredge scraper")
-
-	go func() {
-		err := http.ListenAndServe(viper.GetString("prometheus.addr"), promhttp.Handler())
-		if !errors.Is(err, http.ErrServerClosed) {
-			panic(err)
-		}
-	}()
 
 	repo, err := repository.NewPostgresDB(
 		viper.GetString("database.host"),
@@ -69,27 +66,23 @@ func run(cmd *cobra.Command, _ []string) error {
 		Publisher: pubsub.Publisher[solaredge.Update]{},
 	}
 
-	tadoMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "tado"}})
-	prometheus.MustRegister(tadoMetrics)
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
 
-	tadoClient, err := tado.New(
-		viper.GetString("tado.username"),
-		viper.GetString("tado.password"),
-		viper.GetString("tado.secret"),
-	)
+	tadoClient, err := newTadoClient(ctx)
 	if err != nil {
 		return fmt.Errorf("tado: %w", err)
 	}
 
-	origTP := tadoClient.HTTPClient.Transport
-	tadoClient.HTTPClient.Transport = roundtripper.New(
-		roundtripper.WithRequestMetrics(tadoMetrics),
-		roundtripper.WithRoundTripper(origTP),
-	)
+	homeId, err := getHomeId(ctx, tadoClient, logger)
+	if err != nil {
+		return fmt.Errorf("failed to list Tado Homes: %w", err)
+	}
 
 	writer := scraper.Writer{
 		Store:      repo,
 		TadoGetter: tadoClient,
+		HomeId:     homeId,
 		Poller:     &poller,
 		Interval:   viper.GetDuration("scrape.interval"),
 		Logger:     logger.With("component", "writer"),
@@ -105,9 +98,43 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	var group errgroup.Group
-	group.Go(func() error { return poller.Run(cmd.Context()) })
-	group.Go(func() error { return exporter.Run(cmd.Context()) })
-	group.Go(func() error { return writer.Run(cmd.Context()) })
+	group.Go(func() error {
+		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+	})
+	group.Go(func() error { return poller.Run(ctx) })
+	group.Go(func() error { return exporter.Run(ctx) })
+	group.Go(func() error { return writer.Run(ctx) })
 
 	return group.Wait()
+}
+
+func newTadoClient(ctx context.Context) (*tado.ClientWithResponses, error) {
+	tadoMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "tado"}})
+	prometheus.MustRegister(tadoMetrics)
+
+	tadoHttpClient, err := tado.NewOAuth2Client(ctx, viper.GetString("tado.username"), viper.GetString("tado.password"))
+	if err != nil {
+		return nil, err
+	}
+	origTP := tadoHttpClient.Transport
+	tadoHttpClient.Transport = roundtripper.New(
+		roundtripper.WithRequestMetrics(tadoMetrics),
+		roundtripper.WithRoundTripper(origTP),
+	)
+	return tado.NewClientWithResponses(tado.ServerURL, tado.WithHTTPClient(tadoHttpClient))
+}
+
+func getHomeId(ctx context.Context, client *tado.ClientWithResponses, logger *slog.Logger) (tado.HomeId, error) {
+	homes, err := tools.GetHomes(ctx, client)
+	if err != nil {
+		return 0, err
+	}
+	if len(homes) == 0 {
+		return 0, errors.New("no Tado Homes found")
+	}
+	homeId := *homes[0].Id
+	if len(homes) > 1 {
+		logger.Warn("Tado account has more than one home registered. Using first one", "homeId", homeId)
+	}
+	return homeId, nil
 }

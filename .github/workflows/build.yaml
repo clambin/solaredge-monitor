@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - go123
+      - tado-v2
 
 jobs:
   test:
@@ -16,3 +16,4 @@ jobs:
     uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
       image: ghcr.io/clambin/solaredge
+      dockerfile: Dockerfile

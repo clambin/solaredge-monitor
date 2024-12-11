@@ -15,6 +15,7 @@ jobs:
     uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
       image: ghcr.io/clambin/solaredge
+      dockerfile: Dockerfile
   release:
     needs:
       - build

@@ -3,9 +3,9 @@ package web
 import (
 	"fmt"
 	"github.com/clambin/go-common/charmer"
-	gchttp "github.com/clambin/go-common/http"
-	"github.com/clambin/go-common/http/metrics"
-	"github.com/clambin/go-common/http/middleware"
+	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/go-common/httputils/metrics"
+	"github.com/clambin/go-common/httputils/middleware"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/prometheus/client_golang/prometheus"
@@ -66,12 +66,13 @@ func run(cmd *cobra.Command, _ []string) error {
 	h = middleware.WithRequestMetrics(serverMetrics)(h)
 	h = middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)(h)
 
+	ctx := cmd.Context()
 	var g errgroup.Group
 	g.Go(func() error {
-		return gchttp.RunServer(cmd.Context(), &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	g.Go(func() error {
-		return gchttp.RunServer(cmd.Context(), &http.Server{Addr: viper.GetString("web.addr"), Handler: h})
+		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("web.addr"), Handler: h})
 	})
 	return g.Wait()
 }
