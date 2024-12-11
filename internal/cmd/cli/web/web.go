@@ -3,9 +3,9 @@ package web
 import (
 	"fmt"
 	"github.com/clambin/go-common/charmer"
-	"github.com/clambin/go-common/http/metrics"
-	"github.com/clambin/go-common/http/middleware"
 	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/go-common/httputils/metrics"
+	"github.com/clambin/go-common/httputils/middleware"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/prometheus/client_golang/prometheus"
