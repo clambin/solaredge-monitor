@@ -1,30 +1,29 @@
 package repository_test
 
 import (
+	"context"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strconv"
+	"github.com/testcontainers/testcontainers-go"
 	"testing"
 	"time"
 )
 
 func TestStore(t *testing.T) {
-	values, ok := testutils.DBEnv()
-	if !ok {
-		t.Skip("Could not find all DB env variables. Skipping this test")
-	}
-
-	port, err := strconv.Atoi(values["pg_port"])
-	require.NoError(t, err)
+	ctx := context.Background()
+	c, err := testutils.NewTestPostgresDB(ctx, "solaredge", "solaredge", "solaredge")
+	t.Cleanup(func() {
+		require.NoError(t, testcontainers.TerminateContainer(c.PostgresContainer))
+	})
 
 	db, err := repository.NewPostgresDB(
-		values["pg_host"],
-		port,
-		values["pg_database"],
-		values["pg_user"],
-		values["pg_password"],
+		"localhost",
+		c.Port,
+		"solaredge",
+		"solaredge",
+		"solaredge",
 	)
 	require.NoError(t, err)
 

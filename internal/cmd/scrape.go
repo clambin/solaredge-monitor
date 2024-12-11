@@ -1,4 +1,4 @@
-package scrape
+package cmd
 
 import (
 	"context"
@@ -10,8 +10,6 @@ import (
 	"github.com/clambin/go-common/httputils/roundtripper"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
-	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	"github.com/clambin/solaredge-monitor/pkg/pubsub"
 	"github.com/clambin/tado/v2"
 	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,58 +19,39 @@ import (
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net/http"
-	"time"
 )
 
 var (
-	Cmd = cobra.Command{
+	scrapeCmd = cobra.Command{
 		Use:   "scrape",
 		Short: "collect SolarEdge data and export to Prometheus & Postgres",
-		RunE:  run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			logger := charmer.GetLogger(cmd)
+			repo, err := repository.NewPostgresDB(
+				viper.GetString("database.host"),
+				viper.GetInt("database.port"),
+				viper.GetString("database.database"),
+				viper.GetString("database.username"),
+				viper.GetString("database.password"),
+			)
+			if err != nil {
+				return fmt.Errorf("database: %w", err)
+			}
+			poller := newPoller(prometheus.DefaultRegisterer, viper.GetViper(), logger.With("component", "poller"))
+			tadoClient, err := newTadoClient(ctx)
+			if err != nil {
+				return fmt.Errorf("tado: %w", err)
+			}
+
+			return runScrape(ctx, cmd.Root().Version, poller, tadoClient, repo, logger)
+		},
 	}
 )
 
-func run(cmd *cobra.Command, _ []string) error {
-	logger := charmer.GetLogger(cmd)
-
-	logger.Info("starting solaredge scraper", "version", cmd.Root().Version)
+func runScrape(ctx context.Context, version string, poller Poller, tadoClient *tado.ClientWithResponses, repo scraper.Store, logger *slog.Logger) error {
+	logger.Info("starting solaredge scraper", "version", version)
 	defer logger.Info("stopping solaredge scraper")
-
-	repo, err := repository.NewPostgresDB(
-		viper.GetString("database.host"),
-		viper.GetInt("database.port"),
-		viper.GetString("database.database"),
-		viper.GetString("database.username"),
-		viper.GetString("database.password"),
-	)
-	if err != nil {
-		return fmt.Errorf("database: %w", err)
-	}
-
-	logger.Debug("connected to database")
-
-	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "solaredge"}})
-	prometheus.MustRegister(solarEdgeMetrics)
-
-	httpClient := http.Client{
-		Timeout:   5 * time.Second,
-		Transport: roundtripper.New(roundtripper.WithRequestMetrics(solarEdgeMetrics)),
-	}
-
-	poller := scraper.Poller{
-		Client:    solaredge.New(viper.GetString("polling.token"), &httpClient),
-		Interval:  viper.GetDuration("polling.interval"),
-		Logger:    logger.With("component", "poller"),
-		Publisher: pubsub.Publisher[solaredge.Update]{},
-	}
-
-	ctx, cancel := context.WithCancel(cmd.Context())
-	defer cancel()
-
-	tadoClient, err := newTadoClient(ctx)
-	if err != nil {
-		return fmt.Errorf("tado: %w", err)
-	}
 
 	homeId, err := getHomeId(ctx, tadoClient, logger)
 	if err != nil {
@@ -83,7 +62,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		Store:      repo,
 		TadoGetter: tadoClient,
 		HomeId:     homeId,
-		Poller:     &poller,
+		Poller:     poller,
 		Interval:   viper.GetDuration("scrape.interval"),
 		Logger:     logger.With("component", "writer"),
 	}
@@ -92,7 +71,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	prometheus.MustRegister(exportMetrics)
 
 	exporter := scraper.Exporter{
-		Poller:  &poller,
+		Poller:  poller,
 		Metrics: exportMetrics,
 		Logger:  logger.With("component", "exporter"),
 	}
@@ -101,9 +80,9 @@ func run(cmd *cobra.Command, _ []string) error {
 	group.Go(func() error {
 		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
-	group.Go(func() error { return poller.Run(ctx) })
 	group.Go(func() error { return exporter.Run(ctx) })
 	group.Go(func() error { return writer.Run(ctx) })
+	group.Go(func() error { return poller.Run(ctx) })
 
 	return group.Wait()
 }

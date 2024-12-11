@@ -2,8 +2,8 @@ package scraper
 
 import (
 	"context"
+	"github.com/clambin/go-common/pubsub"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	"github.com/clambin/solaredge-monitor/pkg/pubsub"
 	"log/slog"
 	"time"
 )
