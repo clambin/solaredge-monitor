@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"github.com/clambin/go-common/charmer"
-	"github.com/clambin/solaredge-monitor/internal/cmd/cli/export"
-	"github.com/clambin/solaredge-monitor/internal/cmd/cli/scrape"
-	"github.com/clambin/solaredge-monitor/internal/cmd/cli/web"
+	"github.com/clambin/solaredge-monitor/internal/cmd/export"
+	"github.com/clambin/solaredge-monitor/internal/cmd/scrape"
+	"github.com/clambin/solaredge-monitor/internal/cmd/web"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
