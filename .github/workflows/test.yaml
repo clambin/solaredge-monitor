@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore:
       - master
-      - tado-v2
+      - testcontainers
   pull_request_target:
 
 jobs:
