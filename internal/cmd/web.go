@@ -1,4 +1,4 @@
-package web
+package cmd
 
 import (
 	"fmt"
@@ -19,14 +19,14 @@ import (
 )
 
 var (
-	Cmd = cobra.Command{
+	webCmd = cobra.Command{
 		Use:   "web",
 		Short: "runs the web server",
-		RunE:  run,
+		RunE:  runWeb,
 	}
 )
 
-func run(cmd *cobra.Command, _ []string) error {
+func runWeb(cmd *cobra.Command, _ []string) error {
 	logger := charmer.GetLogger(cmd)
 
 	logger.Info("starting solaredge web server", "version", cmd.Root().Version)

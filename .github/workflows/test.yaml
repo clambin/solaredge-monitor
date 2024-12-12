@@ -4,11 +4,11 @@ on:
   push:
     branches-ignore:
       - master
-      - tado-v2
+      - testcontainer
   pull_request_target:
 
 jobs:
   test:
-    uses: ./.github/workflows/test-reuse.yaml
+    uses: clambin/workflows/.github/workflows/test.yaml@main
     secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
