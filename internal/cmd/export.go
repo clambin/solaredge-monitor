@@ -22,15 +22,7 @@ var (
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
 			poller := newPoller(prometheus.DefaultRegisterer, viper.GetViper(), logger.With("component", "poller"))
-
-			return runExport(
-				ctx,
-				cmd.Root().Version,
-				viper.GetViper(),
-				prometheus.DefaultRegisterer,
-				poller,
-				logger,
-			)
+			return runExport(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, poller, logger)
 		},
 	}
 )

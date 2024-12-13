@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - testcontainer
+      - coverage
 
 jobs:
   test:

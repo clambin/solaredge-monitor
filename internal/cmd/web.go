@@ -26,7 +26,6 @@ var (
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-
 			return runWeb(ctx, cmd.Root().Version, viper.GetViper(), logger)
 		},
 	}

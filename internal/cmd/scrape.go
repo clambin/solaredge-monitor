@@ -37,17 +37,7 @@ var (
 			if err != nil {
 				return fmt.Errorf("failed to list Tado Homes: %w", err)
 			}
-
-			return runScrape(
-				ctx,
-				cmd.Root().Version,
-				viper.GetViper(),
-				prometheus.DefaultRegisterer,
-				poller,
-				tadoClient,
-				homeId,
-				logger,
-			)
+			return runScrape(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, poller, tadoClient, homeId, logger)
 		},
 	}
 )
