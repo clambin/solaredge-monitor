@@ -33,7 +33,7 @@ func NewTestPostgresDB(ctx context.Context, dbName, userName, password string) (
 		return nil, 0, fmt.Errorf("could not get connection string: %w", err)
 	}
 	port, err := getPortNr(connectionString)
-	return c, port, nil
+	return c, port, err
 }
 
 func NewTestRedis(ctx context.Context) (*redis.RedisContainer, int, error) {

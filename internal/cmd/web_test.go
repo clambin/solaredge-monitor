@@ -17,6 +17,7 @@ func Test_runWeb(t *testing.T) {
 	c, dbPort, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
 	require.NoError(t, err)
 	r, redisPort, err := testutils.NewTestRedis(ctx)
+	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, testcontainers.TerminateContainer(c))
 		require.NoError(t, testcontainers.TerminateContainer(r))
