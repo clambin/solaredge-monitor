@@ -28,47 +28,57 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			repo, err := repository.NewPostgresDB(
-				viper.GetString("database.host"),
-				viper.GetInt("database.port"),
-				viper.GetString("database.database"),
-				viper.GetString("database.username"),
-				viper.GetString("database.password"),
-			)
-			if err != nil {
-				return fmt.Errorf("database: %w", err)
-			}
 			poller := newPoller(prometheus.DefaultRegisterer, viper.GetViper(), logger.With("component", "poller"))
 			tadoClient, err := newTadoClient(ctx)
 			if err != nil {
 				return fmt.Errorf("tado: %w", err)
 			}
-
-			return runScrape(ctx, cmd.Root().Version, poller, tadoClient, repo, logger)
+			homeId, err := getHomeId(ctx, tadoClient, logger)
+			if err != nil {
+				return fmt.Errorf("failed to list Tado Homes: %w", err)
+			}
+			return runScrape(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, poller, tadoClient, homeId, logger)
 		},
 	}
 )
 
-func runScrape(ctx context.Context, version string, poller Poller, tadoClient *tado.ClientWithResponses, repo scraper.Store, logger *slog.Logger) error {
+func runScrape(
+	ctx context.Context,
+	version string,
+	v *viper.Viper,
+	r prometheus.Registerer,
+	poller Poller,
+	tadoClient scraper.TadoGetter,
+	homeId tado.HomeId,
+	logger *slog.Logger,
+) error {
 	logger.Info("starting solaredge scraper", "version", version)
 	defer logger.Info("stopping solaredge scraper")
 
-	homeId, err := getHomeId(ctx, tadoClient, logger)
+	repo, err := repository.NewPostgresDB(
+		v.GetString("database.host"),
+		v.GetInt("database.port"),
+		v.GetString("database.database"),
+		v.GetString("database.username"),
+		v.GetString("database.password"),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to list Tado Homes: %w", err)
+		return fmt.Errorf("database: %w", err)
 	}
+
+	logger.Debug("connected to database")
 
 	writer := scraper.Writer{
 		Store:      repo,
 		TadoGetter: tadoClient,
 		HomeId:     homeId,
 		Poller:     poller,
-		Interval:   viper.GetDuration("scrape.interval"),
+		Interval:   v.GetDuration("scrape.interval"),
 		Logger:     logger.With("component", "writer"),
 	}
 
 	exportMetrics := scraper.NewMetrics()
-	prometheus.MustRegister(exportMetrics)
+	r.MustRegister(exportMetrics)
 
 	exporter := scraper.Exporter{
 		Poller:  poller,
@@ -78,7 +88,7 @@ func runScrape(ctx context.Context, version string, poller Poller, tadoClient *t
 
 	var group errgroup.Group
 	group.Go(func() error {
-		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	group.Go(func() error { return exporter.Run(ctx) })
 	group.Go(func() error { return writer.Run(ctx) })

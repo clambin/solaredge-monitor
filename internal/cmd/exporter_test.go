@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"context"
-	solaredge2 "github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log/slog"
@@ -16,27 +16,17 @@ import (
 
 var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
-func Test_runExporter(t *testing.T) {
+func Test_runExport(t *testing.T) {
+	v := getViperFromViper(viper.GetViper())
 	p := fakePoller{ch: make(chan solaredge.Update)}
 	r := prometheus.NewPedanticRegistry()
 	ctx, cancel := context.WithCancel(context.Background())
 	errCh := make(chan error)
 	go func() {
-		errCh <- runExport(ctx, "dev", r, &p, discardLogger)
+		errCh <- runExport(ctx, "dev", v, r, &p, discardLogger)
 	}()
 
-	p.ch <- solaredge.Update{{
-		ID:   1,
-		Name: "my home",
-		PowerOverview: solaredge2.PowerOverview{
-			LastUpdateTime: solaredge2.Time(time.Date(2024, time.December, 12, 12, 0, 0, 0, time.UTC)),
-			LifeTimeData:   solaredge2.EnergyOverview{Energy: 1000},
-			LastYearData:   solaredge2.EnergyOverview{Energy: 100},
-			LastMonthData:  solaredge2.EnergyOverview{Energy: 10},
-			LastDayData:    solaredge2.EnergyOverview{Energy: 1},
-			CurrentPower:   solaredge2.CurrentPower{Power: 500},
-		},
-	}}
+	go feed(ctx, p.ch, 5, 500*time.Millisecond)
 
 	var metricNames = []string{
 		"solaredge_current_power",
@@ -48,7 +38,7 @@ func Test_runExporter(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		count, err := testutil.GatherAndCount(r, metricNames...)
 		return err == nil && count == len(metricNames)
-	}, 10*time.Second, time.Millisecond)
+	}, time.Second, time.Millisecond)
 
 	assert.NoError(t, testutil.GatherAndCompare(r, strings.NewReader(`
 # HELP solaredge_current_power current power in Watt

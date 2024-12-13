@@ -13,17 +13,18 @@ import (
 
 func TestStore(t *testing.T) {
 	ctx := context.Background()
-	c, err := testutils.NewTestPostgresDB(ctx, "solaredge", "solaredge", "solaredge")
+	c, port, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
+	require.NoError(t, err)
 	t.Cleanup(func() {
-		require.NoError(t, testcontainers.TerminateContainer(c.PostgresContainer))
+		require.NoError(t, testcontainers.TerminateContainer(c))
 	})
 
 	db, err := repository.NewPostgresDB(
 		"localhost",
-		c.Port,
+		port,
 		"solaredge",
-		"solaredge",
-		"solaredge",
+		"username",
+		"password",
 	)
 	require.NoError(t, err)
 

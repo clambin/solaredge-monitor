@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
@@ -22,22 +23,24 @@ var (
 	webCmd = cobra.Command{
 		Use:   "web",
 		Short: "runs the web server",
-		RunE:  runWeb,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			logger := charmer.GetLogger(cmd)
+			return runWeb(ctx, cmd.Root().Version, viper.GetViper(), logger)
+		},
 	}
 )
 
-func runWeb(cmd *cobra.Command, _ []string) error {
-	logger := charmer.GetLogger(cmd)
-
-	logger.Info("starting solaredge web server", "version", cmd.Root().Version)
+func runWeb(ctx context.Context, version string, v *viper.Viper, logger *slog.Logger) error {
+	logger.Info("starting solaredge web server", "version", version)
 	defer logger.Info("stopping solaredge web server")
 
 	repo, err := repository.NewPostgresDB(
-		viper.GetString("database.host"),
-		viper.GetInt("database.port"),
-		viper.GetString("database.database"),
-		viper.GetString("database.username"),
-		viper.GetString("database.password"),
+		v.GetString("database.host"),
+		v.GetInt("database.port"),
+		v.GetString("database.database"),
+		v.GetString("database.username"),
+		v.GetString("database.password"),
 	)
 	if err != nil {
 		return fmt.Errorf("database: %w", err)
@@ -49,16 +52,16 @@ func runWeb(cmd *cobra.Command, _ []string) error {
 	prometheus.MustRegister(serverMetrics)
 
 	var cache *web.ImageCache
-	if redisAddr := viper.GetString("web.cache.addr"); redisAddr != "" {
+	if redisAddr := v.GetString("web.cache.addr"); redisAddr != "" {
 		cache = &web.ImageCache{
 			Client: redis.NewClient(&redis.Options{
 				Addr:     redisAddr,
-				Username: viper.GetString("web.cache.username"),
-				Password: viper.GetString("web.cache.password"),
+				Username: v.GetString("web.cache.username"),
+				Password: v.GetString("web.cache.password"),
 			}),
 			Namespace: "github.com/clambin/solaredge-monitor",
-			Rounding:  viper.GetDuration("web.cache.rounding"),
-			TTL:       viper.GetDuration("web.cache.ttl"),
+			Rounding:  v.GetDuration("web.cache.rounding"),
+			TTL:       v.GetDuration("web.cache.ttl"),
 		}
 	}
 
@@ -66,13 +69,12 @@ func runWeb(cmd *cobra.Command, _ []string) error {
 	h = middleware.WithRequestMetrics(serverMetrics)(h)
 	h = middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)(h)
 
-	ctx := cmd.Context()
 	var g errgroup.Group
 	g.Go(func() error {
-		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	g.Go(func() error {
-		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("web.addr"), Handler: h})
+		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("web.addr"), Handler: h})
 	})
 	return g.Wait()
 }
