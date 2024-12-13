@@ -28,7 +28,7 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			poller := newPoller(prometheus.DefaultRegisterer, viper.GetViper(), logger.With("component", "poller"))
+			poller := newPoller(prometheus.DefaultRegisterer, "scraper", viper.GetViper(), logger.With("component", "poller"))
 			tadoClient, err := newTadoClient(ctx)
 			if err != nil {
 				return fmt.Errorf("tado: %w", err)

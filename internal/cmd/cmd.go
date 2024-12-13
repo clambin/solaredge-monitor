@@ -80,8 +80,8 @@ type Poller interface {
 	scraper.Publisher[solaredge.Update]
 }
 
-func newPoller(r prometheus.Registerer, v *viper.Viper, l *slog.Logger) *scraper.Poller {
-	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "exporter", ConstLabels: prometheus.Labels{"application": "solaredge"}})
+func newPoller(r prometheus.Registerer, subsystem string, v *viper.Viper, l *slog.Logger) *scraper.Poller {
+	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: subsystem, ConstLabels: prometheus.Labels{"application": "solaredge"}})
 	r.MustRegister(solarEdgeMetrics)
 
 	return &scraper.Poller{
