@@ -21,7 +21,7 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			poller := newPoller(prometheus.DefaultRegisterer, viper.GetViper(), logger.With("component", "poller"))
+			poller := newPoller(prometheus.DefaultRegisterer, "exporter", viper.GetViper(), logger.With("component", "poller"))
 			return runExport(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, poller, logger)
 		},
 	}
