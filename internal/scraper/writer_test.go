@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	tadov2 "github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"os"
@@ -22,10 +22,10 @@ func TestWriter(t *testing.T) {
 	s := store{}
 	w := scraper.Writer{
 		Store: &s,
-		TadoGetter: tadoClient{weatherInfo: tadov2.Weather{
-			OutsideTemperature: &tadov2.TemperatureDataPoint{Celsius: VarP[float32](23.0)},
-			SolarIntensity:     &tadov2.PercentageDataPoint{Percentage: VarP[float32](75)},
-			WeatherState:       &tadov2.WeatherStateDataPoint{Value: VarP[tadov2.WeatherState](tadov2.SUN)},
+		TadoGetter: tadoClient{weatherInfo: tado.Weather{
+			OutsideTemperature: &tado.TemperatureDataPoint{Celsius: VarP[float32](23.0)},
+			SolarIntensity:     &tado.PercentageDataPoint{Percentage: VarP[float32](75)},
+			WeatherState:       &tado.WeatherStateDataPoint{Value: VarP[tado.WeatherState](tado.SUN)},
 		}},
 		Poller:   &p,
 		Interval: 100 * time.Millisecond,

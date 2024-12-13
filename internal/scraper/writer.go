@@ -4,8 +4,7 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	"github.com/clambin/solaredge-monitor/pkg/averager"
-	tadov2 "github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2"
 	"log/slog"
 	"time"
 )
@@ -16,9 +15,9 @@ type Writer struct {
 	Poller      Publisher[solaredge.Update]
 	Interval    time.Duration
 	Logger      *slog.Logger
-	power       averager.Averager[float64]
-	lastWeather *tadov2.Weather
-	HomeId      tadov2.HomeId
+	power       median
+	lastWeather *tado.Weather
+	HomeId      tado.HomeId
 }
 
 type Store interface {
@@ -26,7 +25,7 @@ type Store interface {
 }
 
 type TadoGetter interface {
-	GetWeatherWithResponse(ctx context.Context, homeId tadov2.HomeId, reqEditors ...tadov2.RequestEditorFn) (*tadov2.GetWeatherResponse, error)
+	GetWeatherWithResponse(ctx context.Context, homeId tado.HomeId, reqEditors ...tado.RequestEditorFn) (*tado.GetWeatherResponse, error)
 }
 
 func (w *Writer) Run(ctx context.Context) error {
@@ -71,8 +70,8 @@ func (w *Writer) process(ctx context.Context, update solaredge.Update) {
 	}
 
 	if len(update) > 0 {
-		w.power.Add(update[0].PowerOverview.CurrentPower.Power)
-		w.Logger.Debug("update received", "site", update[0].Name, "count", w.power.Count())
+		w.power.add(update[0].PowerOverview.CurrentPower.Power)
+		w.Logger.Debug("update received", "site", update[0].Name, "count", w.power.len())
 	}
 	if len(update) > 1 {
 		w.Logger.Debug("only one site is supported. ignoring remaining sites")
@@ -85,11 +84,11 @@ func (w *Writer) store() error {
 		w.Logger.Debug("no weather info to store")
 		return nil
 	}
-	if w.power.Count() == 0 {
+	if w.power.len() == 0 {
 		w.Logger.Debug("no data to store")
 		return nil
 	}
-	power := w.power.Average()
+	power := w.power.median()
 	if power == 0 {
 		w.Logger.Debug("not storing measurement with no power")
 		return nil

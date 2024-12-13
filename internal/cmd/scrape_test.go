@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
-	tadov2 "github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -54,12 +54,12 @@ var _ scraper.TadoGetter = fakeTadoGetter{}
 
 type fakeTadoGetter struct{}
 
-func (f fakeTadoGetter) GetWeatherWithResponse(_ context.Context, _ tadov2.HomeId, _ ...tadov2.RequestEditorFn) (*tadov2.GetWeatherResponse, error) {
-	return &tadov2.GetWeatherResponse{
+func (f fakeTadoGetter) GetWeatherWithResponse(_ context.Context, _ tado.HomeId, _ ...tado.RequestEditorFn) (*tado.GetWeatherResponse, error) {
+	return &tado.GetWeatherResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK, Body: http.NoBody},
-		JSON200: &tadov2.Weather{
-			SolarIntensity: &tadov2.PercentageDataPoint{Percentage: varP(float32(75))},
-			WeatherState:   &tadov2.WeatherStateDataPoint{Value: varP(tadov2.SUN)},
+		JSON200: &tado.Weather{
+			SolarIntensity: &tado.PercentageDataPoint{Percentage: varP(float32(75))},
+			WeatherState:   &tado.WeatherStateDataPoint{Value: varP(tado.SUN)},
 		},
 	}, nil
 }

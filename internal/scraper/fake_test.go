@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	tadov2 "github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2"
 	"sync"
 	"sync/atomic"
 )
@@ -56,12 +56,12 @@ func (s *store) Store(measurement repository.Measurement) error {
 var _ scraper.TadoGetter = tadoClient{}
 
 type tadoClient struct {
-	weatherInfo tadov2.Weather
+	weatherInfo tado.Weather
 	err         error
 }
 
-func (t tadoClient) GetWeatherWithResponse(_ context.Context, homeId tadov2.HomeId, _ ...tadov2.RequestEditorFn) (*tadov2.GetWeatherResponse, error) {
-	resp := tadov2.GetWeatherResponse{
+func (t tadoClient) GetWeatherWithResponse(_ context.Context, _ tado.HomeId, _ ...tado.RequestEditorFn) (*tado.GetWeatherResponse, error) {
+	resp := tado.GetWeatherResponse{
 		JSON200: &t.weatherInfo,
 	}
 	return &resp, t.err
