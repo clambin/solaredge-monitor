@@ -23,12 +23,26 @@ var (
 			logger := charmer.GetLogger(cmd)
 			poller := newPoller(prometheus.DefaultRegisterer, viper.GetViper(), logger.With("component", "poller"))
 
-			return runExport(ctx, cmd.Root().Version, prometheus.DefaultRegisterer, poller, logger)
+			return runExport(
+				ctx,
+				cmd.Root().Version,
+				viper.GetViper(),
+				prometheus.DefaultRegisterer,
+				poller,
+				logger,
+			)
 		},
 	}
 )
 
-func runExport(ctx context.Context, version string, r prometheus.Registerer, poller Poller, logger *slog.Logger) error {
+func runExport(
+	ctx context.Context,
+	version string,
+	v *viper.Viper,
+	r prometheus.Registerer,
+	poller Poller,
+	logger *slog.Logger,
+) error {
 	logger.Info("starting solaredge exporter", "version", version)
 	defer logger.Info("stopping solaredge exporter")
 
@@ -43,7 +57,7 @@ func runExport(ctx context.Context, version string, r prometheus.Registerer, pol
 
 	var group errgroup.Group
 	group.Go(func() error {
-		return httputils.RunServer(ctx, &http.Server{Addr: viper.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	group.Go(func() error { return poller.Run(ctx) })
 	group.Go(func() error { return exporter.Run(ctx) })

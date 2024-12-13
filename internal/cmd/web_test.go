@@ -2,37 +2,32 @@ package cmd
 
 import (
 	"context"
-	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log/slog"
+	"github.com/testcontainers/testcontainers-go"
 	"net/http"
-	"strconv"
 	"testing"
 	"time"
 )
 
-func Test_run(t *testing.T) {
+func Test_runWeb(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	c, err := testutils.NewTestPostgresDB(ctx, "solaredge", "solaredge", "solaredge")
+	c, dbPort, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
 	require.NoError(t, err)
-	initViper(viper.GetViper(), map[string]string{
-		"pg_host":     "localhost",
-		"pg_port":     strconv.Itoa(c.Port),
-		"pg_database": "solaredge",
-		"pg_user":     "solaredge",
-		"pg_password": "solaredge",
+	r, redisPort, err := testutils.NewTestRedis(ctx)
+	t.Cleanup(func() {
+		require.NoError(t, testcontainers.TerminateContainer(c))
+		require.NoError(t, testcontainers.TerminateContainer(r))
 	})
+	v := getViperFromViper(viper.GetViper())
+	initViperDB(v, dbPort)
+	initViperCache(v, redisPort)
 
-	cmd := cobra.Command{}
-	cmd.SetContext(ctx)
-	charmer.SetLogger(&cmd, slog.Default())
 	ch := make(chan error)
 	go func() {
-		ch <- runWeb(&cmd, nil)
+		ch <- runWeb(ctx, "dev", v, discardLogger)
 	}()
 
 	assert.Eventually(t, func() bool {
@@ -44,15 +39,4 @@ func Test_run(t *testing.T) {
 	assert.NoError(t, err)
 	cancel()
 	assert.NoError(t, <-ch)
-}
-
-func initViper(v *viper.Viper, dbenv map[string]string) {
-	v.Set("database.host", dbenv["pg_host"])
-	port, _ := strconv.Atoi(dbenv["pg_port"])
-	v.Set("database.port", port)
-	v.Set("database.database", dbenv["pg_database"])
-	v.Set("database.username", dbenv["pg_user"])
-	v.Set("database.password", dbenv["pg_password"])
-	v.Set("prometheus.addr", ":9090")
-	v.Set("web.addr", ":8080")
 }
