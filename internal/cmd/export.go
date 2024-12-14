@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
-	"github.com/clambin/solaredge-monitor/internal/scraper"
+	"github.com/clambin/solaredge-monitor/internal/exporter"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -21,8 +23,15 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			poller := newPoller(prometheus.DefaultRegisterer, "exporter", viper.GetViper(), logger.With("component", "poller"))
-			return runExport(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, poller, logger)
+			solarEdgeClient := newSolarEdgeClient("exporter", prometheus.DefaultRegisterer, viper.GetViper())
+			return runExport(
+				ctx,
+				cmd.Root().Version,
+				viper.GetViper(),
+				prometheus.DefaultRegisterer,
+				publisher.SolarEdgeUpdater{Client: solarEdgeClient},
+				logger,
+			)
 		},
 	}
 )
@@ -32,27 +41,33 @@ func runExport(
 	version string,
 	v *viper.Viper,
 	r prometheus.Registerer,
-	poller Poller,
+	solarEdgeUpdater publisher.Updater[solaredge.Update],
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge exporter", "version", version)
 	defer logger.Info("stopping solaredge exporter")
 
-	exportMetrics := scraper.NewMetrics()
+	exportMetrics := exporter.NewMetrics()
 	r.MustRegister(exportMetrics)
 
-	exporter := scraper.Exporter{
-		Poller:  poller,
-		Metrics: exportMetrics,
-		Logger:  logger.With("component", "exporter"),
+	solarEdgePoller := publisher.Publisher[solaredge.Update]{
+		Updater:  solarEdgeUpdater,
+		Interval: v.GetDuration("polling.interval"),
+		Logger:   logger.With("publisher", "solaredge"),
+	}
+
+	exp := exporter.Exporter{
+		SolarEdge: &solarEdgePoller,
+		Metrics:   exportMetrics,
+		Logger:    logger,
 	}
 
 	var group errgroup.Group
 	group.Go(func() error {
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
-	group.Go(func() error { return poller.Run(ctx) })
-	group.Go(func() error { return exporter.Run(ctx) })
+	group.Go(func() error { return solarEdgePoller.Run(ctx) })
+	group.Go(func() error { return exp.Run(ctx) })
 
 	return group.Wait()
 }

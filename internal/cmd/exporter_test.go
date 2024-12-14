@@ -2,31 +2,39 @@ package cmd
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
+	solaredge2 "github.com/clambin/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"log/slog"
 	"strings"
 	"testing"
 	"time"
 )
 
-var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
-
 func Test_runExport(t *testing.T) {
+	p := fakeUpdater{Update: solaredge.Update{{
+		ID:   1,
+		Name: "my home",
+		PowerOverview: solaredge2.PowerOverview{
+			LastUpdateTime: solaredge2.Time(time.Date(2024, time.December, 12, 12, 0, 0, 0, time.UTC)),
+			LifeTimeData:   solaredge2.EnergyOverview{Energy: 1000},
+			LastYearData:   solaredge2.EnergyOverview{Energy: 100},
+			LastMonthData:  solaredge2.EnergyOverview{Energy: 10},
+			LastDayData:    solaredge2.EnergyOverview{Energy: 1},
+			CurrentPower:   solaredge2.CurrentPower{Power: 500},
+		},
+	}}}
 	v := getViperFromViper(viper.GetViper())
-	p := fakePoller{ch: make(chan solaredge.Update)}
+	v.Set("polling.interval", time.Second)
 	r := prometheus.NewPedanticRegistry()
 	ctx, cancel := context.WithCancel(context.Background())
 	errCh := make(chan error)
 	go func() {
 		errCh <- runExport(ctx, "dev", v, r, &p, discardLogger)
 	}()
-
-	go feed(ctx, p.ch, 5, 500*time.Millisecond)
 
 	var metricNames = []string{
 		"solaredge_current_power",
@@ -38,7 +46,7 @@ func Test_runExport(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		count, err := testutil.GatherAndCount(r, metricNames...)
 		return err == nil && count == len(metricNames)
-	}, time.Second, time.Millisecond)
+	}, 10*time.Second, time.Millisecond)
 
 	assert.NoError(t, testutil.GatherAndCompare(r, strings.NewReader(`
 # HELP solaredge_current_power current power in Watt
@@ -61,20 +69,12 @@ solaredge_year_energy{site="my home"} 100
 	assert.NoError(t, <-errCh)
 }
 
-var _ Poller = fakePoller{}
+var _ publisher.Updater[solaredge.Update] = fakeUpdater{}
 
-type fakePoller struct {
-	ch chan solaredge.Update
+type fakeUpdater struct {
+	solaredge.Update
 }
 
-func (f fakePoller) Run(ctx context.Context) error {
-	<-ctx.Done()
-	return nil
-}
-
-func (f fakePoller) Subscribe() chan solaredge.Update {
-	return f.ch
-}
-
-func (f fakePoller) Unsubscribe(_ chan solaredge.Update) {
+func (f fakeUpdater) GetUpdate(_ context.Context) (solaredge.Update, error) {
+	return f.Update, nil
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,13 +23,14 @@ func Test_runWeb(t *testing.T) {
 		require.NoError(t, testcontainers.TerminateContainer(c))
 		require.NoError(t, testcontainers.TerminateContainer(r))
 	})
+	reg := prometheus.NewPedanticRegistry()
 	v := getViperFromViper(viper.GetViper())
 	initViperDB(v, dbPort)
 	initViperCache(v, redisPort)
 
 	ch := make(chan error)
 	go func() {
-		ch <- runWeb(ctx, "dev", v, discardLogger)
+		ch <- runWeb(ctx, "dev", v, reg, discardLogger)
 	}()
 
 	assert.Eventually(t, func() bool {

@@ -1,74 +1,23 @@
-package scraper_test
+package testutils
 
 import (
-	"context"
 	solaredge2 "github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/internal/repository"
-	"github.com/clambin/solaredge-monitor/internal/scraper"
-	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
-	"github.com/clambin/tado/v2"
-	"sync"
-	"sync/atomic"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 )
 
-var _ scraper.Publisher[solaredge.Update] = poller{}
-
-type poller struct {
-	ch chan solaredge.Update
+type FakePublisher[T any] struct {
+	Ch chan T
 }
 
-func (p poller) Subscribe() chan solaredge.Update {
-	return p.ch
+func (f FakePublisher[T]) Subscribe() chan T {
+	return f.Ch
 }
 
-func (p poller) Unsubscribe(ch chan solaredge.Update) {
-	if ch != p.ch {
-		panic("unexpected channel")
-	}
-}
-
-var _ scraper.SolarEdgeGetter = client{}
-
-type client struct {
-	update solaredge.Update
-}
-
-func (c client) GetUpdate(_ context.Context) (solaredge.Update, error) {
-	return c.update, nil
-}
-
-var _ scraper.Store = &store{}
-
-type store struct {
-	hasData     atomic.Bool
-	lock        sync.Mutex
-	measurement repository.Measurement
-}
-
-func (s *store) Store(measurement repository.Measurement) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	s.measurement = measurement
-	s.hasData.Store(true)
-	return nil
-}
-
-var _ scraper.TadoGetter = tadoClient{}
-
-type tadoClient struct {
-	weatherInfo tado.Weather
-	err         error
-}
-
-func (t tadoClient) GetWeatherWithResponse(_ context.Context, _ tado.HomeId, _ ...tado.RequestEditorFn) (*tado.GetWeatherResponse, error) {
-	resp := tado.GetWeatherResponse{
-		JSON200: &t.weatherInfo,
-	}
-	return &resp, t.err
+func (f FakePublisher[T]) Unsubscribe(_ chan T) {
 }
 
 var (
-	testUpdate = solaredge.Update{
+	TestUpdate = solaredge.Update{
 		solaredge.SiteUpdate{
 			ID:   1,
 			Name: "foo",
@@ -114,7 +63,7 @@ var (
 		},
 	}
 
-	emptyUpdate = solaredge.Update{
+	EmptyUpdate = solaredge.Update{
 		solaredge.SiteUpdate{
 			ID:   1,
 			Name: "foo",

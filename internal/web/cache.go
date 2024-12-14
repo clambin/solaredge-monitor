@@ -19,7 +19,7 @@ type ImageCache struct {
 
 type RedisClient interface {
 	Get(ctx context.Context, key string) *redis.StringCmd
-	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *redis.StatusCmd
 }
 
 func (c *ImageCache) Get(ctx context.Context, plotType string, args arguments) (string, []byte, error) {

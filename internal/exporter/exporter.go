@@ -1,16 +1,16 @@
-package scraper
+package exporter
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
 	"log/slog"
 )
 
 type Exporter struct {
-	Poller  Publisher[solaredge.Update]
-	Metrics *Metrics
-	Logger  *slog.Logger
+	SolarEdge Publisher[solaredge.Update]
+	Metrics   *Metrics
+	Logger    *slog.Logger
 }
 
 type Publisher[T any] interface {
@@ -19,8 +19,8 @@ type Publisher[T any] interface {
 }
 
 func (e Exporter) Run(ctx context.Context) error {
-	ch := e.Poller.Subscribe()
-	defer e.Poller.Unsubscribe(ch)
+	ch := e.SolarEdge.Subscribe()
+	defer e.SolarEdge.Unsubscribe(ch)
 
 	e.Logger.Debug("starting exporter")
 	defer e.Logger.Debug("stopped exporter")
