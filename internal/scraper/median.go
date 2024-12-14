@@ -1,11 +1,13 @@
 package scraper
 
+import "slices"
+
 type median struct {
 	values []float64
 }
 
-func (m *median) add(value float64) {
-	m.values = append(m.values, value)
+func (m *median) add(value ...float64) {
+	m.values = append(m.values, value...)
 }
 
 func (m *median) len() int {
@@ -21,6 +23,7 @@ func (m *median) median() float64 {
 		return 0
 	}
 	defer m.reset()
+	slices.Sort(m.values)
 	n := len(m.values)
 	if n%2 == 1 {
 		return m.values[n/2]
