@@ -9,11 +9,11 @@ import (
 )
 
 type SolarEdgeUpdater struct {
-	SolarEdge solaredge.Client
+	solaredge.Client
 }
 
 func (c SolarEdgeUpdater) GetUpdate(ctx context.Context) (solaredge2.Update, error) {
-	sites, err := c.SolarEdge.GetSites(ctx)
+	sites, err := c.GetSites(ctx)
 	if err != nil {
 		return solaredge2.Update{}, err
 	}

@@ -8,8 +8,8 @@ import (
 )
 
 type TadoUpdater struct {
-	TadoClient WeatherGetter
-	HomeId     tado.HomeId
+	Client WeatherGetter
+	HomeId tado.HomeId
 }
 
 type WeatherGetter interface {
@@ -17,7 +17,7 @@ type WeatherGetter interface {
 }
 
 func (c TadoUpdater) GetUpdate(ctx context.Context) (*tado.Weather, error) {
-	resp, err := c.TadoClient.GetWeatherWithResponse(ctx, c.HomeId)
+	resp, err := c.Client.GetWeatherWithResponse(ctx, c.HomeId)
 	if err != nil {
 		return nil, err
 	}

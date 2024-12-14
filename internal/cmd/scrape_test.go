@@ -41,7 +41,7 @@ func Test_runScrape(t *testing.T) {
 			CurrentPower:   solaredge2.CurrentPower{Power: 500},
 		},
 	}}}
-	tadoUpdater := publisher.TadoUpdater{TadoClient: fakeTadoGetter{}}
+	tadoUpdater := publisher.TadoUpdater{Client: fakeTadoGetter{}}
 	r := prometheus.NewPedanticRegistry()
 
 	errCh := make(chan error)

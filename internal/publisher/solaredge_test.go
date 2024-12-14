@@ -21,7 +21,7 @@ func TestSolarEdgeUpdater_GetUpdate(t *testing.T) {
 		},
 	}
 
-	u := SolarEdgeUpdater{SolarEdge: c}
+	u := SolarEdgeUpdater{Client: c}
 
 	update, err := u.GetUpdate(context.Background())
 	require.NoError(t, err)

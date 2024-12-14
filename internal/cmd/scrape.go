@@ -41,8 +41,8 @@ var (
 				cmd.Root().Version,
 				viper.GetViper(),
 				prometheus.DefaultRegisterer,
-				publisher.SolarEdgeUpdater{SolarEdge: solarEdgeClient},
-				publisher.TadoUpdater{TadoClient: tadoClient, HomeId: homeId},
+				publisher.SolarEdgeUpdater{Client: solarEdgeClient},
+				publisher.TadoUpdater{Client: tadoClient, HomeId: homeId},
 				logger,
 			)
 		},

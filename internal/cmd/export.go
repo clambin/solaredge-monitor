@@ -29,7 +29,7 @@ var (
 				cmd.Root().Version,
 				viper.GetViper(),
 				prometheus.DefaultRegisterer,
-				publisher.SolarEdgeUpdater{SolarEdge: solarEdgeClient},
+				publisher.SolarEdgeUpdater{Client: solarEdgeClient},
 				logger,
 			)
 		},
