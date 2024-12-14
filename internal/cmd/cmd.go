@@ -106,7 +106,7 @@ func newTadoClient(ctx context.Context, r prometheus.Registerer, v *viper.Viper)
 	return tado.NewClientWithResponses(tado.ServerURL, tado.WithHTTPClient(tadoHttpClient))
 }
 
-func getHomeId(ctx context.Context, client *tado.ClientWithResponses, logger *slog.Logger) (tado.HomeId, error) {
+func getHomeId(ctx context.Context, client tools.TadoClient, logger *slog.Logger) (tado.HomeId, error) {
 	homes, err := tools.GetHomes(ctx, client)
 	if err != nil {
 		return 0, err

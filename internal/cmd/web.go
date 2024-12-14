@@ -67,7 +67,7 @@ func runWeb(ctx context.Context, version string, v *viper.Viper, r prometheus.Re
 
 	h := web.New(repo, cache, logger)
 	h = middleware.WithRequestMetrics(serverMetrics)(h)
-	h = middleware.RequestLogger(logger.With("component", "web"), slog.LevelInfo, middleware.DefaultRequestLogFormatter)(h)
+	h = middleware.RequestLogger(logger, slog.LevelInfo, middleware.DefaultRequestLogFormatter)(h)
 
 	var g errgroup.Group
 	g.Go(func() error {

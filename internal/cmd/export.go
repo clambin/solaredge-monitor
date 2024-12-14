@@ -59,7 +59,7 @@ func runExport(
 	exp := exporter.Exporter{
 		SolarEdge: &solarEdgePoller,
 		Metrics:   exportMetrics,
-		Logger:    logger.With("component", "exporter"),
+		Logger:    logger,
 	}
 
 	var group errgroup.Group
