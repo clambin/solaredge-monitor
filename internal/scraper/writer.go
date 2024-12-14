@@ -18,7 +18,6 @@ type Writer struct {
 	power          median
 	solarIntensity median
 	weatherStates  weatherStates
-	HomeId         tado.HomeId
 }
 
 type Publisher[T any] interface {

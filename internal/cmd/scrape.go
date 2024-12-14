@@ -37,7 +37,7 @@ var (
 			if err != nil {
 				return fmt.Errorf("failed to list Tado Homes: %w", err)
 			}
-			return runScrape(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, solaredge2.Client{SolarEdge: solarEdgeClient}, tado2.Client{TadoClient: tadoClient}, homeId, logger)
+			return runScrape(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, solaredge2.Client{SolarEdge: solarEdgeClient}, tado2.Client{TadoClient: tadoClient, HomeId: homeId}, logger)
 		},
 	}
 )
@@ -49,7 +49,6 @@ func runScrape(
 	r prometheus.Registerer,
 	solarEdgeUpdater poller.Updater[solaredge2.Update],
 	tadoUpdater poller.Updater[*tado.Weather],
-	homeId tado.HomeId,
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge scraper", "version", version)
@@ -84,7 +83,6 @@ func runScrape(
 		Store:     repo,
 		SolarEdge: &solarEdgePoller,
 		Tado:      &tadoPoller,
-		HomeId:    homeId,
 		Interval:  v.GetDuration("scrape.interval"),
 		Logger:    logger.With("component", "writer"),
 	}

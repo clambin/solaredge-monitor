@@ -46,7 +46,7 @@ func Test_runScrape(t *testing.T) {
 
 	errCh := make(chan error)
 	go func() {
-		errCh <- runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, 1, discardLogger)
+		errCh <- runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, discardLogger)
 	}()
 
 	dbc, err := repository.NewPostgresDB("localhost", port, "solaredge", "username", "password")
