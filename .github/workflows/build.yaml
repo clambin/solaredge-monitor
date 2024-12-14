@@ -6,6 +6,9 @@ on:
       - master
       - pollers
 
+permissions:
+  packages: write
+
 jobs:
   test:
     uses: clambin/workflows/.github/workflows/test.yaml@main
