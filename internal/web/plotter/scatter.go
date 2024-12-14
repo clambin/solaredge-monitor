@@ -7,7 +7,7 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
-	"gonum.org/v1/plot/vg/vgimg"
+	"io"
 	"math"
 )
 
@@ -20,7 +20,7 @@ type Legend struct {
 	Increase int
 }
 
-func (s ScatterPlotter) Plot(measurements repository.Measurements, folded bool) (*vgimg.PngCanvas, error) {
+func (s ScatterPlotter) Plot(w io.Writer, measurements repository.Measurements, folded bool) (int64, error) {
 	if folded {
 		measurements = measurements.Fold()
 	}
@@ -30,13 +30,13 @@ func (s ScatterPlotter) Plot(measurements repository.Measurements, folded bool) 
 	p := s.preparePlot(folded)
 
 	if err := s.addData(p, data, &zRange); err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	if zRange.Bound() {
 		s.addLegend(p, &zRange)
 	}
-	return s.createImage(p), nil
+	return s.writeImage(w, p)
 }
 
 func (s ScatterPlotter) addData(p *plot.Plot, data plotter.XYZs, r *Range) error {

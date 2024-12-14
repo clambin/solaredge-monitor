@@ -26,9 +26,7 @@ func TestScatterPlotter_Plot(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
-		img, err := p.Plot(buildData(200), fold)
-		assert.NoError(t, err)
-		_, err = img.WriteTo(&buf)
+		_, err := p.Plot(&buf, buildData(200), fold)
 		assert.NoError(t, err)
 		assert.NotZero(t, buf.Len())
 
@@ -67,14 +65,16 @@ func buildData(count int) (measurements repository.Measurements) {
 func BenchmarkScatterPlotter_Plot(b *testing.B) {
 	data := buildData(200)
 	//b.ResetTimer()
+	var buf bytes.Buffer
 	for range b.N {
 		p := plotter.ScatterPlotter{
 			BasePlotter: plotter.NewBasePlotter("foo"),
 			Legend:      plotter.Legend{Increase: 100},
 		}
-		_, err := p.Plot(data, false)
+		_, err := p.Plot(&buf, data, false)
 		if err != nil {
 			b.Fatal(err)
 		}
+		buf.Reset()
 	}
 }

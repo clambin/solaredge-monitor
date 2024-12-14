@@ -22,9 +22,7 @@ func TestContourPlotter_Plot(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
-		img, err := p.Plot(buildData(200), fold)
-		require.NoError(t, err)
-		_, err = img.WriteTo(&buf)
+		_, err := p.Plot(&buf, buildData(200), fold)
 		require.NoError(t, err)
 		require.NotZero(t, buf.Len())
 

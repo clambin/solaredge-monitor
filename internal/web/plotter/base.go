@@ -8,6 +8,7 @@ import (
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
 	"gonum.org/v1/plot/vg/vgimg"
+	"io"
 )
 
 type BasePlotter struct {
@@ -48,11 +49,11 @@ func (bp BasePlotter) preparePlot(folded bool) *plot.Plot {
 // This is the width of the legend, experimentally determined.
 const legendWidth = vg.Centimeter
 
-func (bp BasePlotter) createImage(p *plot.Plot) *vgimg.PngCanvas {
+func (bp BasePlotter) writeImage(w io.Writer, p *plot.Plot) (int64, error) {
 	rawImg := vgimg.New(vg.Points(float64(bp.Size.Width)), vg.Points(float64(bp.Size.Height)))
 	dc := draw.New(rawImg)
 	dc = draw.Crop(dc, 0, -legendWidth, 0, 0) // Make space for the legend.
 	p.Draw(dc)
 
-	return &vgimg.PngCanvas{Canvas: rawImg}
+	return vgimg.PngCanvas{Canvas: rawImg}.WriteTo(w)
 }

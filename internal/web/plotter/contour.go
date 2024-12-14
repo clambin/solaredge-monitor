@@ -4,21 +4,21 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/vg/vgimg"
+	"io"
 )
 
 type ContourPlotter struct {
 	GriddedPlotter
 }
 
-func (c ContourPlotter) Plot(measurements repository.Measurements, folded bool) (*vgimg.PngCanvas, error) {
+func (c ContourPlotter) Plot(w io.Writer, measurements repository.Measurements, folded bool) (int64, error) {
 	p, data, err := c.preparePlot(measurements, folded)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	c.addContour(p, data)
 	c.addLegend(p)
-	return c.createImage(p), nil
+	return c.writeImage(w, p)
 }
 
 func (c ContourPlotter) addContour(p *plot.Plot, data plotter.GridXYZ) {

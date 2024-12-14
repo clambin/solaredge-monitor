@@ -4,10 +4,9 @@ import (
 	"errors"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
-	mocks2 "github.com/clambin/solaredge-monitor/internal/web/mocks"
+	"github.com/clambin/solaredge-monitor/internal/web/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"gonum.org/v1/plot/vg/vgimg"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -195,11 +194,9 @@ func TestPlotterHandler(t *testing.T) {
 		},
 	}
 
-	r := mocks2.NewRepository(t)
-	p := mocks2.NewPlotter(t)
+	r := mocks.NewRepository(t)
+	p := mocks.NewPlotter(t)
 	h := web.PlotterHandler(r, p, slog.Default())
-
-	img := vgimg.PngCanvas{Canvas: vgimg.New(10, 10)}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -207,7 +204,7 @@ func TestPlotterHandler(t *testing.T) {
 			if tt.wantCode != http.StatusBadRequest {
 				r.EXPECT().Get(mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(repository.Measurements{}, tt.dbErr).Once()
 				if tt.dbErr == nil {
-					p.EXPECT().Plot(mock.AnythingOfType("repository.Measurements"), mock.AnythingOfType("bool")).Return(&img, tt.plotErr).Once()
+					p.EXPECT().Plot(mock.Anything, mock.AnythingOfType("repository.Measurements"), mock.AnythingOfType("bool")).Return(0, tt.plotErr).Once()
 				}
 			}
 

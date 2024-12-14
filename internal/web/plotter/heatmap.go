@@ -4,21 +4,21 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/vg/vgimg"
+	"io"
 )
 
 type HeatmapPlotter struct {
 	GriddedPlotter
 }
 
-func (h HeatmapPlotter) Plot(measurements repository.Measurements, folded bool) (*vgimg.PngCanvas, error) {
+func (h HeatmapPlotter) Plot(w io.Writer, measurements repository.Measurements, folded bool) (int64, error) {
 	p, data, err := h.preparePlot(measurements, folded)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	h.addHeatmap(p, data)
 	h.addLegend(p)
-	return h.createImage(p), err
+	return h.writeImage(w, p)
 }
 
 func (h HeatmapPlotter) addHeatmap(p *plot.Plot, data *Sampler) {

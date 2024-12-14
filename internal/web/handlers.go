@@ -1,11 +1,12 @@
 package web
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
-	"gonum.org/v1/plot/vg/vgimg"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -97,7 +98,7 @@ type Repository interface {
 var _ Repository = &repository.PostgresDB{}
 
 type Plotter interface {
-	Plot(repository.Measurements, bool) (*vgimg.PngCanvas, error)
+	Plot(io.Writer, repository.Measurements, bool) (int64, error)
 }
 
 var _ Plotter = &plotter.ScatterPlotter{}
@@ -110,6 +111,18 @@ func PlotterHandler(
 	logger *slog.Logger,
 ) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO: moreland.smoothDiverging.Palette can panic (where there's not enough data?)
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Error("panic during plot generation", "err", err)
+				response := "failed to generate plot"
+				if err2, ok := err.(error); ok {
+					response += ": " + err2.Error()
+				}
+				http.Error(w, response, http.StatusInternalServerError)
+			}
+		}()
+
 		args, err := parseArguments(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -123,7 +136,8 @@ func PlotterHandler(
 			return
 		}
 
-		img, err := plotter.Plot(measurements, args.fold)
+		var buf bytes.Buffer
+		_, err = plotter.Plot(&buf, measurements, args.fold)
 		if err != nil {
 			logger.Error("failed to generate plot", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -132,6 +146,6 @@ func PlotterHandler(
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("ContentType", "image/png")
-		_, _ = img.WriteTo(w)
+		_, _ = io.Copy(w, bytes.NewReader(buf.Bytes()))
 	})
 }
