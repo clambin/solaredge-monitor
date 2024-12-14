@@ -20,6 +20,9 @@ var (
 	exportCmd = cobra.Command{
 		Use:   "export",
 		Short: "collect SolarEdge data and export to Prometheus",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			charmer.SetJSONLogger(cmd, viper.GetBool("debug"))
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)

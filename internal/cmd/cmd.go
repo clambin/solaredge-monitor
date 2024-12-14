@@ -22,16 +22,13 @@ var (
 	RootCmd    = cobra.Command{
 		Use:   "solaredge",
 		Short: "solaredge metrics collector",
-		PreRun: func(cmd *cobra.Command, args []string) {
-			charmer.SetTextLogger(cmd, viper.GetBool("debug"))
-		},
 	}
 
 	commonArguments = charmer.Arguments{
-		"debug":             {Default: false, Help: "Log debug messages"},
-		"prometheus.addr":   {Default: ":9090", Help: "Prometheus metrics endpoint"},
-		"solaredge.token":   {Default: "", Help: "SolarEdge API token"},
-		"polling.interval":  {Default: 5 * time.Minute, Help: "Polling interval"},
+		"debug":            {Default: false, Help: "Log debug messages"},
+		"prometheus.addr":  {Default: ":9090", Help: "Prometheus metrics endpoint"},
+		"solaredge.token":  {Default: "", Help: "SolarEdge API token"},
+		"polling.interval": {Default: 5 * time.Minute, Help: "Polling interval"},
 	}
 
 	dbArguments = charmer.Arguments{
@@ -42,7 +39,7 @@ var (
 		"database.password": {Default: "", Help: "Postgres database password"},
 	}
 	webArguments = charmer.Arguments{
-		"web.addr":          {Default: ":8080", Help: "Web server address"},
+		"web.addr":           {Default: ":8080", Help: "Web server address"},
 		"web.cache.addr":     {Default: "", Help: "Redis server address"},
 		"web.cache.username": {Default: "", Help: "Redis cache username"},
 		"web.cache.password": {Default: "", Help: "Redis cache password"},
@@ -51,9 +48,9 @@ var (
 	}
 
 	scrapeArguments = charmer.Arguments{
-		"scrape.interval":   {Default: 15 * time.Minute, Help: "Scraper interval"},
-		"tado.username":     {Default: "", Help: "Tado API username"},
-		"tado.password":     {Default: "", Help: "Tado API password"},
+		"scrape.interval": {Default: 15 * time.Minute, Help: "Scraper interval"},
+		"tado.username":   {Default: "", Help: "Tado API username"},
+		"tado.password":   {Default: "", Help: "Tado API password"},
 	}
 )
 

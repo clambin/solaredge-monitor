@@ -23,6 +23,9 @@ var (
 	webCmd = cobra.Command{
 		Use:   "web",
 		Short: "runs the web server",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			charmer.SetJSONLogger(cmd, viper.GetBool("debug"))
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)

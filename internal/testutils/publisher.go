@@ -9,11 +9,11 @@ type FakePublisher[T any] struct {
 	Ch chan T
 }
 
-func (f FakePublisher[T]) Subscribe() chan T {
+func (f FakePublisher[T]) Subscribe() <-chan T {
 	return f.Ch
 }
 
-func (f FakePublisher[T]) Unsubscribe(_ chan T) {
+func (f FakePublisher[T]) Unsubscribe(_ <-chan T) {
 }
 
 var (

@@ -14,8 +14,8 @@ type Exporter struct {
 }
 
 type Publisher[T any] interface {
-	Subscribe() chan T
-	Unsubscribe(chan T)
+	Subscribe() <-chan T
+	Unsubscribe(<-chan T)
 }
 
 func (e Exporter) Run(ctx context.Context) error {
