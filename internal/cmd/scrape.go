@@ -6,9 +6,8 @@ import (
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
-	"github.com/clambin/solaredge-monitor/internal/poller"
-	solaredge2 "github.com/clambin/solaredge-monitor/internal/poller/solaredge"
-	tado2 "github.com/clambin/solaredge-monitor/internal/poller/tado"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
+	solaredge2 "github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/tado/v2"
@@ -37,7 +36,15 @@ var (
 			if err != nil {
 				return fmt.Errorf("failed to list Tado Homes: %w", err)
 			}
-			return runScrape(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, solaredge2.Client{SolarEdge: solarEdgeClient}, tado2.Client{TadoClient: tadoClient, HomeId: homeId}, logger)
+			return runScrape(
+				ctx,
+				cmd.Root().Version,
+				viper.GetViper(),
+				prometheus.DefaultRegisterer,
+				publisher.SolarEdgeUpdater{SolarEdge: solarEdgeClient},
+				publisher.TadoUpdater{TadoClient: tadoClient, HomeId: homeId},
+				logger,
+			)
 		},
 	}
 )
@@ -47,8 +54,8 @@ func runScrape(
 	version string,
 	v *viper.Viper,
 	r prometheus.Registerer,
-	solarEdgeUpdater poller.Updater[solaredge2.Update],
-	tadoUpdater poller.Updater[*tado.Weather],
+	solarEdgeUpdater publisher.Updater[solaredge2.Update],
+	tadoUpdater publisher.Updater[*tado.Weather],
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge scraper", "version", version)
@@ -67,16 +74,16 @@ func runScrape(
 
 	logger.Debug("connected to database")
 
-	solarEdgePoller := poller.Poller[solaredge2.Update]{
+	solarEdgePoller := publisher.Publisher[solaredge2.Update]{
 		Updater:  solarEdgeUpdater,
 		Interval: v.GetDuration("polling.interval"),
-		Logger:   logger.With("poller", "solaredge"),
+		Logger:   logger.With("publisher", "solaredge"),
 	}
 
-	tadoPoller := poller.Poller[*tado.Weather]{
+	tadoPoller := publisher.Publisher[*tado.Weather]{
 		Updater:  tadoUpdater,
 		Interval: v.GetDuration("polling.interval"),
-		Logger:   logger.With("poller", "tado"),
+		Logger:   logger.With("publisher", "tado"),
 	}
 
 	writer := scraper.Writer{

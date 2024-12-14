@@ -1,9 +1,9 @@
-package poller
+package publisher
 
 import (
 	"context"
 	"github.com/clambin/go-common/pubsub"
-	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/clambin/tado/v2"
 	"io"
 	"log/slog"
@@ -13,8 +13,8 @@ import (
 
 var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
-func TestPoller_SolarEdge(t *testing.T) {
-	p := Poller[solaredge.Update]{
+func TestPublisher_SolarEdge(t *testing.T) {
+	p := Publisher[solaredge.Update]{
 		Updater:   fakeSolarEdgeClient{},
 		Interval:  100 * time.Millisecond,
 		Logger:    discardLogger,
@@ -39,8 +39,8 @@ func (f fakeSolarEdgeClient) GetUpdate(_ context.Context) (solaredge.Update, err
 	return solaredge.Update{}, nil
 }
 
-func TestPoller_Tado(t *testing.T) {
-	p := Poller[*tado.Weather]{
+func TestPublisher_Tado(t *testing.T) {
+	p := Publisher[*tado.Weather]{
 		Updater:   fakeTadoClient{},
 		Interval:  100 * time.Millisecond,
 		Logger:    discardLogger,

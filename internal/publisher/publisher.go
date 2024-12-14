@@ -1,4 +1,4 @@
-package poller
+package publisher
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type Poller[T any] struct {
+type Publisher[T any] struct {
 	Updater[T]
 	Interval time.Duration
 	Logger   *slog.Logger
@@ -18,9 +18,9 @@ type Updater[T any] interface {
 	GetUpdate(context.Context) (T, error)
 }
 
-func (p *Poller[T]) Run(ctx context.Context) error {
-	p.Logger.Debug("starting poller", "interval", p.Interval)
-	defer p.Logger.Debug("stopped poller")
+func (p *Publisher[T]) Run(ctx context.Context) error {
+	p.Logger.Debug("starting publisher", "interval", p.Interval)
+	defer p.Logger.Debug("stopped publisher")
 
 	for {
 		start := time.Now()

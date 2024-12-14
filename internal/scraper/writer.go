@@ -2,7 +2,7 @@ package scraper
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/tado/v2"
 	"log/slog"

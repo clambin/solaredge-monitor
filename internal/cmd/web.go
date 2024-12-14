@@ -26,12 +26,12 @@ var (
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			return runWeb(ctx, cmd.Root().Version, prometheus.DefaultRegisterer, viper.GetViper(), logger)
+			return runWeb(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, logger)
 		},
 	}
 )
 
-func runWeb(ctx context.Context, version string, r prometheus.Registerer, v *viper.Viper, logger *slog.Logger) error {
+func runWeb(ctx context.Context, version string, v *viper.Viper, r prometheus.Registerer, logger *slog.Logger) error {
 	logger.Info("starting solaredge web server", "version", version)
 	defer logger.Info("stopping solaredge web server")
 

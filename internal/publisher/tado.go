@@ -1,4 +1,4 @@
-package tado
+package publisher
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type Client struct {
+type TadoUpdater struct {
 	TadoClient WeatherGetter
 	HomeId     tado.HomeId
 }
@@ -16,7 +16,7 @@ type WeatherGetter interface {
 	GetWeatherWithResponse(ctx context.Context, homeId tado.HomeId, reqEditors ...tado.RequestEditorFn) (*tado.GetWeatherResponse, error)
 }
 
-func (c Client) GetUpdate(ctx context.Context) (*tado.Weather, error) {
+func (c TadoUpdater) GetUpdate(ctx context.Context) (*tado.Weather, error) {
 	resp, err := c.TadoClient.GetWeatherWithResponse(ctx, c.HomeId)
 	if err != nil {
 		return nil, err

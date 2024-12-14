@@ -30,7 +30,7 @@ func Test_runWeb(t *testing.T) {
 
 	ch := make(chan error)
 	go func() {
-		ch <- runWeb(ctx, "dev", reg, v, discardLogger)
+		ch <- runWeb(ctx, "dev", v, reg, discardLogger)
 	}()
 
 	assert.Eventually(t, func() bool {

@@ -2,7 +2,7 @@ package testutils
 
 import (
 	solaredge2 "github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 )
 
 type FakePublisher[T any] struct {

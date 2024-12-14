@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 	solaredge2 "github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/internal/poller"
-	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/spf13/viper"
@@ -69,7 +69,7 @@ solaredge_year_energy{site="my home"} 100
 	assert.NoError(t, <-errCh)
 }
 
-var _ poller.Updater[solaredge.Update] = fakeUpdater{}
+var _ publisher.Updater[solaredge.Update] = fakeUpdater{}
 
 type fakeUpdater struct {
 	solaredge.Update

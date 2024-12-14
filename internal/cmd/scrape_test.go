@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 	solaredge2 "github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
-	tado2 "github.com/clambin/solaredge-monitor/internal/poller/tado"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/clambin/tado/v2"
@@ -41,7 +41,7 @@ func Test_runScrape(t *testing.T) {
 			CurrentPower:   solaredge2.CurrentPower{Power: 500},
 		},
 	}}}
-	tadoUpdater := tado2.Client{TadoClient: fakeTadoGetter{}}
+	tadoUpdater := publisher.TadoUpdater{TadoClient: fakeTadoGetter{}}
 	r := prometheus.NewPedanticRegistry()
 
 	errCh := make(chan error)
@@ -61,7 +61,7 @@ func Test_runScrape(t *testing.T) {
 	assert.NoError(t, <-errCh)
 }
 
-var _ tado2.WeatherGetter = fakeTadoGetter{}
+var _ publisher.WeatherGetter = fakeTadoGetter{}
 
 type fakeTadoGetter struct{}
 

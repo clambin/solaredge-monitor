@@ -2,7 +2,7 @@ package exporter
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"

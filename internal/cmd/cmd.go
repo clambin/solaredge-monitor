@@ -35,12 +35,11 @@ var (
 		"database.database":  {Default: "solar", Help: "Postgres database name"},
 		"database.username":  {Default: "solar", Help: "Postgres database username"},
 		"database.password":  {Default: "", Help: "Postgres database password"},
-		"polling.token":      {Default: "", Help: "SolarEdge API token"},
+		"polling.token":      {Default: "", Help: "SolarEdge API token"}, // TODO: rename to solaredge.token
 		"polling.interval":   {Default: 5 * time.Minute, Help: "Polling interval"},
 		"scrape.interval":    {Default: 15 * time.Minute, Help: "Scraper interval"},
 		"tado.username":      {Default: "", Help: "Tado API username"},
 		"tado.password":      {Default: "", Help: "Tado API password"},
-		"tado.secret":        {Default: "", Help: "Tado API secret"},
 		"web.addr":           {Default: ":8080", Help: "Web server address"},
 		"web.cache.addr":     {Default: "", Help: "Redis server address"},
 		"web.cache.username": {Default: "", Help: "Redis cache username"},
