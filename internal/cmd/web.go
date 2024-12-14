@@ -26,12 +26,12 @@ var (
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			return runWeb(ctx, cmd.Root().Version, viper.GetViper(), logger)
+			return runWeb(ctx, cmd.Root().Version, prometheus.DefaultRegisterer, viper.GetViper(), logger)
 		},
 	}
 )
 
-func runWeb(ctx context.Context, version string, v *viper.Viper, logger *slog.Logger) error {
+func runWeb(ctx context.Context, version string, r prometheus.Registerer, v *viper.Viper, logger *slog.Logger) error {
 	logger.Info("starting solaredge web server", "version", version)
 	defer logger.Info("stopping solaredge web server")
 
@@ -49,7 +49,7 @@ func runWeb(ctx context.Context, version string, v *viper.Viper, logger *slog.Lo
 	logger.Debug("connected to database")
 
 	serverMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "web"})
-	prometheus.MustRegister(serverMetrics)
+	r.MustRegister(serverMetrics)
 
 	var cache *web.ImageCache
 	if redisAddr := v.GetString("web.cache.addr"); redisAddr != "" {

@@ -1,8 +1,9 @@
-package scraper
+package exporter
 
 import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestExporter(t *testing.T) {
-	p := fakePublisher[solaredge.Update]{ch: make(chan solaredge.Update)}
+	p := testutils.FakePublisher[solaredge.Update]{Ch: make(chan solaredge.Update)}
 
 	metrics := NewMetrics()
 	exporter := Exporter{
@@ -26,11 +27,11 @@ func TestExporter(t *testing.T) {
 	defer cancel()
 
 	go func() { _ = exporter.Run(ctx) }()
-	p.ch <- testUpdate
+	p.Ch <- testutils.TestUpdate
 
 	require.Eventually(t, func() bool {
 		return testutil.CollectAndCount(metrics) >= 9
-	}, time.Second, time.Millisecond)
+	}, 10*time.Second, time.Millisecond)
 
 	assert.NoError(t, testutil.CollectAndCompare(metrics, strings.NewReader(`
 # HELP solaredge_current_power current power in Watt

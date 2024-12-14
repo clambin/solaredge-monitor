@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/solaredge-monitor/internal/exporter"
 	"github.com/clambin/solaredge-monitor/internal/poller"
 	solaredge2 "github.com/clambin/solaredge-monitor/internal/poller/solaredge"
 	tado2 "github.com/clambin/solaredge-monitor/internal/poller/tado"
@@ -97,10 +98,10 @@ func runScrape(
 		Logger:    logger.With("component", "writer"),
 	}
 
-	exportMetrics := scraper.NewMetrics()
+	exportMetrics := exporter.NewMetrics()
 	r.MustRegister(exportMetrics)
 
-	exporter := scraper.Exporter{
+	exp := exporter.Exporter{
 		SolarEdge: &solarEdgePoller,
 		Metrics:   exportMetrics,
 		Logger:    logger.With("component", "exporter"),
@@ -111,7 +112,7 @@ func runScrape(
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	group.Go(func() error { return writer.Run(ctx) })
-	group.Go(func() error { return exporter.Run(ctx) })
+	group.Go(func() error { return exp.Run(ctx) })
 	group.Go(func() error { return solarEdgePoller.Run(ctx) })
 	group.Go(func() error { return tadoPoller.Run(ctx) })
 

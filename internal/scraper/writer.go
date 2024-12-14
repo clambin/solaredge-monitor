@@ -21,6 +21,11 @@ type Writer struct {
 	HomeId         tado.HomeId
 }
 
+type Publisher[T any] interface {
+	Subscribe() chan T
+	Unsubscribe(chan T)
+}
+
 type Store interface {
 	Store(repository.Measurement) error
 }

@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/solaredge-monitor/internal/exporter"
 	"github.com/clambin/solaredge-monitor/internal/poller"
 	solaredge2 "github.com/clambin/solaredge-monitor/internal/poller/solaredge"
-	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -47,7 +47,7 @@ func runExport(
 	logger.Info("starting solaredge exporter", "version", version)
 	defer logger.Info("stopping solaredge exporter")
 
-	exportMetrics := scraper.NewMetrics()
+	exportMetrics := exporter.NewMetrics()
 	r.MustRegister(exportMetrics)
 
 	solarEdgePoller := poller.Poller[solaredge2.Update]{
@@ -56,7 +56,7 @@ func runExport(
 		Logger:   logger.With("poller", "solaredge"),
 	}
 
-	exporter := scraper.Exporter{
+	exp := exporter.Exporter{
 		SolarEdge: &solarEdgePoller,
 		Metrics:   exportMetrics,
 		Logger:    logger.With("component", "exporter"),
@@ -67,7 +67,7 @@ func runExport(
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	group.Go(func() error { return solarEdgePoller.Run(ctx) })
-	group.Go(func() error { return exporter.Run(ctx) })
+	group.Go(func() error { return exp.Run(ctx) })
 
 	return group.Wait()
 }

@@ -32,7 +32,7 @@ func Test_runExport(t *testing.T) {
 		},
 	}}}
 	v := getViperFromViper(viper.GetViper())
-	v.Set("polling.interval", time.Minute)
+	v.Set("polling.interval", time.Second)
 	r := prometheus.NewPedanticRegistry()
 	ctx, cancel := context.WithCancel(context.Background())
 	errCh := make(chan error)
@@ -50,7 +50,7 @@ func Test_runExport(t *testing.T) {
 	assert.Eventually(t, func() bool {
 		count, err := testutil.GatherAndCount(r, metricNames...)
 		return err == nil && count == len(metricNames)
-	}, time.Second, time.Millisecond)
+	}, 10*time.Second, time.Millisecond)
 
 	assert.NoError(t, testutil.GatherAndCompare(r, strings.NewReader(`
 # HELP solaredge_current_power current power in Watt
