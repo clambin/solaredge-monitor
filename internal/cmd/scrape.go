@@ -37,16 +37,7 @@ var (
 			if err != nil {
 				return fmt.Errorf("failed to list Tado Homes: %w", err)
 			}
-			return runScrape(
-				ctx,
-				cmd.Root().Version,
-				viper.GetViper(),
-				prometheus.DefaultRegisterer,
-				solaredge2.Client{SolarEdge: solarEdgeClient},
-				tado2.Client{TadoClient: tadoClient},
-				homeId,
-				logger,
-			)
+			return runScrape(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, solaredge2.Client{SolarEdge: solarEdgeClient}, tado2.Client{TadoClient: tadoClient}, homeId, logger)
 		},
 	}
 )

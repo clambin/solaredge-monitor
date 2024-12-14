@@ -9,14 +9,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"log/slog"
 	"strings"
 	"testing"
 	"time"
 )
-
-var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 func Test_runExport(t *testing.T) {
 	p := fakeUpdater{Update: solaredge.Update{{

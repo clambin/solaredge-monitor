@@ -2,8 +2,12 @@ package cmd
 
 import (
 	"github.com/spf13/viper"
+	"io"
+	"log/slog"
 	"strconv"
 )
+
+var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 func varP[T any](v T) *T {
 	return &v
