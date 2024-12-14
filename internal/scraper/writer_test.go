@@ -1,14 +1,15 @@
-package scraper_test
+package scraper
 
 import (
 	"context"
-	"errors"
-	"github.com/clambin/solaredge-monitor/internal/scraper"
-	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
+	solaredge2 "github.com/clambin/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/poller/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/tado/v2"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
-	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -18,55 +19,126 @@ func VarP[T any](t T) *T {
 }
 
 func TestWriter(t *testing.T) {
-	p := poller{ch: make(chan solaredge.Update)}
 	s := store{}
-	w := scraper.Writer{
-		Store: &s,
-		TadoGetter: tadoClient{weatherInfo: tado.Weather{
-			OutsideTemperature: &tado.TemperatureDataPoint{Celsius: VarP[float32](23.0)},
-			SolarIntensity:     &tado.PercentageDataPoint{Percentage: VarP[float32](75)},
-			WeatherState:       &tado.WeatherStateDataPoint{Value: VarP[tado.WeatherState](tado.SUN)},
-		}},
-		Poller:   &p,
-		Interval: 100 * time.Millisecond,
-		Logger:   slog.Default(),
+	solarUpdate := fakePublisher[solaredge.Update]{ch: make(chan solaredge.Update)}
+	tadoUpdate := fakePublisher[*tado.Weather]{ch: make(chan *tado.Weather)}
+
+	w := Writer{
+		Store:     &s,
+		SolarEdge: solarUpdate,
+		Tado:      tadoUpdate,
+		Interval:  10 * time.Millisecond,
+		Logger:    slog.Default(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	ch := make(chan error)
-	go func() { ch <- w.Run(ctx) }()
+	errCh := make(chan error)
+	go func() { errCh <- w.Run(ctx) }()
 
-	p.ch <- emptyUpdate
-	assert.Never(t, s.hasData.Load, 500*time.Millisecond, time.Millisecond)
+	solarUpdate.ch <- emptyUpdate
+	assert.Never(t, s.hasData.Load, 100*time.Millisecond, time.Millisecond)
 
-	p.ch <- testUpdate
+	solarUpdate.ch <- testUpdate
+	assert.Never(t, s.hasData.Load, 100*time.Millisecond, time.Millisecond)
+
+	tadoUpdate.ch <- &tado.Weather{
+		SolarIntensity: &tado.PercentageDataPoint{Percentage: VarP(float32(75))},
+		WeatherState:   &tado.WeatherStateDataPoint{Value: VarP(tado.SUN)},
+	}
 	assert.Eventually(t, s.hasData.Load, time.Second, time.Millisecond)
-	cancel()
 
-	assert.NoError(t, <-ch)
+	cancel()
+	assert.NoError(t, <-errCh)
 	assert.Equal(t, "SUN", s.measurement.Weather)
 	assert.Equal(t, 75.0, s.measurement.Intensity)
-	assert.Equal(t, 3000.0, s.measurement.Power)
+	assert.Equal(t, 1500.0, s.measurement.Power)
 }
 
-func TestWriter_TadoFailure(t *testing.T) {
-	p := poller{ch: make(chan solaredge.Update)}
-	s := store{}
-	w := scraper.Writer{
-		Store:      &s,
-		TadoGetter: tadoClient{err: errors.New("failure")},
-		Poller:     &p,
-		Interval:   100 * time.Millisecond,
-		Logger:     slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})),
+var _ Store = &store{}
+
+type store struct {
+	hasData     atomic.Bool
+	lock        sync.Mutex
+	measurement repository.Measurement
+}
+
+func (s *store) Store(measurement repository.Measurement) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.measurement = measurement
+	s.hasData.Store(true)
+	return nil
+}
+
+type fakePublisher[T any] struct {
+	ch chan T
+}
+
+func (f fakePublisher[T]) Subscribe() chan T {
+	return f.ch
+}
+
+func (f fakePublisher[T]) Unsubscribe(_ chan T) {
+	return
+}
+
+var (
+	testUpdate = solaredge.Update{
+		solaredge.SiteUpdate{
+			ID:   1,
+			Name: "foo",
+			PowerOverview: solaredge2.PowerOverview{
+				LastYearData:  solaredge2.EnergyOverview{Energy: 1000},
+				LastMonthData: solaredge2.EnergyOverview{Energy: 100},
+				LastDayData:   solaredge2.EnergyOverview{Energy: 10},
+				CurrentPower:  solaredge2.CurrentPower{Power: 3000},
+			},
+			InverterUpdates: []solaredge.InverterUpdate{
+				{
+					Name:         "inv1",
+					SerialNumber: "1234",
+					Telemetry: solaredge2.InverterTelemetry{
+						L1Data: struct {
+							AcCurrent     float64 `json:"acCurrent"`
+							AcFrequency   float64 `json:"acFrequency"`
+							AcVoltage     float64 `json:"acVoltage"`
+							ActivePower   float64 `json:"activePower"`
+							ApparentPower float64 `json:"apparentPower"`
+							CosPhi        float64 `json:"cosPhi"`
+							ReactivePower float64 `json:"reactivePower"`
+						}(struct {
+							AcCurrent     float64
+							AcFrequency   float64
+							AcVoltage     float64
+							ActivePower   float64
+							ApparentPower float64
+							CosPhi        float64
+							ReactivePower float64
+						}{
+							AcCurrent: 10,
+							AcVoltage: 240,
+						}),
+						DcVoltage:        400,
+						PowerLimit:       1,
+						Temperature:      40,
+						TotalActivePower: 9999,
+						TotalEnergy:      8888,
+					},
+				},
+			},
+		},
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	ch := make(chan error)
-	go func() { ch <- w.Run(ctx) }()
-
-	p.ch <- testUpdate
-	assert.Never(t, s.hasData.Load, 200*time.Millisecond, 50*time.Millisecond)
-	cancel()
-
-	assert.NoError(t, <-ch)
-}
+	emptyUpdate = solaredge.Update{
+		solaredge.SiteUpdate{
+			ID:   1,
+			Name: "foo",
+			PowerOverview: solaredge2.PowerOverview{
+				LastYearData:  solaredge2.EnergyOverview{Energy: 1000},
+				LastMonthData: solaredge2.EnergyOverview{Energy: 100},
+				LastDayData:   solaredge2.EnergyOverview{Energy: 10},
+				CurrentPower:  solaredge2.CurrentPower{Power: 0},
+			},
+		},
+	}
+)

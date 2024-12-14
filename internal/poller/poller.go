@@ -1,34 +1,34 @@
-package scraper
+package poller
 
 import (
 	"context"
 	"github.com/clambin/go-common/pubsub"
-	"github.com/clambin/solaredge-monitor/internal/scraper/solaredge"
 	"log/slog"
 	"time"
 )
 
-type Poller struct {
-	Client   SolarEdgeGetter
+type Poller[T any] struct {
+	Updater[T]
 	Interval time.Duration
 	Logger   *slog.Logger
-	pubsub.Publisher[solaredge.Update]
-}
-type SolarEdgeGetter interface {
-	GetUpdate(context.Context) (solaredge.Update, error)
+	pubsub.Publisher[T]
 }
 
-func (p *Poller) Run(ctx context.Context) error {
+type Updater[T any] interface {
+	GetUpdate(context.Context) (T, error)
+}
+
+func (p *Poller[T]) Run(ctx context.Context) error {
 	p.Logger.Debug("starting poller", "interval", p.Interval)
 	defer p.Logger.Debug("stopped poller")
 
 	for {
 		start := time.Now()
-		if update, err := p.Client.GetUpdate(ctx); err == nil {
+		if update, err := p.GetUpdate(ctx); err == nil {
 			p.Publish(update)
 			p.Logger.Debug("poll done", "duration", time.Since(start))
 		} else {
-			p.Logger.Error("failed to get solaredge data", "err", err)
+			p.Logger.Error("failed to get update", "err", err)
 		}
 		select {
 		case <-ctx.Done():

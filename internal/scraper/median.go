@@ -22,7 +22,6 @@ func (m *median) median() float64 {
 	if m.len() == 0 {
 		return 0
 	}
-	defer m.reset()
 	slices.Sort(m.values)
 	n := len(m.values)
 	if n%2 == 1 {

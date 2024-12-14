@@ -22,7 +22,9 @@ func Test_median(t *testing.T) {
 			var m median
 			m.add(tt.values...)
 			assert.Equal(t, tt.want, m.median())
-			assert.Equal(t, 0.0, m.median())
+
+			m.reset()
+			assert.Zero(t, m.median())
 		})
 	}
 }

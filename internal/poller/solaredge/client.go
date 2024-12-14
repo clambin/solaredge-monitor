@@ -3,7 +3,6 @@ package solaredge
 import (
 	"context"
 	"github.com/clambin/solaredge"
-	"net/http"
 	"time"
 )
 
@@ -23,16 +22,7 @@ type InverterUpdate struct {
 }
 
 type Client struct {
-	SolarEdge *solaredge.Client
-}
-
-func New(token string, client *http.Client) *Client {
-	return &Client{
-		SolarEdge: &solaredge.Client{
-			Token:      token,
-			HTTPClient: client,
-		},
-	}
+	SolarEdge solaredge.Client
 }
 
 func (c Client) GetUpdate(ctx context.Context) (Update, error) {

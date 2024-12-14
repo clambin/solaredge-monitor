@@ -13,9 +13,14 @@ import (
 	"time"
 )
 
+const (
+	postgresImage = "postgres:12-alpine"
+	redisImage    = "redis:7.4.1"
+)
+
 func NewTestPostgresDB(ctx context.Context, dbName, userName, password string) (testcontainers.Container, int, error) {
 	c, err := postgres.Run(ctx,
-		"postgres:16-alpine",
+		postgresImage,
 		postgres.WithDatabase(dbName),
 		postgres.WithUsername(userName),
 		postgres.WithPassword(password),
@@ -37,7 +42,7 @@ func NewTestPostgresDB(ctx context.Context, dbName, userName, password string) (
 }
 
 func NewTestRedis(ctx context.Context) (*redis.RedisContainer, int, error) {
-	c, err := redis.Run(ctx, "redis:7.4.1")
+	c, err := redis.Run(ctx, redisImage)
 	if err != nil {
 		return nil, 0, err
 	}

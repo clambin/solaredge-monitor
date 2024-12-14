@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/solaredge-monitor/internal/poller"
+	solaredge2 "github.com/clambin/solaredge-monitor/internal/poller/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,8 +23,15 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			poller := newPoller(prometheus.DefaultRegisterer, "exporter", viper.GetViper(), logger.With("component", "poller"))
-			return runExport(ctx, cmd.Root().Version, viper.GetViper(), prometheus.DefaultRegisterer, poller, logger)
+			solarEdgeClient := newSolarEdgeClient("exporter", prometheus.DefaultRegisterer, viper.GetViper())
+			return runExport(
+				ctx,
+				cmd.Root().Version,
+				viper.GetViper(),
+				prometheus.DefaultRegisterer,
+				solaredge2.Client{SolarEdge: solarEdgeClient},
+				logger,
+			)
 		},
 	}
 )
@@ -32,7 +41,7 @@ func runExport(
 	version string,
 	v *viper.Viper,
 	r prometheus.Registerer,
-	poller Poller,
+	solarEdgeUpdater poller.Updater[solaredge2.Update],
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge exporter", "version", version)
@@ -41,17 +50,23 @@ func runExport(
 	exportMetrics := scraper.NewMetrics()
 	r.MustRegister(exportMetrics)
 
+	solarEdgePoller := poller.Poller[solaredge2.Update]{
+		Updater:  solarEdgeUpdater,
+		Interval: v.GetDuration("polling.interval"),
+		Logger:   logger.With("poller", "solaredge"),
+	}
+
 	exporter := scraper.Exporter{
-		Poller:  poller,
-		Metrics: exportMetrics,
-		Logger:  logger.With("component", "exporter"),
+		SolarEdge: &solarEdgePoller,
+		Metrics:   exportMetrics,
+		Logger:    logger.With("component", "exporter"),
 	}
 
 	var group errgroup.Group
 	group.Go(func() error {
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
-	group.Go(func() error { return poller.Run(ctx) })
+	group.Go(func() error { return solarEdgePoller.Run(ctx) })
 	group.Go(func() error { return exporter.Run(ctx) })
 
 	return group.Wait()
