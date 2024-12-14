@@ -33,13 +33,6 @@ func (c SolarEdgeUpdater) GetUpdate(ctx context.Context) (solaredge2.Update, err
 	return update, nil
 }
 
-/*
-type siteGetter interface {
-	GetPowerOverview(ctx context.Context) (solaredge.PowerOverview, error)
-	GetInverters(ctx context.Context) ([]solaredge.Inverter, error)
-}
-*/
-
 func getSiteUpdate(ctx context.Context, site solaredge.Site) (solaredge.PowerOverview, []solaredge2.InverterUpdate, error) {
 	powerOverview, err := site.GetPowerOverview(ctx)
 	if err != nil {
