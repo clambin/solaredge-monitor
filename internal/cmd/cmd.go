@@ -28,33 +28,41 @@ var (
 	}
 
 	commonArguments = charmer.Arguments{
-		"debug":              {Default: false, Help: "Log debug messages"},
-		"prometheus.addr":    {Default: ":9090", Help: "Prometheus metrics endpoint"},
-		"database.host":      {Default: "postgres", Help: "Postgres database host"},
-		"database.port":      {Default: 5432, Help: "Postgres database port"},
-		"database.database":  {Default: "solar", Help: "Postgres database name"},
-		"database.username":  {Default: "solar", Help: "Postgres database username"},
-		"database.password":  {Default: "", Help: "Postgres database password"},
-		"polling.token":      {Default: "", Help: "SolarEdge API token"}, // TODO: rename to solaredge.token
-		"polling.interval":   {Default: 5 * time.Minute, Help: "Polling interval"},
-		"scrape.interval":    {Default: 15 * time.Minute, Help: "Scraper interval"},
-		"tado.username":      {Default: "", Help: "Tado API username"},
-		"tado.password":      {Default: "", Help: "Tado API password"},
-		"web.addr":           {Default: ":8080", Help: "Web server address"},
+		"debug":             {Default: false, Help: "Log debug messages"},
+		"prometheus.addr":   {Default: ":9090", Help: "Prometheus metrics endpoint"},
+		"solaredge.token":   {Default: "", Help: "SolarEdge API token"},
+		"polling.interval":  {Default: 5 * time.Minute, Help: "Polling interval"},
+	}
+
+	dbArguments = charmer.Arguments{
+		"database.host":     {Default: "postgres", Help: "Postgres database host"},
+		"database.port":     {Default: 5432, Help: "Postgres database port"},
+		"database.database": {Default: "solar", Help: "Postgres database name"},
+		"database.username": {Default: "solar", Help: "Postgres database username"},
+		"database.password": {Default: "", Help: "Postgres database password"},
+	}
+	webArguments = charmer.Arguments{
+		"web.addr":          {Default: ":8080", Help: "Web server address"},
 		"web.cache.addr":     {Default: "", Help: "Redis server address"},
 		"web.cache.username": {Default: "", Help: "Redis cache username"},
 		"web.cache.password": {Default: "", Help: "Redis cache password"},
 		"web.cache.rounding": {Default: 15 * time.Minute, Help: "Cache granularity rounding"},
 		"web.cache.ttl":      {Default: time.Hour, Help: "Time to cache images"},
 	}
+
+	scrapeArguments = charmer.Arguments{
+		"scrape.interval":   {Default: 15 * time.Minute, Help: "Scraper interval"},
+		"tado.username":     {Default: "", Help: "Tado API username"},
+		"tado.password":     {Default: "", Help: "Tado API password"},
+	}
 )
 
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "Configuration file")
-	if err := charmer.SetPersistentFlags(&RootCmd, viper.GetViper(), commonArguments); err != nil {
-		panic(err)
-	}
+	setFlags(&RootCmd, viper.GetViper(), commonArguments)
+	setFlags(&webCmd, viper.GetViper(), dbArguments, webArguments)
+	setFlags(&scrapeCmd, viper.GetViper(), dbArguments, scrapeArguments)
 	RootCmd.AddCommand(&webCmd, &exportCmd, &scrapeCmd)
 }
 
@@ -72,6 +80,14 @@ func initConfig() {
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err != nil {
 		slog.Warn("failed to read config file", "err", err)
+	}
+}
+
+func setFlags(cmd *cobra.Command, v *viper.Viper, arguments ...charmer.Arguments) {
+	for _, args := range arguments {
+		if err := charmer.SetPersistentFlags(cmd, v, args); err != nil {
+			panic(err)
+		}
 	}
 }
 
