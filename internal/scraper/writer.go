@@ -86,6 +86,12 @@ func (w *Writer) store() error {
 		w.Logger.Debug("no power data to store")
 		return nil
 	}
+	defer func() {
+		w.power.reset()
+		w.solarIntensity.reset()
+		w.weatherStates = w.weatherStates[:0]
+	}()
+
 	power := w.power.median()
 	if power == 0 {
 		w.Logger.Debug("not storing measurement with no power")
@@ -98,10 +104,6 @@ func (w *Writer) store() error {
 		Intensity: w.solarIntensity.median(),
 		Weather:   w.weatherStates.mostFrequent(),
 	}
-
-	w.power.reset()
-	w.solarIntensity.reset()
-	w.weatherStates = w.weatherStates[:0]
 
 	w.Logger.Info("storing", "measurement", m)
 	return w.Store.Store(m)
