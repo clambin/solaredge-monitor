@@ -38,13 +38,7 @@ func runWeb(ctx context.Context, version string, v *viper.Viper, r prometheus.Re
 	logger.Info("starting solaredge web server", "version", version)
 	defer logger.Info("stopping solaredge web server")
 
-	repo, err := repository.NewPostgresDB(
-		v.GetString("database.host"),
-		v.GetInt("database.port"),
-		v.GetString("database.database"),
-		v.GetString("database.username"),
-		v.GetString("database.password"),
-	)
+	repo, err := repository.NewPostgresDB(v.GetString("database.url"))
 	if err != nil {
 		return fmt.Errorf("database: %w", err)
 	}

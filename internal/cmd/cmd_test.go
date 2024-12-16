@@ -10,7 +10,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"testing"
 )
 
@@ -105,16 +104,4 @@ func getViperFromViper(v *viper.Viper) *viper.Viper {
 		n.Set(k, v.Get(k))
 	}
 	return n
-}
-
-func initViperDB(v *viper.Viper, port int) {
-	v.Set("database.host", "localhost")
-	v.Set("database.port", port)
-	v.Set("database.database", "solaredge")
-	v.Set("database.username", "username")
-	v.Set("database.password", "password")
-}
-
-func initViperCache(v *viper.Viper, port int) {
-	v.Set("web.cache.addr", "localhost:"+strconv.Itoa(port))
 }

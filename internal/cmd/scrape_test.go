@@ -20,13 +20,13 @@ import (
 
 func Test_runScrape(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	store, port, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
+	store, connString, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, testcontainers.TerminateContainer(store))
 	})
 	v := getViperFromViper(viper.GetViper())
-	initViperDB(v, port)
+	v.Set("database.url", connString)
 	v.Set("polling.interval", time.Second)
 	v.Set("scrape.interval", 2*time.Second)
 	solarEdgeUpdater := fakeUpdater{Update: solaredge.Update{{
@@ -49,7 +49,7 @@ func Test_runScrape(t *testing.T) {
 		errCh <- runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, discardLogger)
 	}()
 
-	dbc, err := repository.NewPostgresDB("localhost", port, "solaredge", "username", "password")
+	dbc, err := repository.NewPostgresDB(connString)
 	require.NoError(t, err)
 	assert.Eventually(t, func() bool {
 		rows, err := dbc.Get(time.Time{}, time.Time{})

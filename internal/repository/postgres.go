@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -23,22 +24,33 @@ type PostgresDB struct {
 
 var _ prometheus.Collector = &PostgresDB{}
 
-func NewPostgresDB(host string, port int, database string, user string, password string) (*PostgresDB, error) {
+func NewPostgresDB(connectionString string) (*PostgresDB, error) {
+	dbName, err := validateConnectionString(connectionString)
+	if err != nil {
+		return nil, fmt.Errorf("invalid db url %q: %w", connectionString, err)
+	}
 	var db *PostgresDB
-
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, database)
-	dbh, err := sqlx.Connect("postgres", psqlInfo)
+	dbh, err := sqlx.Connect("postgres", connectionString)
 	if err == nil {
 		db = &PostgresDB{
-			database:  database,
+			database:  dbName,
 			DBH:       dbh,
-			Collector: collectors.NewDBStatsCollector(dbh.DB, database),
+			Collector: collectors.NewDBStatsCollector(dbh.DB, dbName),
 		}
 		err = db.migrate()
 	}
-
 	return db, err
+}
+
+func validateConnectionString(connectionString string) (string, error) {
+	u, err := url.Parse(connectionString)
+	if err != nil || u.Scheme != "postgres" {
+		return "", fmt.Errorf("invalid db url %q: %w", connectionString, err)
+	}
+	if u.Path == "" || u.Path == "/" {
+		return "", errors.New("no database specified")
+	}
+	return u.Path[1:], nil
 }
 
 func (db *PostgresDB) Store(measurement Measurement) error {
