@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/clambin/go-common/charmer v0.2.0
 	github.com/clambin/go-common/httputils v0.1.1
-	github.com/clambin/go-common/pubsub v0.2.0
+	github.com/clambin/go-common/pubsub v0.2.1
 	github.com/clambin/go-common/testutils v0.3.0
 	github.com/clambin/solaredge v1.0.3
 	github.com/clambin/tado/v2 v2.2.0
