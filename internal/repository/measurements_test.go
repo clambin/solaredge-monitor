@@ -1,11 +1,9 @@
 package repository_test
 
 import (
-	"bytes"
-	"github.com/clambin/go-common/testutils"
 	"github.com/clambin/solaredge-monitor/internal/repository"
+	"github.com/clambin/tado/v2"
 	"github.com/stretchr/testify/assert"
-	"log/slog"
 	"testing"
 	"time"
 )
@@ -30,15 +28,10 @@ func TestMeasurements_Fold(t *testing.T) {
 func TestMeasurement_LogValue(t *testing.T) {
 	m := repository.Measurement{
 		Timestamp: time.Date(2024, time.March, 26, 12, 0, 0, 0, time.UTC),
-		Power:     3000,
-		Intensity: .8,
-		Weather:   "SUNNY",
+		Power:     3000.0,
+		Intensity: 80.5,
+		Weather:   string(tado.SUN),
 	}
 
-	var output bytes.Buffer
-	l := testutils.NewTextLogger(&output, slog.LevelInfo)
-	l.Info("measurement", "measurement", m)
-
-	assert.Equal(t, `level=INFO msg=measurement measurement.power=3000 measurement.intensity=0.8 measurement.weather=SUNNY
-`, output.String())
+	assert.Equal(t, `[power=3000 intensity=80.5 weather=SUN]`, m.LogValue().String())
 }
