@@ -44,8 +44,11 @@ func NewPostgresDB(connectionString string) (*PostgresDB, error) {
 
 func validateConnectionString(connectionString string) (string, error) {
 	u, err := url.Parse(connectionString)
-	if err != nil || u.Scheme != "postgres" {
-		return "", fmt.Errorf("invalid db url %q: %w", connectionString, err)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme != "postgres" {
+		return "", errors.New("not a postgres url")
 	}
 	if u.Path == "" || u.Path == "/" {
 		return "", errors.New("no database specified")
