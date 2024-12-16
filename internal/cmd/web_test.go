@@ -9,13 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 )
 
 func Test_runWeb(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	c, dbPort, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
+	c, connString, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
 	require.NoError(t, err)
 	r, redisPort, err := testutils.NewTestRedis(ctx)
 	require.NoError(t, err)
@@ -25,8 +26,8 @@ func Test_runWeb(t *testing.T) {
 	})
 	reg := prometheus.NewPedanticRegistry()
 	v := getViperFromViper(viper.GetViper())
-	initViperDB(v, dbPort)
-	initViperCache(v, redisPort)
+	v.Set("database.url", connString)
+	v.Set("web.cache.addr", "localhost:"+strconv.Itoa(redisPort))
 
 	ch := make(chan error)
 	go func() {

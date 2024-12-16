@@ -18,7 +18,7 @@ const (
 	redisImage    = "redis:7.4.1"
 )
 
-func NewTestPostgresDB(ctx context.Context, dbName, userName, password string) (testcontainers.Container, int, error) {
+func NewTestPostgresDB(ctx context.Context, dbName, userName, password string) (testcontainers.Container, string, error) {
 	c, err := postgres.Run(ctx,
 		postgresImage,
 		postgres.WithDatabase(dbName),
@@ -31,14 +31,13 @@ func NewTestPostgresDB(ctx context.Context, dbName, userName, password string) (
 		),
 	)
 	if err != nil {
-		return nil, 0, err
+		return nil, "", err
 	}
-	connectionString, err := c.ConnectionString(ctx)
+	connectionString, err := c.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
-		return nil, 0, fmt.Errorf("could not get connection string: %w", err)
+		return nil, "", fmt.Errorf("could not get connection string: %w", err)
 	}
-	port, err := getPortNr(connectionString)
-	return c, port, err
+	return c, connectionString, err
 }
 
 func NewTestRedis(ctx context.Context) (*redis.RedisContainer, int, error) {

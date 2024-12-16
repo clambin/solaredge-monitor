@@ -32,11 +32,7 @@ var (
 	}
 
 	dbArguments = charmer.Arguments{
-		"database.host":     {Default: "postgres", Help: "Postgres database host"},
-		"database.port":     {Default: 5432, Help: "Postgres database port"},
-		"database.database": {Default: "solar", Help: "Postgres database name"},
-		"database.username": {Default: "solar", Help: "Postgres database username"},
-		"database.password": {Default: "", Help: "Postgres database password"},
+		"database.url": {Default: "", Help: "Postgres connection string (postgres://<user>:<password>@<host>:<port>/<dbname>)"},
 	}
 	webArguments = charmer.Arguments{
 		"web.addr":           {Default: ":8080", Help: "Web server address"},
