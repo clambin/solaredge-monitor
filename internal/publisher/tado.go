@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2/tools"
 	"net/http"
 )
 
@@ -22,7 +23,10 @@ func (c TadoUpdater) GetUpdate(ctx context.Context) (*tado.Weather, error) {
 		return nil, err
 	}
 	if resp.StatusCode() != http.StatusOK {
-		return nil, fmt.Errorf("tado: %s", resp.Status())
+		return nil, fmt.Errorf("tado: %w", tools.HandleErrors(resp.HTTPResponse, map[int]any{
+			http.StatusUnauthorized: resp.JSON401,
+			http.StatusForbidden:    resp.JSON403,
+		}))
 	}
 	return resp.JSON200, nil
 }
