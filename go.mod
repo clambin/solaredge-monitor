@@ -7,7 +7,7 @@ require (
 	github.com/clambin/go-common/httputils v0.1.2
 	github.com/clambin/go-common/pubsub v0.2.1
 	github.com/clambin/solaredge v1.0.3
-	github.com/clambin/tado/v2 v2.2.0
+	github.com/clambin/tado/v2 v2.3.0
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
