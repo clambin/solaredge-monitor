@@ -91,7 +91,7 @@ func newSolarEdgeClient(subsystem string, r prometheus.Registerer, v *viper.Vipe
 	r.MustRegister(solarEdgeMetrics)
 
 	return solaredge.Client{
-		Token: v.GetString("polling.token"),
+		Token: v.GetString("solaredge.token"),
 		HTTPClient: &http.Client{
 			Timeout:   5 * time.Second,
 			Transport: roundtripper.New(roundtripper.WithRequestMetrics(solarEdgeMetrics)),
