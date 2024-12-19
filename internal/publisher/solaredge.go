@@ -3,29 +3,35 @@ package publisher
 import (
 	"context"
 	"fmt"
-	"github.com/clambin/solaredge"
-	solaredge2 "github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	solaredge "github.com/clambin/solaredge/v2"
 	"time"
 )
 
 type SolarEdgeUpdater struct {
-	solaredge.Client
+	SolarEdgeClient
 }
 
-func (c SolarEdgeUpdater) GetUpdate(ctx context.Context) (solaredge2.Update, error) {
+type SolarEdgeClient interface {
+	GetSites(ctx context.Context) (solaredge.GetSitesResponse, error)
+	GetPowerOverview(ctx context.Context, id int) (solaredge.GetPowerOverviewResponse, error)
+	GetComponents(ctx context.Context, id int) (solaredge.GetComponentsResponse, error)
+	GetInverterTechnicalData(ctx context.Context, id int, serialNr string, startTime time.Time, endTime time.Time) (solaredge.GetInverterTechnicalDataResponse, error)
+}
+
+func (c SolarEdgeUpdater) GetUpdate(ctx context.Context) (SolarEdgeUpdate, error) {
 	sites, err := c.GetSites(ctx)
 	if err != nil {
-		return solaredge2.Update{}, err
+		return SolarEdgeUpdate{}, err
 	}
 
-	update := make(solaredge2.Update, len(sites))
-	for i, site := range sites {
-		siteUpdate := solaredge2.SiteUpdate{
-			ID:   site.ID,
+	update := make(SolarEdgeUpdate, len(sites.Sites.Site))
+	for i, site := range sites.Sites.Site {
+		siteUpdate := SiteUpdate{
+			ID:   site.Id,
 			Name: site.Name,
 		}
-		if siteUpdate.PowerOverview, siteUpdate.InverterUpdates, err = getSiteUpdate(ctx, site); err != nil {
-			return solaredge2.Update{}, err
+		if siteUpdate.PowerOverview, siteUpdate.InverterUpdates, err = c.getSiteUpdate(ctx, site.Id); err != nil {
+			return SolarEdgeUpdate{}, err
 		}
 		update[i] = siteUpdate
 	}
@@ -33,31 +39,34 @@ func (c SolarEdgeUpdater) GetUpdate(ctx context.Context) (solaredge2.Update, err
 	return update, nil
 }
 
-func getSiteUpdate(ctx context.Context, site solaredge.Site) (solaredge.PowerOverview, []solaredge2.InverterUpdate, error) {
-	powerOverview, err := site.GetPowerOverview(ctx)
+func (c SolarEdgeUpdater) getSiteUpdate(ctx context.Context, id int) (solaredge.PowerOverview, []InverterUpdate, error) {
+	powerOverview, err := c.GetPowerOverview(ctx, id)
 	if err != nil {
 		return solaredge.PowerOverview{}, nil, fmt.Errorf("unable to get power overview: %w", err)
 	}
 
-	inverters, err := site.GetInverters(ctx)
+	inverters, err := c.GetComponents(ctx, id)
 	if err != nil {
 		return solaredge.PowerOverview{}, nil, fmt.Errorf("unable to get inverters: %w", err)
 	}
 
-	end := time.Now()
-	start := end.Add(-10 * time.Minute)
+	endTime := time.Now()
+	startTime := endTime.Add(-10 * time.Minute)
 
-	inverterUpdates := make([]solaredge2.InverterUpdate, len(inverters))
-	for i := range inverters {
-		inverterUpdates[i].Name = inverters[i].Name
-		inverterUpdates[i].SerialNumber = inverters[i].GetSerialNumber()
-		telemetry, err := inverters[i].GetTelemetry(ctx, start, end)
-		if err != nil {
-			return solaredge.PowerOverview{}, nil, fmt.Errorf("unable to get telemetry for inverter %q: %w", inverters[i].Name, err)
+	inverterUpdates := make([]InverterUpdate, len(inverters.Reporters.List))
+	for i, inverter := range inverters.Reporters.List {
+		inverterUpdates[i] = InverterUpdate{
+			Name:         inverter.Name,
+			SerialNumber: inverter.SerialNumber,
 		}
-		if len(telemetry) > 0 {
-			inverterUpdates[i].Telemetry = telemetry[len(telemetry)-1]
+
+		telemetry, err := c.GetInverterTechnicalData(ctx, id, inverter.SerialNumber, startTime, endTime)
+		if err != nil {
+			return solaredge.PowerOverview{}, nil, fmt.Errorf("unable to get telemetry for inverter %q: %w", inverter.Name, err)
+		}
+		if n := len(telemetry.Data.Telemetries); n > 0 {
+			inverterUpdates[i].Telemetry = telemetry.Data.Telemetries[n-1]
 		}
 	}
-	return powerOverview, inverterUpdates, nil
+	return powerOverview.Overview, inverterUpdates, nil
 }

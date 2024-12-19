@@ -1,10 +1,10 @@
-package solaredge
+package publisher
 
 import (
-	"github.com/clambin/solaredge"
+	solaredge "github.com/clambin/solaredge/v2"
 )
 
-type Update []SiteUpdate
+type SolarEdgeUpdate []SiteUpdate
 
 type SiteUpdate struct {
 	ID              int

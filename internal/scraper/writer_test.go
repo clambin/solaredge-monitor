@@ -2,7 +2,7 @@ package scraper
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/clambin/tado/v2"
@@ -23,7 +23,7 @@ func VarP[T any](t T) *T {
 
 func TestWriter(t *testing.T) {
 	s := store{}
-	solarUpdate := testutils.FakePublisher[solaredge.Update]{Ch: make(chan solaredge.Update)}
+	solarUpdate := testutils.FakePublisher[publisher.SolarEdgeUpdate]{Ch: make(chan publisher.SolarEdgeUpdate)}
 	tadoUpdate := testutils.FakePublisher[*tado.Weather]{Ch: make(chan *tado.Weather)}
 
 	w := Writer{
@@ -56,13 +56,13 @@ func TestWriter(t *testing.T) {
 func TestWriter_store(t *testing.T) {
 	tests := []struct {
 		name    string
-		solar   []solaredge.Update
+		solar   []publisher.SolarEdgeUpdate
 		tado    []*tado.Weather
 		hasData assert.BoolAssertionFunc
 	}{
 		{
 			name:  "no power: no update",
-			solar: []solaredge.Update{testutils.EmptyUpdate},
+			solar: []publisher.SolarEdgeUpdate{testutils.EmptyUpdate},
 			tado: []*tado.Weather{{
 				SolarIntensity: &tado.PercentageDataPoint{Percentage: VarP(float32(75))},
 				WeatherState:   &tado.WeatherStateDataPoint{Value: VarP(tado.SUN)},
@@ -71,7 +71,7 @@ func TestWriter_store(t *testing.T) {
 		},
 		{
 			name:  "no solaredge update: no update",
-			solar: []solaredge.Update{},
+			solar: []publisher.SolarEdgeUpdate{},
 			tado: []*tado.Weather{{
 				SolarIntensity: &tado.PercentageDataPoint{Percentage: VarP(float32(75))},
 				WeatherState:   &tado.WeatherStateDataPoint{Value: VarP(tado.SUN)},
@@ -80,13 +80,13 @@ func TestWriter_store(t *testing.T) {
 		},
 		{
 			name:    "no tado update: no update",
-			solar:   []solaredge.Update{testutils.TestUpdate},
+			solar:   []publisher.SolarEdgeUpdate{testutils.TestUpdate},
 			tado:    []*tado.Weather{},
 			hasData: assert.False,
 		},
 		{
 			name:  "power: update",
-			solar: []solaredge.Update{testutils.TestUpdate},
+			solar: []publisher.SolarEdgeUpdate{testutils.TestUpdate},
 			tado: []*tado.Weather{{
 				SolarIntensity: &tado.PercentageDataPoint{Percentage: VarP(float32(75))},
 				WeatherState:   &tado.WeatherStateDataPoint{Value: VarP(tado.SUN)},

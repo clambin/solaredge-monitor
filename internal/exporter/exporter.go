@@ -2,13 +2,13 @@ package exporter
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/prometheus/client_golang/prometheus"
 	"log/slog"
 )
 
 type Exporter struct {
-	SolarEdge Publisher[solaredge.Update]
+	SolarEdge Publisher[publisher.SolarEdgeUpdate]
 	Metrics   *Metrics
 	Logger    *slog.Logger
 }
@@ -35,7 +35,7 @@ func (e Exporter) Run(ctx context.Context) error {
 	}
 }
 
-func (e Exporter) export(update solaredge.Update) {
+func (e Exporter) export(update publisher.SolarEdgeUpdate) {
 	e.Logger.Debug("exporting update")
 	for site := range update {
 		e.Metrics.currentPower.WithLabelValues(update[site].Name).Set(update[site].PowerOverview.CurrentPower.Power)

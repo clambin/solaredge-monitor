@@ -2,7 +2,7 @@ package scraper
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/tado/v2"
 	"log/slog"
@@ -11,7 +11,7 @@ import (
 
 type Writer struct {
 	Store
-	SolarEdge      Publisher[solaredge.Update]
+	SolarEdge      Publisher[publisher.SolarEdgeUpdate]
 	Tado           Publisher[*tado.Weather]
 	Interval       time.Duration
 	Logger         *slog.Logger
@@ -62,7 +62,7 @@ func (w *Writer) Run(ctx context.Context) error {
 	}
 }
 
-func (w *Writer) processSolarEdgeUpdate(update solaredge.Update) {
+func (w *Writer) processSolarEdgeUpdate(update publisher.SolarEdgeUpdate) {
 	if len(update) > 0 {
 		w.power.add(update[0].PowerOverview.CurrentPower.Power)
 		w.Logger.Debug("update received", "site", update[0].Name, "count", w.power.len())
