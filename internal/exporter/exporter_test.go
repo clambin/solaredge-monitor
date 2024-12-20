@@ -2,7 +2,7 @@ package exporter
 
 import (
 	"context"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 )
 
 func TestExporter(t *testing.T) {
-	p := testutils.FakePublisher[solaredge.Update]{Ch: make(chan solaredge.Update)}
+	p := testutils.FakePublisher[publisher.SolarEdgeUpdate]{Ch: make(chan publisher.SolarEdgeUpdate)}
 
 	metrics := NewMetrics()
 	exporter := Exporter{

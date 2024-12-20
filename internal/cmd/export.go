@@ -6,7 +6,6 @@ import (
 	"github.com/clambin/go-common/httputils"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -32,7 +31,7 @@ var (
 				cmd.Root().Version,
 				viper.GetViper(),
 				prometheus.DefaultRegisterer,
-				publisher.SolarEdgeUpdater{Client: solarEdgeClient},
+				publisher.SolarEdgeUpdater{SolarEdgeClient: &solarEdgeClient},
 				logger,
 			)
 		},
@@ -44,7 +43,7 @@ func runExport(
 	version string,
 	v *viper.Viper,
 	r prometheus.Registerer,
-	solarEdgeUpdater publisher.Updater[solaredge.Update],
+	solarEdgeUpdater publisher.Updater[publisher.SolarEdgeUpdate],
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge exporter", "version", version)
@@ -53,7 +52,7 @@ func runExport(
 	exportMetrics := exporter.NewMetrics()
 	r.MustRegister(exportMetrics)
 
-	solarEdgePoller := publisher.Publisher[solaredge.Update]{
+	solarEdgePoller := publisher.Publisher[publisher.SolarEdgeUpdate]{
 		Updater:  solarEdgeUpdater,
 		Interval: v.GetDuration("polling.interval"),
 		Logger:   logger.With("publisher", "solaredge"),

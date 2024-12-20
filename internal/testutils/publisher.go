@@ -1,8 +1,8 @@
 package testutils
 
 import (
-	solaredge2 "github.com/clambin/solaredge"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	"github.com/clambin/solaredge-monitor/internal/publisher"
+	"github.com/clambin/solaredge/v2"
 )
 
 type FakePublisher[T any] struct {
@@ -17,21 +17,21 @@ func (f FakePublisher[T]) Unsubscribe(_ <-chan T) {
 }
 
 var (
-	TestUpdate = solaredge.Update{
-		solaredge.SiteUpdate{
+	TestUpdate = publisher.SolarEdgeUpdate{
+		{
 			ID:   1,
 			Name: "foo",
-			PowerOverview: solaredge2.PowerOverview{
-				LastYearData:  solaredge2.EnergyOverview{Energy: 1000},
-				LastMonthData: solaredge2.EnergyOverview{Energy: 100},
-				LastDayData:   solaredge2.EnergyOverview{Energy: 10},
-				CurrentPower:  solaredge2.CurrentPower{Power: 3000},
+			PowerOverview: solaredge.PowerOverview{
+				LastYearData:  solaredge.EnergyOverview{Energy: 1000},
+				LastMonthData: solaredge.EnergyOverview{Energy: 100},
+				LastDayData:   solaredge.EnergyOverview{Energy: 10},
+				CurrentPower:  solaredge.CurrentPower{Power: 3000},
 			},
-			InverterUpdates: []solaredge.InverterUpdate{
+			InverterUpdates: []publisher.InverterUpdate{
 				{
 					Name:         "inv1",
 					SerialNumber: "1234",
-					Telemetry: solaredge2.InverterTelemetry{
+					Telemetry: solaredge.InverterTelemetry{
 						L1Data: struct {
 							AcCurrent     float64 `json:"acCurrent"`
 							AcFrequency   float64 `json:"acFrequency"`
@@ -63,15 +63,15 @@ var (
 		},
 	}
 
-	EmptyUpdate = solaredge.Update{
-		solaredge.SiteUpdate{
+	EmptyUpdate = publisher.SolarEdgeUpdate{
+		{
 			ID:   1,
 			Name: "foo",
-			PowerOverview: solaredge2.PowerOverview{
-				LastYearData:  solaredge2.EnergyOverview{Energy: 1000},
-				LastMonthData: solaredge2.EnergyOverview{Energy: 100},
-				LastDayData:   solaredge2.EnergyOverview{Energy: 10},
-				CurrentPower:  solaredge2.CurrentPower{Power: 0},
+			PowerOverview: solaredge.PowerOverview{
+				LastYearData:  solaredge.EnergyOverview{Energy: 1000},
+				LastMonthData: solaredge.EnergyOverview{Energy: 100},
+				LastDayData:   solaredge.EnergyOverview{Energy: 10},
+				CurrentPower:  solaredge.CurrentPower{Power: 0},
 			},
 		},
 	}

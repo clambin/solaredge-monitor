@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils/metrics"
 	"github.com/clambin/go-common/httputils/roundtripper"
-	"github.com/clambin/solaredge"
+	"github.com/clambin/solaredge/v2"
 	"github.com/clambin/tado/v2"
 	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
@@ -91,7 +91,7 @@ func newSolarEdgeClient(subsystem string, r prometheus.Registerer, v *viper.Vipe
 	r.MustRegister(solarEdgeMetrics)
 
 	return solaredge.Client{
-		Token: v.GetString("solaredge.token"),
+		SiteKey: v.GetString("solaredge.token"),
 		HTTPClient: &http.Client{
 			Timeout:   5 * time.Second,
 			Transport: roundtripper.New(roundtripper.WithRequestMetrics(solarEdgeMetrics)),

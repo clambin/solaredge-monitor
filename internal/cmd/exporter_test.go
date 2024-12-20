@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"context"
-	solaredge2 "github.com/clambin/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
+	"github.com/clambin/solaredge/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/spf13/viper"
@@ -15,16 +14,16 @@ import (
 )
 
 func Test_runExport(t *testing.T) {
-	p := fakeUpdater{Update: solaredge.Update{{
+	p := fakeUpdater{SolarEdgeUpdate: publisher.SolarEdgeUpdate{{
 		ID:   1,
 		Name: "my home",
-		PowerOverview: solaredge2.PowerOverview{
-			LastUpdateTime: solaredge2.Time(time.Date(2024, time.December, 12, 12, 0, 0, 0, time.UTC)),
-			LifeTimeData:   solaredge2.EnergyOverview{Energy: 1000},
-			LastYearData:   solaredge2.EnergyOverview{Energy: 100},
-			LastMonthData:  solaredge2.EnergyOverview{Energy: 10},
-			LastDayData:    solaredge2.EnergyOverview{Energy: 1},
-			CurrentPower:   solaredge2.CurrentPower{Power: 500},
+		PowerOverview: solaredge.PowerOverview{
+			LastUpdateTime: solaredge.Time(time.Date(2024, time.December, 12, 12, 0, 0, 0, time.UTC)),
+			LifeTimeData:   solaredge.EnergyOverview{Energy: 1000},
+			LastYearData:   solaredge.EnergyOverview{Energy: 100},
+			LastMonthData:  solaredge.EnergyOverview{Energy: 10},
+			LastDayData:    solaredge.EnergyOverview{Energy: 1},
+			CurrentPower:   solaredge.CurrentPower{Power: 500},
 		},
 	}}}
 	v := getViperFromViper(viper.GetViper())
@@ -69,12 +68,12 @@ solaredge_year_energy{site="my home"} 100
 	assert.NoError(t, <-errCh)
 }
 
-var _ publisher.Updater[solaredge.Update] = fakeUpdater{}
+var _ publisher.Updater[publisher.SolarEdgeUpdate] = fakeUpdater{}
 
 type fakeUpdater struct {
-	solaredge.Update
+	publisher.SolarEdgeUpdate
 }
 
-func (f fakeUpdater) GetUpdate(_ context.Context) (solaredge.Update, error) {
-	return f.Update, nil
+func (f fakeUpdater) GetUpdate(_ context.Context) (publisher.SolarEdgeUpdate, error) {
+	return f.SolarEdgeUpdate, nil
 }

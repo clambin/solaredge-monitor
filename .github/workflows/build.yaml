@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - connstring
+      - v2
 
 permissions:
   packages: write

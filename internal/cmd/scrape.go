@@ -7,7 +7,6 @@ import (
 	"github.com/clambin/go-common/httputils"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
-	"github.com/clambin/solaredge-monitor/internal/publisher/solaredge"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/tado/v2"
@@ -44,7 +43,7 @@ var (
 				cmd.Root().Version,
 				viper.GetViper(),
 				prometheus.DefaultRegisterer,
-				publisher.SolarEdgeUpdater{Client: solarEdgeClient},
+				publisher.SolarEdgeUpdater{SolarEdgeClient: &solarEdgeClient},
 				publisher.TadoUpdater{Client: tadoClient, HomeId: homeId},
 				logger,
 			)
@@ -57,7 +56,7 @@ func runScrape(
 	version string,
 	v *viper.Viper,
 	r prometheus.Registerer,
-	solarEdgeUpdater publisher.Updater[solaredge.Update],
+	solarEdgeUpdater publisher.Updater[publisher.SolarEdgeUpdate],
 	tadoUpdater publisher.Updater[*tado.Weather],
 	logger *slog.Logger,
 ) error {
@@ -71,7 +70,7 @@ func runScrape(
 
 	logger.Debug("connected to database")
 
-	solarEdgePoller := publisher.Publisher[solaredge.Update]{
+	solarEdgePoller := publisher.Publisher[publisher.SolarEdgeUpdate]{
 		Updater:  solarEdgeUpdater,
 		Interval: v.GetDuration("polling.interval"),
 		Logger:   logger.With("publisher", "solaredge"),
