@@ -6,7 +6,7 @@ require (
 	github.com/clambin/go-common/charmer v0.2.0
 	github.com/clambin/go-common/httputils v0.1.2
 	github.com/clambin/go-common/pubsub v0.2.1
-	github.com/clambin/solaredge v1.0.3
+	github.com/clambin/solaredge/v2 v2.0.0-rc1
 	github.com/clambin/tado/v2 v2.3.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/jmoiron/sqlx v1.4.0
@@ -108,7 +108,7 @@ require (
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
 	golang.org/x/image v0.21.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

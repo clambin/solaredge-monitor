@@ -3,7 +3,7 @@ package publisher
 import (
 	"context"
 	"fmt"
-	solaredge "github.com/clambin/solaredge/v2"
+	"github.com/clambin/solaredge/v2"
 	"time"
 )
 
@@ -16,6 +16,21 @@ type SolarEdgeClient interface {
 	GetPowerOverview(ctx context.Context, id int) (solaredge.GetPowerOverviewResponse, error)
 	GetComponents(ctx context.Context, id int) (solaredge.GetComponentsResponse, error)
 	GetInverterTechnicalData(ctx context.Context, id int, serialNr string, startTime time.Time, endTime time.Time) (solaredge.GetInverterTechnicalDataResponse, error)
+}
+
+type SolarEdgeUpdate []SiteUpdate
+
+type SiteUpdate struct {
+	ID              int
+	Name            string
+	PowerOverview   solaredge.PowerOverview
+	InverterUpdates []InverterUpdate
+}
+
+type InverterUpdate struct {
+	Name         string
+	SerialNumber string
+	Telemetry    solaredge.InverterTelemetry
 }
 
 func (c SolarEdgeUpdater) GetUpdate(ctx context.Context) (SolarEdgeUpdate, error) {

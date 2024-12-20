@@ -5,7 +5,7 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
-	solaredge2 "github.com/clambin/solaredge/v2"
+	"github.com/clambin/solaredge/v2"
 	"github.com/clambin/tado/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
@@ -31,13 +31,13 @@ func Test_runScrape(t *testing.T) {
 	solarEdgeUpdater := fakeUpdater{SolarEdgeUpdate: publisher.SolarEdgeUpdate{{
 		ID:   1,
 		Name: "my home",
-		PowerOverview: solaredge2.PowerOverview{
-			LastUpdateTime: solaredge2.Time(time.Date(2024, time.December, 12, 12, 0, 0, 0, time.UTC)),
-			LifeTimeData:   solaredge2.EnergyOverview{Energy: 1000},
-			LastYearData:   solaredge2.EnergyOverview{Energy: 100},
-			LastMonthData:  solaredge2.EnergyOverview{Energy: 10},
-			LastDayData:    solaredge2.EnergyOverview{Energy: 1},
-			CurrentPower:   solaredge2.CurrentPower{Power: 500},
+		PowerOverview: solaredge.PowerOverview{
+			LastUpdateTime: solaredge.Time(time.Date(2024, time.December, 12, 12, 0, 0, 0, time.UTC)),
+			LifeTimeData:   solaredge.EnergyOverview{Energy: 1000},
+			LastYearData:   solaredge.EnergyOverview{Energy: 100},
+			LastMonthData:  solaredge.EnergyOverview{Energy: 10},
+			LastDayData:    solaredge.EnergyOverview{Energy: 1},
+			CurrentPower:   solaredge.CurrentPower{Power: 500},
 		},
 	}}}
 	tadoUpdater := publisher.TadoUpdater{Client: fakeTadoGetter{}}

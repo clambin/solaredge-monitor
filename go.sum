@@ -41,10 +41,10 @@ github.com/clambin/go-common/httputils v0.1.2 h1:x06nP/M/SgYqtVtU5998kOmEQppCAmb
 github.com/clambin/go-common/httputils v0.1.2/go.mod h1:Wf2E3PpcGVqDTOp+7eOCAePzvzCSk/1FHC4MQVKsRIo=
 github.com/clambin/go-common/pubsub v0.2.1 h1:+L8/3JCG95NglPu4w59i3afvn1SbeBz27kbyTK3vc0M=
 github.com/clambin/go-common/pubsub v0.2.1/go.mod h1:0/dx43STTMk+soDoTEG5f5QvfKhl60Bq/TpXztyBKvk=
-github.com/clambin/go-common/testutils v0.4.1 h1:cEmGbP/o4sEUWTKZMJ0UjVFgqRzNEiBMEaTHw93r+n4=
-github.com/clambin/go-common/testutils v0.4.1/go.mod h1:bV0j8D4zhNkleCeluFKLBeLQ0L/dqkxbaR/joLn8kzg=
-github.com/clambin/solaredge v1.0.3 h1:rrN7PL35XXlb8Wt/h0b0sO807N1mRz2RWNlMcWTn8TI=
-github.com/clambin/solaredge v1.0.3/go.mod h1:9gphI1A0gzuPo8FtY/r3772rS+fc6NwvqMzK+1o+Foc=
+github.com/clambin/go-common/testutils v0.5.0 h1:kh/0kuBiFL2oeZJ3EgkRyQphqXQmQYqsS3z07a2R2AM=
+github.com/clambin/go-common/testutils v0.5.0/go.mod h1:bV0j8D4zhNkleCeluFKLBeLQ0L/dqkxbaR/joLn8kzg=
+github.com/clambin/solaredge/v2 v2.0.0-rc1 h1:mfhMrr3dx0lhKVuzW8IW1qdkLaNibd78hg5pI8Icbm0=
+github.com/clambin/solaredge/v2 v2.0.0-rc1/go.mod h1:mxpZQkBTlhpM/f+BSHhuDM+IPVoqqlHhYxg0sevEbcQ=
 github.com/clambin/tado/v2 v2.3.1 h1:dRvRPZDf1Ll6OC/BtboPGDhaO4zzkjoO9tqrLBCaoTk=
 github.com/clambin/tado/v2 v2.3.1/go.mod h1:oBre3Dk7lffgFi4yflgiqsIqjuojXCZoKvpzqdrEC+Y=
 github.com/containerd/log v0.1.0 h1:TCJt7ioM2cr/tfR8GPbGf9/VRAX8D2B4PjzCpfX540I=
@@ -286,8 +286,8 @@ golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200226121028-0de0cce0169b/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20201021035429-f5854403a974/go.mod h1:sp8m0HH+o8qH0wwXwYZr8TS3Oi6o0r6Gce1SSxlDquU=
-golang.org/x/net v0.30.0 h1:AcW1SDZMkb8IpzCdQUaIq2sP4sZ4zw+55h6ynffypl4=
-golang.org/x/net v0.30.0/go.mod h1:2wGyMJ5iFasEhkwi13ChkO/t1ECNC4X4eBKkVFyYFlU=
+golang.org/x/net v0.33.0 h1:74SYHlV8BIgHIFC/LrYkOGIwL19eTYXQ5wc6TBuO36I=
+golang.org/x/net v0.33.0/go.mod h1:HXLR5J+9DxmrqMwG9qjGCxZ+zKXxBru04zlTvWlWuN4=
 golang.org/x/oauth2 v0.24.0 h1:KTBBxWqUa0ykRPLtV69rRto9TLXcqYkeswu48x/gvNE=
 golang.org/x/oauth2 v0.24.0/go.mod h1:XYTD2NtWslqkgxebSiOHnXEap4TF09sJSc7H1sXbhtI=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=

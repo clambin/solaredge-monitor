@@ -2,7 +2,7 @@ package publisher
 
 import (
 	"context"
-	solaredge "github.com/clambin/solaredge/v2"
+	"github.com/clambin/solaredge/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"

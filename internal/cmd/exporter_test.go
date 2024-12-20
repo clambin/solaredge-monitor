@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
-	solaredge "github.com/clambin/solaredge/v2"
+	"github.com/clambin/solaredge/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/spf13/viper"

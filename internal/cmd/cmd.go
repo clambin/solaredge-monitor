@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils/metrics"
 	"github.com/clambin/go-common/httputils/roundtripper"
-	solaredge "github.com/clambin/solaredge/v2"
+	"github.com/clambin/solaredge/v2"
 	"github.com/clambin/tado/v2"
 	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
