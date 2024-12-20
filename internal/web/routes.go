@@ -1,10 +1,14 @@
 package web
 
 import (
+	"embed"
 	"github.com/clambin/solaredge-monitor/internal/web/plotter"
 	"log/slog"
 	"net/http"
 )
+
+//go:embed static/*
+var staticFS embed.FS
 
 func addRoutes(m *http.ServeMux, repo Repository, imageCache *ImageCache, logger *slog.Logger) {
 	logger = logger.With("component", "handler")
@@ -20,9 +24,11 @@ func addRoutes(m *http.ServeMux, repo Repository, imageCache *ImageCache, logger
 			makePlotterHandler("heatmap", repo, logger),
 		),
 	)
+	m.Handle("/static/", http.FileServer(http.FS(staticFS)))
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/report", http.StatusSeeOther)
 	})
+
 }
 
 func makePlotterHandler(plotType string, repo Repository, logger *slog.Logger) http.Handler {

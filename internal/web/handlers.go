@@ -15,12 +15,13 @@ import (
 )
 
 //go:embed templates/*
-var html embed.FS
+var templatesFS embed.FS
 
-var tmpl = template.Must(template.ParseFS(html, "templates/plot.html"))
+var tmpl = template.Must(template.ParseFS(templatesFS, "templates/plot.html"))
 
 func PlotHandler(logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO: if either arg is blank, look up value from db & redirect
 		args, err := parseArguments(r)
 		if err != nil {
 			logger.Error("failed to determine start/stop parameters", "err", err)
@@ -62,6 +63,7 @@ func ReportHandler(logger *slog.Logger) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO: if either arg is blank, look up value from db & redirect
 		args, err := parseArguments(r)
 		if err != nil {
 			logger.Error("failed to determine start/stop parameters", "err", err)
@@ -76,7 +78,7 @@ func ReportHandler(logger *slog.Logger) http.Handler {
 		values.Add("start", args.start.Format(time.RFC3339))
 		values.Add("stop", args.stop.Format(time.RFC3339))
 
-		reportTemplate := template.Must(template.ParseFS(html, "templates/report.html"))
+		reportTemplate := template.Must(template.ParseFS(templatesFS, "templates/report.html"))
 		data := Data{
 			PlotTypes: []string{"scatter", "heatmap"},
 			FoldTypes: []string{"false", "true"},

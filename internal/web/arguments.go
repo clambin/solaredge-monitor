@@ -33,12 +33,19 @@ func parseArguments(req *http.Request) (args arguments, err error) {
 	return
 }
 
+var timeFormats = []string{
+	time.RFC3339,
+	"2006-01-02T15:04",
+}
+
 func parseTimestamp(arg string) (timestamp time.Time, err error) {
 	if arg == "" {
 		return
 	}
-	if timestamp, err = time.Parse(time.RFC3339, arg); err != nil {
-		err = fmt.Errorf("invalid format for %q: %w", arg, err)
+	for _, timeFormat := range timeFormats {
+		if timestamp, err = time.Parse(timeFormat, arg); err == nil {
+			return timestamp, nil
+		}
 	}
-	return timestamp, err
+	return timestamp, fmt.Errorf("invalid format for %q: %w", arg, err)
 }
