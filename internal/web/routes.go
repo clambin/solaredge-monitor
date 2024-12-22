@@ -12,7 +12,7 @@ var staticFS embed.FS
 
 func addRoutes(m *http.ServeMux, repo Repository, imageCache *ImageCache, logger *slog.Logger) {
 	logger = logger.With("component", "handler")
-	m.Handle("GET /report", ReportHandler(logger.With("handler", "report")))
+	m.Handle("GET /report", ReportHandler(repo, logger.With("handler", "report")))
 	m.Handle("GET /plot/{plotType}", PlotHandler(logger.With("handler", "plot")))
 	m.Handle("GET /plotter/scatter",
 		imageCache.Middleware("scatter", logger.With("cache", "scatter"))(
@@ -43,10 +43,10 @@ func makePlotter(plotType string) Plotter {
 			BasePlotter: plotter.NewBasePlotter("Power output"),
 			Legend:      plotter.Legend{Increase: 100},
 		}
-	case "contour":
-		p = plotter.ContourPlotter{
-			GriddedPlotter: plotter.NewGriddedPlotter("Power output"),
-		}
+	//case "contour":
+	//	p = plotter.ContourPlotter{
+	//		GriddedPlotter: plotter.NewGriddedPlotter("Power output"),
+	//	}
 	case "heatmap":
 		p = plotter.HeatmapPlotter{
 			GriddedPlotter: plotter.NewGriddedPlotter("Power output"),
