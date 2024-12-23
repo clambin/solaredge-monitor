@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
+	"github.com/clambin/solaredge-monitor/pkg/median"
 	"github.com/clambin/tado/v2"
 	"log/slog"
 	"time"
@@ -15,8 +16,8 @@ type Writer struct {
 	Tado           Publisher[*tado.Weather]
 	Interval       time.Duration
 	Logger         *slog.Logger
-	power          median
-	solarIntensity median
+	power          median.Median
+	solarIntensity median.Median
 	weatherStates  weatherStates
 }
 
@@ -64,8 +65,8 @@ func (w *Writer) Run(ctx context.Context) error {
 
 func (w *Writer) processSolarEdgeUpdate(update publisher.SolarEdgeUpdate) {
 	if len(update) > 0 {
-		w.power.add(update[0].PowerOverview.CurrentPower.Power)
-		w.Logger.Debug("update received", "site", update[0].Name, "count", w.power.len())
+		w.power.Add(update[0].PowerOverview.CurrentPower.Power)
+		w.Logger.Debug("update received", "site", update[0].Name, "count", w.power.Len())
 	}
 	if len(update) > 1 {
 		w.Logger.Debug("only one site is supported. ignoring remaining sites")
@@ -73,26 +74,26 @@ func (w *Writer) processSolarEdgeUpdate(update publisher.SolarEdgeUpdate) {
 }
 
 func (w *Writer) processTadoUpdate(update *tado.Weather) {
-	w.solarIntensity.add(float64(*update.SolarIntensity.Percentage))
+	w.solarIntensity.Add(float64(*update.SolarIntensity.Percentage))
 	w.weatherStates = append(w.weatherStates, string(*update.WeatherState.Value))
 }
 
 func (w *Writer) store() error {
-	if w.solarIntensity.len() == 0 {
+	if w.solarIntensity.Len() == 0 {
 		w.Logger.Debug("no weather info to store")
 		return nil
 	}
-	if w.power.len() == 0 {
+	if w.power.Len() == 0 {
 		w.Logger.Debug("no power data to store")
 		return nil
 	}
 	defer func() {
-		w.power.reset()
-		w.solarIntensity.reset()
+		w.power.Reset()
+		w.solarIntensity.Reset()
 		w.weatherStates = w.weatherStates[:0]
 	}()
 
-	power := w.power.median()
+	power := w.power.Median()
 	if power == 0 {
 		w.Logger.Debug("not storing measurement with no power")
 		return nil
@@ -101,7 +102,7 @@ func (w *Writer) store() error {
 	m := repository.Measurement{
 		Timestamp: time.Now(),
 		Power:     power,
-		Intensity: w.solarIntensity.median(),
+		Intensity: w.solarIntensity.Median(),
 		Weather:   w.weatherStates.mostFrequent(),
 	}
 

@@ -1,25 +1,25 @@
-package scraper
+package median
 
 import "slices"
 
-type median struct {
+type Median struct {
 	values []float64
 }
 
-func (m *median) add(value ...float64) {
+func (m *Median) Add(value ...float64) {
 	m.values = append(m.values, value...)
 }
 
-func (m *median) len() int {
+func (m *Median) Len() int {
 	return len(m.values)
 }
 
-func (m *median) reset() {
+func (m *Median) Reset() {
 	m.values = m.values[:0]
 }
 
-func (m *median) median() float64 {
-	if m.len() == 0 {
+func (m *Median) Median() float64 {
+	if m.Len() == 0 {
 		return 0
 	}
 	slices.Sort(m.values)

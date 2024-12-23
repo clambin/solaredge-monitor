@@ -123,11 +123,11 @@ func TestPlotHandler(t *testing.T) {
 
 func TestPlotterHandler(t *testing.T) {
 	tests := []struct {
-		name     string
-		args     url.Values
-		dbErr    error
-		plotErr  error
-		wantCode int
+		name         string
+		args         url.Values
+		measurements repository.Measurements
+		dbErr        error
+		wantCode     int
 	}{
 		{
 			name: "valid arguments",
@@ -135,6 +135,22 @@ func TestPlotterHandler(t *testing.T) {
 				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
 				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
 				"fold":  []string{"true"},
+			},
+			measurements: repository.Measurements{
+				{time.Date(2024, time.December, 23, 12, 0, 0, 0, time.UTC), 1000, 65, "SUN"},
+				{time.Date(2024, time.December, 23, 12, 15, 0, 0, time.UTC), 1000, 65, "SUN"},
+				{time.Date(2024, time.December, 23, 12, 30, 0, 0, time.UTC), 1000, 65, "SUN"},
+				{time.Date(2024, time.December, 23, 12, 45, 0, 0, time.UTC), 1000, 65, "SUN"},
+				{time.Date(2024, time.December, 23, 13, 0, 0, 0, time.UTC), 1000, 65, "SUN"},
+			},
+			wantCode: http.StatusOK,
+		},
+		{
+			name: "no data",
+			args: url.Values{
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"fold":  []string{"false"},
 			},
 			wantCode: http.StatusOK,
 		},
@@ -160,33 +176,18 @@ func TestPlotterHandler(t *testing.T) {
 			dbErr:    errors.New("db failure"),
 			wantCode: http.StatusInternalServerError,
 		},
-		{
-			name: "plot failure",
-			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
-				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
-				"fold":  []string{"true"},
-			},
-			plotErr:  errors.New("plot failure"),
-			wantCode: http.StatusInternalServerError,
-		},
 	}
 
 	r := mocks.NewRepository(t)
-	p := mocks.NewPlotter(t)
-	h := web.PlotterHandler(r, p, discardLogger)
+	h := web.PlotterHandler(r, "scatter", discardLogger)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			if tt.wantCode != http.StatusBadRequest {
-				r.EXPECT().Get(mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(repository.Measurements{}, tt.dbErr).Once()
-				if tt.dbErr == nil {
-					p.EXPECT().Plot(mock.Anything, mock.AnythingOfType("repository.Measurements"), mock.AnythingOfType("bool")).Return(0, tt.plotErr).Once()
-				}
+				r.EXPECT().Get(mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(tt.measurements, tt.dbErr).Once()
 			}
 
-			target := url.URL{Path: "/plot/heatmap", RawQuery: tt.args.Encode()}
+			target := url.URL{Path: "/plot/scatter", RawQuery: tt.args.Encode()}
 			req, _ := http.NewRequest(http.MethodGet, target.String(), nil)
 			resp := httptest.NewRecorder()
 			h.ServeHTTP(resp, req)

@@ -6,6 +6,5 @@ outpkg: "mocks"
 packages:
   github.com/clambin/solaredge-monitor/internal/web:
     interfaces:
-      Plotter:
       Repository:
       RedisClient:
