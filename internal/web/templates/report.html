@@ -16,5 +16,19 @@
 {{ end }}
 <p></p>
 {{ end }}
+<form id="date-form" action="/report" method="get">
+    <label for="start-date">Start Date:</label>
+    <input type="date" id="start-date" required>
+
+    <label for="end-date">End Date:</label>
+    <input type="date" id="end-date" required>
+
+    <!-- Hidden inputs for submitting full timestamps -->
+    <input type="hidden" id="start-datetime" name="start">
+    <input type="hidden" id="end-datetime" name="end">
+
+    <button type="submit">Refresh Graph</button>
+</form>
+<script src="/static/form.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,49 +23,25 @@ type RedisClient interface {
 	Set(ctx context.Context, key string, value any, expiration time.Duration) *redis.StatusCmd
 }
 
-func (c *ImageCache) Get(ctx context.Context, plotType string, args arguments) (string, []byte, error) {
-	key := c.getKey(plotType, args)
-	content, err := c.Client.Get(ctx, key).Result()
-	return key, []byte(content), err
-}
-
-func (c *ImageCache) getKey(plotType string, args arguments) string {
-	roundedStart := args.start.Truncate(c.Rounding)
-	roundedStop := args.stop.Truncate(c.Rounding)
-	folded := "false"
-	if args.fold {
-		folded = "true"
-	}
-	return strings.Join([]string{
-		c.Namespace,
-		plotType,
-		folded,
-		roundedStart.Format(time.RFC3339),
-		roundedStop.Format(time.RFC3339),
-	}, "|")
-}
-
-func (c *ImageCache) Set(ctx context.Context, key string, content []byte) error {
-	return c.Client.Set(ctx, key, content, c.TTL).Err()
-}
-
 func (c *ImageCache) Middleware(plotType string, logger *slog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		if c == nil {
 			return next
 		}
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			args, err := parseArguments(r)
+			start, end, fold, err := parsePlotterArguments(r)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, "bad request: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-			key, img, err := c.Get(r.Context(), plotType, args)
-			if err == nil && len(img) > 0 {
+
+			key := c.getKey(plotType, start, end, fold)
+			var content []byte
+			if content, err = c.Client.Get(r.Context(), key).Bytes(); err == nil && len(content) > 0 {
 				logger.Debug("serving image from cache", "key", key)
 				w.Header().Set("ContentType", "image/png")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write(img)
+				_, _ = w.Write(content)
 				return
 			}
 
@@ -78,6 +55,20 @@ func (c *ImageCache) Middleware(plotType string, logger *slog.Logger) func(next 
 			}
 		})
 	}
+}
+
+func (c *ImageCache) getKey(plotType string, start, end time.Time, fold bool) string {
+	return strings.Join([]string{
+		c.Namespace,
+		plotType,
+		strconv.FormatBool(fold),
+		start.Truncate(c.Rounding).Format(time.RFC3339),
+		end.Truncate(c.Rounding).Format(time.RFC3339),
+	}, "|")
+}
+
+func (c *ImageCache) Set(ctx context.Context, key string, content []byte) error {
+	return c.Client.Set(ctx, key, content, c.TTL).Err()
 }
 
 var _ http.ResponseWriter = &teeResponseWriter{}

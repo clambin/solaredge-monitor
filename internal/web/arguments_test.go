@@ -2,68 +2,60 @@ package web
 
 import (
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
 	"testing"
 	"time"
 )
 
-func TestParse(t *testing.T) {
-	location := time.FixedZone("UK", int(time.Hour.Seconds()))
-
+func Test_parseTimestamp(t *testing.T) {
+	location := time.FixedZone("", 3600)
 	testCases := []struct {
-		name    string
-		args    url.Values
-		want    arguments
-		wantErr assert.ErrorAssertionFunc
+		name string
+		arg  string
+		want time.Time
+		err  assert.ErrorAssertionFunc
 	}{
 		{
-			name:    "default",
-			args:    url.Values{},
-			wantErr: assert.NoError,
+			name: "2006-01-02T15:04:05Z07:00 (RFC3339)",
+			arg:  `2023-08-25T00:00:00+01:00`,
+			want: time.Date(2023, time.August, 25, 0, 0, 0, 0, location),
+			err:  assert.NoError,
 		},
 		{
-			name:    "start",
-			args:    url.Values{"start": []string{`2023-08-25T00:00:00+00:00`}},
-			want:    arguments{start: time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC)},
-			wantErr: assert.NoError,
+			name: "2006-01-02T15:04:05",
+			arg:  `2023-08-25T01:00:00`,
+			want: time.Date(2023, time.August, 25, 1, 0, 0, 0, time.UTC),
+			err:  assert.NoError,
 		},
 		{
-			name:    "stop",
-			args:    url.Values{"stop": []string{`2023-08-25T00:00:00+01:00`}},
-			want:    arguments{stop: time.Date(2023, time.August, 25, 0, 0, 0, 0, location)},
-			wantErr: assert.NoError,
+			name: "2006-01-02T15:04",
+			arg:  `2023-08-25T01:00`,
+			want: time.Date(2023, time.August, 25, 1, 0, 0, 0, time.UTC),
+			err:  assert.NoError,
 		},
 		{
-			name:    "fold",
-			args:    url.Values{"fold": []string{"true"}},
-			want:    arguments{fold: true},
-			wantErr: assert.NoError,
+			name: "2006-01-02",
+			arg:  `2023-08-25`,
+			want: time.Date(2023, time.August, 25, 0, 0, 0, 0, time.UTC),
+			err:  assert.NoError,
 		},
 		{
-			name:    "invalid date",
-			args:    url.Values{"stop": []string{`invalid-date`}},
-			wantErr: assert.Error,
+			name: "invalid date",
+			arg:  `invalid-date`,
+			err:  assert.Error,
 		},
 		{
-			name:    "swapped dates",
-			args:    url.Values{"start": []string{`2023-08-25T12:00:00+01:00`}, "stop": []string{`2023-08-25T00:00:00+01:00`}},
-			wantErr: assert.Error,
+			name: "blank date",
+			arg:  ``,
+			want: time.Time{},
+			err:  assert.NoError,
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := http.NewRequest(http.MethodGet, "/?"+tt.args.Encode(), nil)
-
-			args, err := parseArguments(req)
-			tt.wantErr(t, err)
-
-			if err == nil {
-				assert.True(t, tt.want.start.Equal(args.start))
-				assert.True(t, tt.want.stop.Equal(args.stop))
-				assert.Equal(t, tt.want.fold, args.fold)
-			}
+			args, err := parseTimestamp(tt.arg)
+			tt.err(t, err)
+			assert.Equal(t, tt.want, args)
 		})
 	}
 }

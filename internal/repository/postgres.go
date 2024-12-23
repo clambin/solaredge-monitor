@@ -16,13 +16,13 @@ import (
 	"time"
 )
 
+var _ prometheus.Collector = &PostgresDB{}
+
 type PostgresDB struct {
 	prometheus.Collector
 	database string
 	DBH      *sqlx.DB
 }
-
-var _ prometheus.Collector = &PostgresDB{}
 
 func NewPostgresDB(connectionString string) (*PostgresDB, error) {
 	dbName, err := validateConnectionString(connectionString)
@@ -89,6 +89,21 @@ func getTimeClause(from, to time.Time) string {
 		return ""
 	}
 	return " AND " + strings.Join(conditions, " AND ")
+}
+
+func (db *PostgresDB) GetDataRange() (time.Time, time.Time, error) {
+	type dataRange struct {
+		Min, Max time.Time
+	}
+	var response []dataRange
+	err := db.DBH.Select(&response, "SELECT MIN(timestamp), MAX(timestamp) FROM solar")
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	if len(response) != 1 {
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid dataRange: %d", len(response))
+	}
+	return response[0].Min, response[0].Max, nil
 }
 
 //go:embed migrations/*

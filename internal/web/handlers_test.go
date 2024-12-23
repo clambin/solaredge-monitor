@@ -7,13 +7,63 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/web/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
 )
+
+func TestReportsHandler(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     url.Values
+		wantCode int
+		want     string
+	}{
+		{
+			name: "valid",
+			args: url.Values{
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
+				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)},
+			},
+			wantCode: http.StatusOK,
+			want:     `<a href="/plot/scatter?fold=false&end=2023-08-24T12%3A00%3A00Z&start=2023-08-24T00%3A00%3A00Z">`,
+		},
+		{
+			name:     "missing timestamps: redirect",
+			wantCode: http.StatusTemporaryRedirect,
+		},
+		{
+			name: "invalid timestamps: bad request",
+			args: url.Values{
+				"start": []string{"foo"},
+				"end":   []string{"bar"},
+			},
+			wantCode: http.StatusBadRequest,
+		},
+	}
+
+	r := mocks.NewRepository(t)
+	r.EXPECT().GetDataRange().Return(time.Time{}, time.Time{}, nil).Maybe()
+	h := web.ReportHandler(r, discardLogger)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := url.URL{Path: "/", RawQuery: tt.args.Encode()}
+
+			req, _ := http.NewRequest(http.MethodGet, target.String(), nil)
+			resp := httptest.NewRecorder()
+
+			h.ServeHTTP(resp, req)
+			assert.Equal(t, tt.wantCode, resp.Code)
+
+			if tt.wantCode == http.StatusOK {
+				assert.Contains(t, resp.Body.String(), tt.want)
+			}
+		})
+	}
+}
 
 func TestPlotHandler(t *testing.T) {
 	tests := []struct {
@@ -24,51 +74,33 @@ func TestPlotHandler(t *testing.T) {
 		want     string
 	}{
 		{
-			name:     "default",
+			name:   "all args present",
+			target: "/plot/heatmap",
+			args: url.Values{
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
+				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)},
+				"fold":  []string{"false"},
+			},
+			wantCode: http.StatusOK,
+			want:     `<img src="/plotter/heatmap?end=2023-08-24T12%3A00%3A00Z&fold=false&start=2023-08-24T00%3A00%3A00Z" alt="heatmap"/>`,
+		},
+		{
+			name:     "arg missing: bad request",
 			target:   "/plot/scatter",
-			wantCode: http.StatusOK,
-			want:     "/plotter/scatter?start=",
+			args:     url.Values{},
+			wantCode: http.StatusBadRequest,
 		},
 		{
-			name:   "start & stop",
-			target: "/plot/heatmap",
-			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-				"stop":  []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-				"fold":  []string{"true"},
-			},
-			wantCode: http.StatusOK,
-			want:     "/plotter/heatmap?fold=true&start=2023-08-24T00%3A00%3A00Z&stop=2023-08-24T12%3A00%3A00Z",
-		},
-		{
-			name:   "start",
+			name:   "invalid timestamps: bad request",
 			target: "/plot/scatter",
 			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-			},
-			wantCode: http.StatusOK,
-			want:     "/plotter/scatter?start=2023-08-24T00%3A00%3A00Z",
-		},
-		{
-			name:   "stop",
-			target: "/plot/heatmap",
-			args: url.Values{
-				"stop": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-			},
-			wantCode: http.StatusOK,
-			want:     "/plotter/heatmap?start=0001-01-01T00%3A00%3A00Z&stop=2023-08-24T00%3A00%3A00Z",
-		},
-		{
-			name:   "error",
-			target: "/plot/scatter",
-			args: url.Values{
-				"stop": []string{"foo"},
+				"end": []string{"foo"},
 			},
 			wantCode: http.StatusBadRequest,
 		},
 	}
 
-	h := web.PlotHandler(slog.Default())
+	h := web.PlotHandler(discardLogger)
 	r := http.NewServeMux()
 	r.Handle("GET /plot/{plotType}", h)
 
@@ -89,71 +121,6 @@ func TestPlotHandler(t *testing.T) {
 	}
 }
 
-func TestReportsHandler(t *testing.T) {
-	tests := []struct {
-		name     string
-		args     url.Values
-		wantCode int
-		want     string
-	}{
-		{
-			name:     "default",
-			wantCode: http.StatusOK,
-			want:     "/plotter/scatter?fold=false&",
-		},
-		{
-			name: "start & stop",
-			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-				"stop":  []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-			},
-			wantCode: http.StatusOK,
-			want:     "/plotter/scatter?fold=false&start=2023-08-24T00%3A00%3A00Z&stop=2023-08-24T12%3A00%3A00Z",
-		},
-		{
-			name: "start",
-			args: url.Values{
-				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-			},
-			wantCode: http.StatusOK,
-			want:     "/plotter/scatter?fold=false&start=2023-08-24T00%3A00%3A00Z",
-		},
-		{
-			name: "stop",
-			args: url.Values{
-				"stop": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)},
-			},
-			wantCode: http.StatusOK,
-			want:     "/plotter/scatter?fold=false&start=0001-01-01T00%3A00%3A00Z&stop=2023-08-24T00%3A00%3A00Z",
-		},
-		{
-			name: "error",
-			args: url.Values{
-				"stop": []string{"foo"},
-			},
-			wantCode: http.StatusBadRequest,
-		},
-	}
-
-	h := web.ReportHandler(slog.Default())
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			target := url.URL{Path: "/", RawQuery: tt.args.Encode()}
-
-			req, _ := http.NewRequest(http.MethodGet, target.String(), nil)
-			resp := httptest.NewRecorder()
-
-			h.ServeHTTP(resp, req)
-			assert.Equal(t, tt.wantCode, resp.Code)
-
-			if tt.wantCode == http.StatusOK {
-				assert.Contains(t, resp.Body.String(), tt.want)
-			}
-		})
-	}
-}
-
 func TestPlotterHandler(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -163,32 +130,43 @@ func TestPlotterHandler(t *testing.T) {
 		wantCode int
 	}{
 		{
-			name:     "default",
-			wantCode: http.StatusOK,
-		},
-		{
-			name: "all args",
+			name: "valid arguments",
 			args: url.Values{
 				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
-				"stop":  []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
 				"fold":  []string{"true"},
 			},
 			wantCode: http.StatusOK,
 		},
 		{
+			name:     "missing arguments",
+			args:     url.Values{},
+			wantCode: http.StatusBadRequest,
+		},
+		{
 			name: "invalid argument",
 			args: url.Values{
-				"stop": []string{"foo"},
+				"end": []string{"foo"},
 			},
 			wantCode: http.StatusBadRequest,
 		},
 		{
-			name:     "db failure",
+			name: "db failure",
+			args: url.Values{
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"fold":  []string{"true"},
+			},
 			dbErr:    errors.New("db failure"),
 			wantCode: http.StatusInternalServerError,
 		},
 		{
-			name:     "plot failure",
+			name: "plot failure",
+			args: url.Values{
+				"start": []string{time.Date(2023, time.August, 24, 0, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"end":   []string{time.Date(2023, time.August, 24, 12, 0, 0, 0, time.Local).Format(time.RFC3339)},
+				"fold":  []string{"true"},
+			},
 			plotErr:  errors.New("plot failure"),
 			wantCode: http.StatusInternalServerError,
 		},
@@ -196,7 +174,7 @@ func TestPlotterHandler(t *testing.T) {
 
 	r := mocks.NewRepository(t)
 	p := mocks.NewPlotter(t)
-	h := web.PlotterHandler(r, p, slog.Default())
+	h := web.PlotterHandler(r, p, discardLogger)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

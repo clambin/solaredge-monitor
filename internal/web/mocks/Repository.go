@@ -81,6 +81,68 @@ func (_c *Repository_Get_Call) RunAndReturn(run func(time.Time, time.Time) (repo
 	return _c
 }
 
+// GetDataRange provides a mock function with no fields
+func (_m *Repository) GetDataRange() (time.Time, time.Time, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDataRange")
+	}
+
+	var r0 time.Time
+	var r1 time.Time
+	var r2 error
+	if rf, ok := ret.Get(0).(func() (time.Time, time.Time, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() time.Time); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(time.Time)
+	}
+
+	if rf, ok := ret.Get(1).(func() time.Time); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Get(1).(time.Time)
+	}
+
+	if rf, ok := ret.Get(2).(func() error); ok {
+		r2 = rf()
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// Repository_GetDataRange_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetDataRange'
+type Repository_GetDataRange_Call struct {
+	*mock.Call
+}
+
+// GetDataRange is a helper method to define mock.On call
+func (_e *Repository_Expecter) GetDataRange() *Repository_GetDataRange_Call {
+	return &Repository_GetDataRange_Call{Call: _e.mock.On("GetDataRange")}
+}
+
+func (_c *Repository_GetDataRange_Call) Run(run func()) *Repository_GetDataRange_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Repository_GetDataRange_Call) Return(_a0 time.Time, _a1 time.Time, _a2 error) *Repository_GetDataRange_Call {
+	_c.Call.Return(_a0, _a1, _a2)
+	return _c
+}
+
+func (_c *Repository_GetDataRange_Call) RunAndReturn(run func() (time.Time, time.Time, error)) *Repository_GetDataRange_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewRepository creates a new instance of Repository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewRepository(t interface {
