@@ -11,7 +11,8 @@ import (
 
 var _ plotter.GridXYZ = Grid{}
 
-// A Grid groups the data of a plotter.XYZer in a plotter.GridXYZ. For each cell, Z returns the *average* value.
+// A Grid groups the data of a plotter.XYZer in a plotter.GridXYZ, so it can be displayed as a Heat Map.
+// For each cell, Z returns the *average* value.
 type Grid struct {
 	rows    int
 	cols    int
@@ -89,7 +90,5 @@ func (g Grid) Y(r int) float64 {
 }
 
 func (g Grid) Z(c, r int) float64 {
-	m := g.zValues[makeIndex(r, c, g.cols)]
-	value := m.Average()
-	return value
+	return g.zValues[makeIndex(r, c, g.cols)].Average()
 }

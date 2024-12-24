@@ -25,6 +25,9 @@ func Test_median(t *testing.T) {
 			var m Sampler
 			m.Add(tt.values...)
 			assert.Equal(t, tt.median, m.Median())
+			assert.Equal(t, tt.average, m.Average())
+			assert.Equal(t, tt.min, m.Min())
+			assert.Equal(t, tt.max, m.Max())
 
 			m.Reset()
 			assert.Zero(t, m.Median())

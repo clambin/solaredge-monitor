@@ -9,26 +9,24 @@ import (
 func Test_makeGrid(t *testing.T) {
 	const rows = 2
 	const columns = 4
-	var xyzs plotter.XYZs
-	value := float64(1)
-	for row := range rows {
-		for col := range columns {
-			xyzs = append(xyzs, plotter.XYZ{X: float64(col), Y: float64(row), Z: value})
-			value++
-		}
+	var values = []float64{0, 1, 2, 3, 4, 5, 6, 7}
+
+	var input plotter.XYZs
+	for i := range values {
+		// add 2 opposite values. the sum is always 7, so the average is always 3.5
+		input = append(input, plotter.XYZ{X: float64(i % columns), Y: float64(i / columns), Z: values[i]})
+		input = append(input, plotter.XYZ{X: float64(i % columns), Y: float64(i / columns), Z: values[len(values)-1-i]})
 	}
 
-	g := makeGrid(xyzs, 2, 4)
+	g := makeGrid(input, 2, 4)
 	c, r := g.Dims()
 	assert.Equal(t, columns, c)
 	assert.Equal(t, rows, r)
 	assert.Equal(t, []float64{0, 1, 2, 3}, g.xValues)
 	assert.Equal(t, []float64{0, 1}, g.yValues)
-	want := float64(1)
 	for row := range rows {
 		for col := range columns {
-			assert.Equal(t, want, g.Z(col, row))
-			want++
+			assert.Equal(t, 3.5, g.Z(col, row))
 		}
 	}
 }
