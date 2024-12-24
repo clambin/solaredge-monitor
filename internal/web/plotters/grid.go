@@ -7,11 +7,11 @@ import (
 
 // we may want to split this in a base grid, which implements all of GridXYZ interface, except for Z().
 // a MedianGrid could then get the sampler for Z, a MaxGrid could get the maximum, etc ...
-// sampler would then become a sampler, which implements multiple function (sampler, averager, min, max, etc.)
+// sampler would then become a sampler, which implements multiple function (median, average, min, max, etc.)
 
 var _ plotter.GridXYZ = Grid{}
 
-// A Grid stored the data of a plotter.XYZer in a plotter.GridXYZ. For each cell, Z returns the *sampler* value.
+// A Grid groups the data of a plotter.XYZer in a plotter.GridXYZ. For each cell, Z returns the *average* value.
 type Grid struct {
 	rows    int
 	cols    int
