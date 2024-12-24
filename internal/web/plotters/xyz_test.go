@@ -56,6 +56,7 @@ func TestPlotXYZHeatmap(t *testing.T) {
 
 	var output bytes.Buffer
 	_, err := XYZHeatmap(&output, buildData(1000), config, 20, 24)
+	require.NoError(t, err)
 
 	gp := filepath.Join("testdata", strings.ToLower(t.Name())+"_golden.png")
 	if *update {
