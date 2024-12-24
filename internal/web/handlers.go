@@ -5,7 +5,8 @@ import (
 	"embed"
 	"fmt"
 	"github.com/clambin/solaredge-monitor/internal/repository"
-	"github.com/clambin/solaredge-monitor/internal/web/plotter"
+	"github.com/clambin/solaredge-monitor/internal/web/plotters"
+	"gonum.org/v1/plot/palette/moreland"
 	"io"
 	"log/slog"
 	"net/http"
@@ -118,17 +119,23 @@ type Repository interface {
 
 var _ Repository = &repository.PostgresDB{}
 
-type Plotter interface {
-	Plot(io.Writer, repository.Measurements, bool) (int64, error)
-}
+var DefaultXYZConfig = plotters.XYZConfig{
+	Title:   "Report",
+	X:       "time",
+	XTicker: "2006-01-02\n15:04:05",
+	Y:       "solar intensity (%)",
+	Width:   800,
+	Height:  600,
+	// heatmap doesn't use the values in Rangers, just the length.
+	// needs to be linear, so that the legend is accurate.
+	Ranges: []float64{0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000},
 
-var _ Plotter = &plotter.ScatterPlotter{}
-var _ Plotter = &plotter.HeatmapPlotter{}
-var _ Plotter = &plotter.ContourPlotter{}
+	ColorMap: moreland.SmoothBlueRed(),
+}
 
 func PlotterHandler(
 	repository Repository,
-	plotter Plotter,
+	plotter string,
 	logger *slog.Logger,
 ) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -149,8 +156,24 @@ func PlotterHandler(
 			return
 		}
 
+		if len(measurements) == 0 {
+			http.Error(w, "no data", http.StatusOK)
+			return
+		}
+
+		config := DefaultXYZConfig
+		if fold {
+			measurements = measurements.Fold()
+			config.XTicker = "15:04:05"
+		}
+
 		var buf bytes.Buffer
-		_, err = plotter.Plot(&buf, measurements, fold)
+		switch plotter {
+		case "scatter":
+			_, err = plotters.XYZScatter(&buf, measurements, config)
+		case "heatmap":
+			_, err = plotters.XYZHeatmap(&buf, measurements, config, 50, 50)
+		}
 		if err != nil {
 			logger.Error("failed to generate plot", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -159,7 +182,7 @@ func PlotterHandler(
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("ContentType", "image/png")
-		_, _ = io.Copy(w, bytes.NewReader(buf.Bytes()))
+		_, _ = io.Copy(w, &buf)
 	})
 }
 

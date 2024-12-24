@@ -111,8 +111,8 @@ func TestWriter_store(t *testing.T) {
 			assert.NoError(t, w.store())
 			tt.hasData(t, s.hasData.Load())
 			if s.hasData.Load() {
-				assert.Zero(t, w.solarIntensity.len())
-				assert.Zero(t, w.power.len())
+				assert.Zero(t, w.solarIntensity.Len())
+				assert.Zero(t, w.power.Len())
 				assert.Empty(t, 0, w.weatherStates)
 			}
 		})
