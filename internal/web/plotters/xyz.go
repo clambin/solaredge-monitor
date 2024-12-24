@@ -1,7 +1,6 @@
 package plotters
 
 import (
-	"fmt"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/palette"
 	"gonum.org/v1/plot/plotter"
@@ -9,6 +8,7 @@ import (
 	"gonum.org/v1/plot/vg/draw"
 	"gonum.org/v1/plot/vg/vgimg"
 	"io"
+	"strconv"
 )
 
 type XYZConfig struct {
@@ -36,7 +36,6 @@ func XYZScatter(w io.Writer, data plotter.XYZer, config XYZConfig) (int64, error
 func XYZHeatmap(w io.Writer, data plotter.XYZer, config XYZConfig, rows, cols int) (int64, error) {
 	p := basePlot(config)
 	p.Add(heatmapPlot(data, config, rows, cols))
-	// TODO: this legend doesn't really work with a heatmap: it maps the colors by the value range, but a heatmap decides its own colors.
 	addLegend(p, config)
 	return writePng(w, p, config.Width, config.Height)
 }
@@ -64,16 +63,10 @@ func scatterPlot(data plotter.XYZer, config XYZConfig) (*plotter.Scatter, error)
 
 	sc.GlyphStyleFunc = func(i int) draw.GlyphStyle {
 		_, _, z := data.XYZ(i)
-		color, err := colors.At(z)
-		if err != nil {
-			if z < config.Ranges[0] {
-				// At returns error if value is below min ...
-				color, _ = colors.At(colors.Min())
-			} else {
-				// ... or if higher than maximum
-				color, _ = colors.At(colors.Max())
-			}
-		}
+		// z has to be between colors.Min & Max, or colors.At(z) returns an error
+		z = max(z, colors.Min())
+		z = min(z, colors.Max())
+		color, _ := colors.At(z)
 		return draw.GlyphStyle{Color: color, Radius: vg.Points(3), Shape: draw.CircleGlyph{}}
 	}
 
@@ -82,7 +75,7 @@ func scatterPlot(data plotter.XYZer, config XYZConfig) (*plotter.Scatter, error)
 
 func heatmapPlot(data plotter.XYZer, config XYZConfig, rows, cols int) *plotter.HeatMap {
 	g := makeGrid(data, rows, cols)
-	p := config.ColorMap.Palette(10 /*len(config.Ranges)*/)
+	p := config.ColorMap.Palette(len(config.Ranges))
 	return plotter.NewHeatMap(g, p)
 }
 
@@ -92,12 +85,12 @@ func addLegend(p *plot.Plot, config XYZConfig) {
 	for i := len(thumbs) - 1; i >= 0; i-- {
 		t := thumbs[i]
 		val := int(config.Ranges[i])
-		p.Legend.Add(fmt.Sprintf("%d", val), t)
+		p.Legend.Add(strconv.Itoa(val), t)
 	}
 	p.Legend.XOffs = legendWidth
 }
 
-const legendWidth = vg.Centimeter
+const legendWidth = 2 * vg.Centimeter
 
 func writePng(w io.Writer, p *plot.Plot, width float64, height float64) (int64, error) {
 	rawImg := vgimg.New(vg.Points(width), vg.Points(height))

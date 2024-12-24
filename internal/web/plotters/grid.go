@@ -1,24 +1,23 @@
 package plotters
 
 import (
-	"github.com/clambin/solaredge-monitor/pkg/median"
 	"gonum.org/v1/plot/plotter"
 	"math"
 )
 
 // we may want to split this in a base grid, which implements all of GridXYZ interface, except for Z().
-// a MedianGrid could then get the median for Z, a MaxGrid could get the maximum, etc ...
-// median would then become a sampler, which implements multiple function (median, averager, min, max, etc.)
+// a MedianGrid could then get the sampler for Z, a MaxGrid could get the maximum, etc ...
+// sampler would then become a sampler, which implements multiple function (sampler, averager, min, max, etc.)
 
 var _ plotter.GridXYZ = Grid{}
 
-// A Grid stored the data of a plotter.XYZer in a plotter.GridXYZ. For each cell, Z returns the *median* value.
+// A Grid stored the data of a plotter.XYZer in a plotter.GridXYZ. For each cell, Z returns the *sampler* value.
 type Grid struct {
 	rows    int
 	cols    int
 	xValues []float64
 	yValues []float64
-	zValues []median.Median
+	zValues []Sampler
 }
 
 func makeGrid(data plotter.XYZer, rows int, cols int) Grid {
@@ -33,7 +32,7 @@ func makeGrid(data plotter.XYZer, rows int, cols int) Grid {
 	g.yValues = makeRange(rows, yMin, yDelta)
 
 	// create z matrix
-	g.zValues = make([]median.Median, rows*cols)
+	g.zValues = make([]Sampler, rows*cols)
 	for i := range data.Len() {
 		x, y, z := data.XYZ(i)
 		col := int((x - xMin) / xDelta)
@@ -91,6 +90,6 @@ func (g Grid) Y(r int) float64 {
 
 func (g Grid) Z(c, r int) float64 {
 	m := g.zValues[makeIndex(r, c, g.cols)]
-	value := m.Median()
+	value := m.Average()
 	return value
 }

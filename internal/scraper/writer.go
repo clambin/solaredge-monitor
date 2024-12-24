@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
-	"github.com/clambin/solaredge-monitor/pkg/median"
+	"github.com/clambin/solaredge-monitor/internal/web/plotters"
 	"github.com/clambin/tado/v2"
 	"log/slog"
 	"time"
@@ -16,8 +16,8 @@ type Writer struct {
 	Tado           Publisher[*tado.Weather]
 	Interval       time.Duration
 	Logger         *slog.Logger
-	power          median.Median
-	solarIntensity median.Median
+	power          plotters.Sampler
+	solarIntensity plotters.Sampler
 	weatherStates  weatherStates
 }
 

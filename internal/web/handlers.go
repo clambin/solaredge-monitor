@@ -120,13 +120,16 @@ type Repository interface {
 var _ Repository = &repository.PostgresDB{}
 
 var DefaultXYZConfig = plotters.XYZConfig{
-	Title:    "Report",
-	X:        "time",
-	XTicker:  "2006-01-02\n15:04:05",
-	Y:        "solar intensity (%)",
-	Width:    800,
-	Height:   600,
-	Ranges:   []float64{0, 1000, 2000, 3000, 4000},
+	Title:   "Report",
+	X:       "time",
+	XTicker: "2006-01-02\n15:04:05",
+	Y:       "solar intensity (%)",
+	Width:   800,
+	Height:  600,
+	// heatmap doesn't use the values in Rangers, just the length.
+	// needs to be linear, so that the legend is accurate.
+	Ranges: []float64{0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000},
+
 	ColorMap: moreland.SmoothBlueRed(),
 }
 
