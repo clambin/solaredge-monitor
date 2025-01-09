@@ -2,6 +2,8 @@ module github.com/clambin/solaredge-monitor
 
 go 1.23
 
+toolchain go1.23.4
+
 require (
 	github.com/clambin/go-common/charmer v0.2.0
 	github.com/clambin/go-common/httputils v0.1.2
