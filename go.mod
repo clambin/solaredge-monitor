@@ -18,9 +18,9 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/testcontainers/testcontainers-go v0.34.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.34.0
-	github.com/testcontainers/testcontainers-go/modules/redis v0.34.0
+	github.com/testcontainers/testcontainers-go v0.35.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.35.0
+	github.com/testcontainers/testcontainers-go/modules/redis v0.35.0
 	golang.org/x/sync v0.10.0
 	gonum.org/v1/plot v0.15.0
 )
