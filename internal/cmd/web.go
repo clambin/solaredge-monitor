@@ -17,6 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -37,6 +38,13 @@ var (
 func runWeb(ctx context.Context, version string, v *viper.Viper, r prometheus.Registerer, logger *slog.Logger) error {
 	logger.Info("starting solaredge web server", "version", version)
 	defer logger.Info("stopping solaredge web server")
+
+	if pprofAddr := v.GetString("pprof"); pprofAddr != "" {
+		go func() {
+			logger.Debug("starting pprof", "addr", pprofAddr)
+			_ = http.ListenAndServe(pprofAddr, nil)
+		}()
+	}
 
 	repo, err := repository.NewPostgresDB(v.GetString("database.url"))
 	if err != nil {
