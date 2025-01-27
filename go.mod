@@ -10,7 +10,7 @@ require (
 	github.com/clambin/go-common/pubsub v0.2.1
 	github.com/clambin/solaredge/v2 v2.0.0
 	github.com/clambin/tado/v2 v2.4.0
-	github.com/golang-migrate/migrate/v4 v4.18.1
+	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.20.5
