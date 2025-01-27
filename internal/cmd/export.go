@@ -13,6 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -25,7 +26,7 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			solarEdgeClient := newSolarEdgeClient("exporter", prometheus.DefaultRegisterer, viper.GetViper())
+			solarEdgeClient := newSolarEdgeClient("exporter", prometheus.DefaultRegisterer, viper.GetString("solaredge.token"))
 			return runExport(
 				ctx,
 				cmd.Root().Version,
@@ -48,6 +49,13 @@ func runExport(
 ) error {
 	logger.Info("starting solaredge exporter", "version", version)
 	defer logger.Info("stopping solaredge exporter")
+
+	if pprofAddr := v.GetString("pprof"); pprofAddr != "" {
+		go func() {
+			logger.Debug("starting pprof", "addr", pprofAddr)
+			_ = http.ListenAndServe(pprofAddr, nil)
+		}()
+	}
 
 	exportMetrics := exporter.NewMetrics()
 	r.MustRegister(exportMetrics)

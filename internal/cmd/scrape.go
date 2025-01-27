@@ -17,6 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -29,8 +30,8 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
-			solarEdgeClient := newSolarEdgeClient("scraper", prometheus.DefaultRegisterer, viper.GetViper())
-			tadoClient, err := newTadoClient(ctx, prometheus.DefaultRegisterer, viper.GetViper())
+			solarEdgeClient := newSolarEdgeClient("scraper", prometheus.DefaultRegisterer, viper.GetString("solaredge.token"))
+			tadoClient, err := newTadoClient(ctx, prometheus.DefaultRegisterer, viper.GetString("tado.username"), viper.GetString("tado.password"))
 			if err != nil {
 				return fmt.Errorf("tado: %w", err)
 			}
@@ -62,6 +63,13 @@ func runScrape(
 ) error {
 	logger.Info("starting solaredge scraper", "version", version)
 	defer logger.Info("stopping solaredge scraper")
+
+	if pprofAddr := v.GetString("pprof"); pprofAddr != "" {
+		go func() {
+			logger.Debug("starting pprof", "addr", pprofAddr)
+			_ = http.ListenAndServe(pprofAddr, nil)
+		}()
+	}
 
 	repo, err := repository.NewPostgresDB(v.GetString("database.url"))
 	if err != nil {

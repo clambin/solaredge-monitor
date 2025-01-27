@@ -26,6 +26,7 @@ var (
 
 	commonArguments = charmer.Arguments{
 		"debug":            {Default: false, Help: "Log debug messages"},
+		"pprof":            {Default: "", Help: "Address for pprof endpoint (blank: don't run pprof"},
 		"prometheus.addr":  {Default: ":9090", Help: "Prometheus metrics endpoint"},
 		"solaredge.token":  {Default: "", Help: "SolarEdge API token"},
 		"polling.interval": {Default: 5 * time.Minute, Help: "Polling interval"},
@@ -86,12 +87,12 @@ func setFlags(cmd *cobra.Command, v *viper.Viper, arguments ...charmer.Arguments
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func newSolarEdgeClient(subsystem string, r prometheus.Registerer, v *viper.Viper) solaredge.Client {
+func newSolarEdgeClient(subsystem string, r prometheus.Registerer, token string) solaredge.Client {
 	solarEdgeMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: subsystem, ConstLabels: prometheus.Labels{"application": "solaredge"}})
 	r.MustRegister(solarEdgeMetrics)
 
 	return solaredge.Client{
-		SiteKey: v.GetString("solaredge.token"),
+		SiteKey: token,
 		HTTPClient: &http.Client{
 			Timeout:   5 * time.Second,
 			Transport: roundtripper.New(roundtripper.WithRequestMetrics(solarEdgeMetrics)),
@@ -99,11 +100,11 @@ func newSolarEdgeClient(subsystem string, r prometheus.Registerer, v *viper.Vipe
 	}
 }
 
-func newTadoClient(ctx context.Context, r prometheus.Registerer, v *viper.Viper) (*tado.ClientWithResponses, error) {
+func newTadoClient(ctx context.Context, r prometheus.Registerer, username, password string) (*tado.ClientWithResponses, error) {
 	tadoMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "tado"}})
 	r.MustRegister(tadoMetrics)
 
-	tadoHttpClient, err := tado.NewOAuth2Client(ctx, v.GetString("tado.username"), v.GetString("tado.password"))
+	tadoHttpClient, err := tado.NewOAuth2Client(ctx, username, password)
 	if err != nil {
 		return nil, err
 	}
