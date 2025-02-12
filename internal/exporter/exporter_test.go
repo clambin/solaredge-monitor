@@ -1,7 +1,6 @@
 package exporter
 
 import (
-	"context"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -23,10 +22,7 @@ func TestExporter(t *testing.T) {
 		Logger:    slog.Default(),
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() { _ = exporter.Run(ctx) }()
+	go func() { _ = exporter.Run(t.Context()) }()
 	p.Ch <- testutils.TestUpdate
 
 	require.Eventually(t, func() bool {

@@ -26,9 +26,9 @@ func TestMeasurements_Fold(t *testing.T) {
 }
 
 // Before:
-// BenchmarkMeasurements_Fold/old-16                    954           1252392 ns/op         1966087 B/op          1 allocs/op
-// Current:
 // BenchmarkMeasurements_Fold/new-16                   1244            951993 ns/op         1966080 B/op          1 allocs/op
+// Current:
+// BenchmarkMeasurements_Fold-16    	    1188	    967904 ns/op	 1966123 B/op	       1 allocs/op
 func BenchmarkMeasurements_Fold(b *testing.B) {
 	const size = 365 * 24 * 4
 	measurements := make(repository.Measurements, size)
@@ -38,14 +38,13 @@ func BenchmarkMeasurements_Fold(b *testing.B) {
 		timestamp = timestamp.Add(15 * time.Minute)
 	}
 	b.ResetTimer()
-	b.Run("old", func(b *testing.B) {
-		for range b.N {
-			measurements2 := measurements.Fold()
-			if len(measurements2) != size {
-				b.Fatalf("expected %d measurements, got %d", size, len(measurements2))
-			}
+	b.ReportAllocs()
+	for b.Loop() {
+		measurements2 := measurements.Fold()
+		if len(measurements2) != size {
+			b.Fatalf("expected %d measurements, got %d", size, len(measurements2))
 		}
-	})
+	}
 }
 
 func TestMeasurement_LogValue(t *testing.T) {

@@ -5,7 +5,6 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +12,7 @@ import (
 	"time"
 )
 
-var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
+var discardLogger = slog.New(slog.DiscardHandler)
 
 func TestNewHTTPServer(t *testing.T) {
 	tests := []struct {

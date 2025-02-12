@@ -7,7 +7,6 @@ import (
 	"github.com/clambin/tado/v2/tools"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"log/slog"
 	"net/http"
 	"testing"
@@ -92,7 +91,7 @@ func (f fakeMeGetter) GetMeWithResponse(_ context.Context, _ ...tado.RequestEdit
 	return f.resp, f.err
 }
 
-var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
+var discardLogger = slog.New(slog.DiscardHandler)
 
 func varP[T any](v T) *T {
 	return &v

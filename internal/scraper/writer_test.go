@@ -7,7 +7,6 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/clambin/tado/v2"
 	"github.com/stretchr/testify/assert"
-	"io"
 	"log/slog"
 	"sync"
 	"sync/atomic"
@@ -15,7 +14,7 @@ import (
 	"time"
 )
 
-var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
+var discardLogger = slog.New(slog.DiscardHandler)
 
 func VarP[T any](t T) *T {
 	return &t
@@ -31,7 +30,7 @@ func TestWriter(t *testing.T) {
 		SolarEdge: solarUpdate,
 		Tado:      tadoUpdate,
 		Interval:  10 * time.Millisecond,
-		Logger:    slog.Default(),
+		Logger:    discardLogger,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
