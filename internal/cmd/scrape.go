@@ -36,7 +36,7 @@ var (
 			ctx := cmd.Context()
 			logger := charmer.GetLogger(cmd)
 			solarEdgeClient := newSolarEdgeClient("scraper", prometheus.DefaultRegisterer, viper.GetString("solaredge.token"))
-			tadoClient, err := newTadoClient(ctx, prometheus.DefaultRegisterer, viper.GetString("tado.username"), viper.GetString("tado.password"))
+			tadoClient, err := newTadoClient(ctx, prometheus.DefaultRegisterer, viper.GetString("tado.token.path"), viper.GetString("tado.token.passphrase"))
 			if err != nil {
 				return fmt.Errorf("tado: %w", err)
 			}
