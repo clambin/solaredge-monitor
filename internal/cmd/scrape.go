@@ -2,18 +2,23 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
+	"github.com/clambin/go-common/httputils/metrics"
+	"github.com/clambin/go-common/httputils/roundtripper"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
 	"github.com/clambin/tado/v2"
+	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"
 	"log/slog"
 	"net/http"
@@ -117,4 +122,37 @@ func runScrape(
 	group.Go(func() error { return tadoPoller.Run(ctx) })
 
 	return group.Wait()
+}
+
+func newTadoClient(ctx context.Context, r prometheus.Registerer, path, passphrase string) (*tado.ClientWithResponses, error) {
+	tadoMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "tado"}})
+	r.MustRegister(tadoMetrics)
+
+	tadoHttpClient, err := tado.NewOAuth2Client(ctx, path, passphrase, func(response *oauth2.DeviceAuthResponse) {
+		fmt.Printf("No token found. Visit %s and log in ...\n", response.VerificationURIComplete)
+	})
+	if err != nil {
+		return nil, err
+	}
+	origTP := tadoHttpClient.Transport
+	tadoHttpClient.Transport = roundtripper.New(
+		roundtripper.WithRequestMetrics(tadoMetrics),
+		roundtripper.WithRoundTripper(origTP),
+	)
+	return tado.NewClientWithResponses(tado.ServerURL, tado.WithHTTPClient(tadoHttpClient))
+}
+
+func getHomeId(ctx context.Context, client tools.TadoClient, logger *slog.Logger) (tado.HomeId, error) {
+	homes, err := tools.GetHomes(ctx, client)
+	if err != nil {
+		return 0, err
+	}
+	if len(homes) == 0 {
+		return 0, errors.New("no Tado Homes found")
+	}
+	homeId := *homes[0].Id
+	if len(homes) > 1 {
+		logger.Warn("Tado account has more than one home registered. Using first one", "homeId", homeId)
+	}
+	return homeId, nil
 }
