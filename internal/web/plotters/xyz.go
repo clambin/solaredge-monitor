@@ -12,14 +12,14 @@ import (
 )
 
 type XYZConfig struct {
+	ColorMap palette.ColorMap
 	Title    string
 	X        string
 	XTicker  string
 	Y        string
+	Ranges   []float64
 	Width    float64
 	Height   float64
-	Ranges   []float64
-	ColorMap palette.ColorMap
 }
 
 func XYZScatter(w io.Writer, data plotter.XYZer, config XYZConfig) (int64, error) {

@@ -14,11 +14,11 @@ type Writer struct {
 	Store
 	SolarEdge      Publisher[publisher.SolarEdgeUpdate]
 	Tado           Publisher[*tado.Weather]
-	Interval       time.Duration
 	Logger         *slog.Logger
 	power          plotters.Sampler
 	solarIntensity plotters.Sampler
 	weatherStates  weatherStates
+	Interval       time.Duration
 }
 
 type Publisher[T any] interface {

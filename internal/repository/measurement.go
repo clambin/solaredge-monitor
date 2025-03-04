@@ -10,9 +10,9 @@ var _ slog.LogValuer = Measurement{}
 
 type Measurement struct {
 	Timestamp time.Time
+	Weather   string
 	Power     float64
 	Intensity float64
-	Weather   string
 }
 
 func (m Measurement) LogValue() slog.Value {

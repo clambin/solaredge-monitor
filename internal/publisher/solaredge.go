@@ -21,10 +21,10 @@ type SolarEdgeClient interface {
 type SolarEdgeUpdate []SiteUpdate
 
 type SiteUpdate struct {
-	ID              int
 	Name            string
-	PowerOverview   solaredge.PowerOverview
 	InverterUpdates []InverterUpdate
+	PowerOverview   solaredge.PowerOverview
+	ID              int
 }
 
 type InverterUpdate struct {

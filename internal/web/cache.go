@@ -12,10 +12,10 @@ import (
 )
 
 type ImageCache struct {
+	Client    RedisClient
 	Namespace string
 	Rounding  time.Duration
 	TTL       time.Duration
-	Client    RedisClient
 }
 
 type RedisClient interface {

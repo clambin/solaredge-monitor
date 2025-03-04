@@ -20,8 +20,8 @@ var _ prometheus.Collector = &PostgresDB{}
 
 type PostgresDB struct {
 	prometheus.Collector
-	database string
 	DBH      *sqlx.DB
+	database string
 }
 
 func NewPostgresDB(connectionString string) (*PostgresDB, error) {

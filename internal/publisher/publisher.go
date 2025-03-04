@@ -9,9 +9,9 @@ import (
 
 type Publisher[T any] struct {
 	Updater[T]
-	Interval time.Duration
-	Logger   *slog.Logger
+	Logger *slog.Logger
 	pubsub.Publisher[T]
+	Interval time.Duration
 }
 
 type Updater[T any] interface {

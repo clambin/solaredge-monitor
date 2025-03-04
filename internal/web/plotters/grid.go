@@ -14,11 +14,11 @@ var _ plotter.GridXYZ = Grid{}
 // A Grid groups the data of a plotter.XYZer in a plotter.GridXYZ, so it can be displayed as a Heat Map.
 // For each cell, Z returns the *average* value.
 type Grid struct {
-	rows    int
-	cols    int
 	xValues []float64
 	yValues []float64
 	zValues []Sampler
+	rows    int
+	cols    int
 }
 
 func makeGrid(data plotter.XYZer, rows int, cols int) Grid {

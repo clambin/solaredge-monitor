@@ -18,9 +18,9 @@ import (
 
 func ReportHandler(repo Repository, logger *slog.Logger) http.Handler {
 	type Data struct {
+		Args      string
 		PlotTypes []string
 		FoldTypes []string
-		Args      string
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
