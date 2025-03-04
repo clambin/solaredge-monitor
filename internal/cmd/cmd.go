@@ -21,10 +21,13 @@ var (
 		"prometheus.addr":  {Default: ":9090", Help: "Prometheus metrics endpoint"},
 		"solaredge.token":  {Default: "", Help: "SolarEdge API token"},
 		"polling.interval": {Default: 5 * time.Minute, Help: "Polling interval"},
-		"redis.addr":       {Default: "", Help: "Redis server address"},
-		"redis.username":   {Default: "", Help: "Redis cache username"},
-		"redis.password":   {Default: "", Help: "Redis cache password"},
-		"redis.db":         {Default: 0, Help: "Redis cache db"},
+	}
+
+	redisArguments = charmer.Arguments{
+		"redis.addr":     {Default: "", Help: "Redis server address"},
+		"redis.username": {Default: "", Help: "Redis cache username"},
+		"redis.password": {Default: "", Help: "Redis cache password"},
+		"redis.db":       {Default: 0, Help: "Redis cache db"},
 	}
 
 	dbArguments = charmer.Arguments{
@@ -47,8 +50,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "Configuration file")
 	setFlags(&RootCmd, viper.GetViper(), commonArguments)
-	setFlags(&webCmd, viper.GetViper(), dbArguments, webArguments)
-	setFlags(&scrapeCmd, viper.GetViper(), dbArguments, scrapeArguments)
+	setFlags(&webCmd, viper.GetViper(), dbArguments, redisArguments, webArguments)
+	setFlags(&scrapeCmd, viper.GetViper(), dbArguments, redisArguments, scrapeArguments)
 	RootCmd.AddCommand(&webCmd, &exportCmd, &scrapeCmd)
 }
 
