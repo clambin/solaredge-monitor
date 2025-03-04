@@ -45,8 +45,8 @@ github.com/clambin/go-common/testutils v0.5.0 h1:kh/0kuBiFL2oeZJ3EgkRyQphqXQmQYq
 github.com/clambin/go-common/testutils v0.5.0/go.mod h1:bV0j8D4zhNkleCeluFKLBeLQ0L/dqkxbaR/joLn8kzg=
 github.com/clambin/solaredge/v2 v2.0.0 h1:9xaXtahkBc3qi0icaFA98/rE8t1XWGKOADAtmRaSqUM=
 github.com/clambin/solaredge/v2 v2.0.0/go.mod h1:mxpZQkBTlhpM/f+BSHhuDM+IPVoqqlHhYxg0sevEbcQ=
-github.com/clambin/tado/v2 v2.6.1 h1:DtGutgWm8wkLeaEYBpjcCyjKWORZGIdvOppnBiP3plg=
-github.com/clambin/tado/v2 v2.6.1/go.mod h1:853dKGietJsvtuEMb1+ZsAmNw41mkQ1LdlUrGXmRc1U=
+github.com/clambin/tado/v2 v2.6.2 h1:IgZlx7QhUZE7hqTN3ptkGCwubDuH4YMxdlS4WQtQxZ8=
+github.com/clambin/tado/v2 v2.6.2/go.mod h1:853dKGietJsvtuEMb1+ZsAmNw41mkQ1LdlUrGXmRc1U=
 github.com/containerd/log v0.1.0 h1:TCJt7ioM2cr/tfR8GPbGf9/VRAX8D2B4PjzCpfX540I=
 github.com/containerd/log v0.1.0/go.mod h1:VRRf09a7mHDIRezVKTRCrOq78v577GXq3bSa3EhrzVo=
 github.com/containerd/platforms v0.2.1 h1:zvwtM3rz2YHPQsF2CHYM8+KtB5dvhISiXh5ZpSBQv6A=
