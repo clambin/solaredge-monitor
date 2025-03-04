@@ -40,9 +40,7 @@ var (
 	}
 
 	scrapeArguments = charmer.Arguments{
-		"scrape.interval":       {Default: 15 * time.Minute, Help: "Scraper interval"},
-		"tado.token.path":       {Default: "/data/tado-token.enc", Help: "Location to store the authentication token"},
-		"tado.token.passphrase": {Default: "", Help: "passphrase to encrypt the stored authentication token"},
+		"scrape.interval": {Default: 15 * time.Minute, Help: "Scraper interval"},
 	}
 )
 
