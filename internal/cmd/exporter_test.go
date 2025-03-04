@@ -29,10 +29,9 @@ func Test_runExport(t *testing.T) {
 	v := getViperFromViper(viper.GetViper())
 	v.Set("polling.interval", time.Second)
 	r := prometheus.NewPedanticRegistry()
-	ctx, cancel := context.WithCancel(context.Background())
-	errCh := make(chan error)
+	ctx := t.Context()
 	go func() {
-		errCh <- runExport(ctx, "dev", v, r, &p, discardLogger)
+		assert.NoError(t, runExport(ctx, "dev", v, r, &p, discardLogger))
 	}()
 
 	var metricNames = []string{
@@ -63,9 +62,6 @@ solaredge_month_energy{site="my home"} 10
 # TYPE solaredge_year_energy gauge
 solaredge_year_energy{site="my home"} 100
 `), metricNames...))
-
-	cancel()
-	assert.NoError(t, <-errCh)
 }
 
 var _ publisher.Updater[publisher.SolarEdgeUpdate] = fakeUpdater{}

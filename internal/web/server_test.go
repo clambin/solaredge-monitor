@@ -76,20 +76,6 @@ func makeMeasurements(count int) repository.Measurements {
 	return measurements
 }
 
-func BenchmarkHTTPServer(b *testing.B) {
-	r := repo{measurements: makeMeasurements(100)}
-	s := web.New(r, nil, slog.Default())
-
-	for range b.N {
-		req, _ := http.NewRequest(http.MethodGet, "/plot/heatmap", nil)
-		resp := httptest.NewRecorder()
-		s.ServeHTTP(resp, req)
-		if resp.Code != http.StatusOK {
-			b.Fail()
-		}
-	}
-}
-
 var _ web.Repository = repo{}
 
 type repo struct {

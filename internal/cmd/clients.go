@@ -47,7 +47,7 @@ func newTadoClient(ctx context.Context, r prometheus.Registerer, redisClient *re
 	tadoMetrics := metrics.NewRequestMetrics(metrics.Options{Namespace: "solaredge", Subsystem: "scraper", ConstLabels: prometheus.Labels{"application": "tado"}})
 	r.MustRegister(tadoMetrics)
 
-	tadoHttpClient, err := NewOAuth2Client(ctx, redisClient, func(response *oauth2.DeviceAuthResponse) {
+	tadoHttpClient, err := newOAuth2Client(ctx, redisClient, func(response *oauth2.DeviceAuthResponse) {
 		fmt.Printf("No token found. Visit %s and log in ...\n", response.VerificationURIComplete)
 	})
 	if err != nil {
@@ -61,7 +61,7 @@ func newTadoClient(ctx context.Context, r prometheus.Registerer, redisClient *re
 	return tado.NewClientWithResponses(tado.ServerURL, tado.WithHTTPClient(tadoHttpClient))
 }
 
-func NewOAuth2Client(ctx context.Context, redisClient *redis.Client, deviceAuthCallback func(response *oauth2.DeviceAuthResponse)) (client *http.Client, err error) {
+func newOAuth2Client(ctx context.Context, redisClient *redis.Client, deviceAuthCallback func(response *oauth2.DeviceAuthResponse)) (client *http.Client, err error) {
 	// store to save our token
 	store := oauth2redis.TokenStore{
 		Key:         "github.com/clambin/solaredge-monitor/oauth2redis",

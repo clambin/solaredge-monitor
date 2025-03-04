@@ -21,7 +21,7 @@ func (f fakeMeGetter) GetMeWithResponse(_ context.Context, _ ...tado.RequestEdit
 
 var discardLogger = slog.New(slog.DiscardHandler)
 
-func varP[T any](v T) *T {
+func pointer[T any](v T) *T {
 	return &v
 }
 

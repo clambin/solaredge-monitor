@@ -26,7 +26,7 @@ func Test_runWeb(t *testing.T) {
 	reg := prometheus.NewPedanticRegistry()
 	v := getViperFromViper(viper.GetViper())
 	v.Set("database.url", connString)
-	v.Set("web.cache.addr", "localhost:"+strconv.Itoa(redisPort))
+	v.Set("redis.addr", "localhost:"+strconv.Itoa(redisPort))
 
 	go func() {
 		assert.NoError(t, runWeb(ctx, "dev", v, reg, discardLogger))

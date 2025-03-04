@@ -23,9 +23,7 @@ func TestPublisher_SolarEdge(t *testing.T) {
 	}
 	ch := p.Subscribe()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	errCh := make(chan error)
-	go func() { errCh <- p.Run(ctx) }()
+	go func() { assert.NoError(t, p.Run(t.Context())) }()
 
 	assert.Equal(t, SolarEdgeUpdate{{
 		ID:   1,
@@ -48,9 +46,6 @@ func TestPublisher_SolarEdge(t *testing.T) {
 	}}, <-ch)
 
 	<-ch
-
-	cancel()
-	assert.NoError(t, <-errCh)
 }
 
 func TestPublisher_Tado(t *testing.T) {
@@ -62,18 +57,13 @@ func TestPublisher_Tado(t *testing.T) {
 	}
 	ch := p.Subscribe()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	errCh := make(chan error)
-	go func() { errCh <- p.Run(ctx) }()
+	go func() { assert.NoError(t, p.Run(t.Context())) }()
 
 	update := <-ch
 	assert.Equal(t, float32(75), *update.SolarIntensity.Percentage)
 	assert.Equal(t, float32(18), *update.OutsideTemperature.Celsius)
 	assert.Equal(t, tado.SUN, *update.WeatherState.Value)
 	<-ch
-
-	cancel()
-	assert.NoError(t, <-errCh)
 }
 
 var _ Updater[*tado.Weather] = fakeTadoClient{}
