@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
@@ -15,7 +14,7 @@ import (
 )
 
 func Test_runWeb(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := t.Context()
 	c, connString, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
 	require.NoError(t, err)
 	r, redisPort, err := testutils.NewTestRedis(ctx)
@@ -28,10 +27,10 @@ func Test_runWeb(t *testing.T) {
 	v := getViperFromViper(viper.GetViper())
 	v.Set("database.url", connString)
 	v.Set("web.cache.addr", "localhost:"+strconv.Itoa(redisPort))
+	v.Set("web.addr", ":8080")
 
-	ch := make(chan error)
 	go func() {
-		ch <- runWeb(ctx, "dev", v, reg, discardLogger)
+		assert.NoError(t, runWeb(ctx, "dev", v, reg, discardLogger))
 	}()
 
 	assert.Eventually(t, func() bool {
@@ -41,6 +40,5 @@ func Test_runWeb(t *testing.T) {
 
 	_, err = http.Get("http://localhost" + viper.GetString("prometheus.addr") + "/metrics")
 	assert.NoError(t, err)
-	cancel()
-	assert.NoError(t, <-ch)
+
 }

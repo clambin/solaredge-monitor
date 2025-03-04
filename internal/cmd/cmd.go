@@ -31,6 +31,7 @@ var (
 		"database.url": {Default: "", Help: "Postgres connection string (postgres://<user>:<password>@<host>:<port>/<dbname>)"},
 	}
 	webArguments = charmer.Arguments{
+		"web.addr":           {Default: ":8080", Help: "Address for web endpoint"},
 		"web.cache.rounding": {Default: 15 * time.Minute, Help: "Cache granularity rounding"},
 		"web.cache.ttl":      {Default: time.Hour, Help: "Time to cache images"},
 	}
