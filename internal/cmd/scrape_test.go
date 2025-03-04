@@ -19,7 +19,7 @@ import (
 )
 
 func Test_runScrape(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := t.Context()
 	store, connString, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -44,9 +44,8 @@ func Test_runScrape(t *testing.T) {
 	tadoUpdater := publisher.TadoUpdater{Client: fakeTadoGetter{}}
 	r := prometheus.NewPedanticRegistry()
 
-	errCh := make(chan error)
 	go func() {
-		errCh <- runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, discardLogger)
+		assert.NoError(t, runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, discardLogger))
 	}()
 
 	dbc, err := repository.NewPostgresDB(connString)
@@ -56,9 +55,6 @@ func Test_runScrape(t *testing.T) {
 		return err == nil && len(rows) > 0
 
 	}, 10*time.Second, time.Millisecond)
-
-	cancel()
-	assert.NoError(t, <-errCh)
 }
 
 func Test_getHomeId(t *testing.T) {
@@ -80,7 +76,7 @@ func Test_getHomeId(t *testing.T) {
 			args: args{
 				resp: &tado.GetMeResponse{
 					HTTPResponse: &http.Response{StatusCode: http.StatusOK},
-					JSON200:      &tado.User{Homes: &[]tado.HomeBase{{Id: varP(tado.HomeId(1))}}},
+					JSON200:      &tado.User{Homes: &[]tado.HomeBase{{Id: pointer(tado.HomeId(1))}}},
 				},
 				err: nil,
 			},
@@ -109,7 +105,7 @@ func Test_getHomeId(t *testing.T) {
 			args: args{
 				resp: &tado.GetMeResponse{
 					HTTPResponse: &http.Response{StatusCode: http.StatusOK},
-					JSON200:      &tado.User{Homes: &[]tado.HomeBase{{Id: varP(tado.HomeId(1))}, {Id: varP(tado.HomeId(2))}}},
+					JSON200:      &tado.User{Homes: &[]tado.HomeBase{{Id: pointer(tado.HomeId(1))}, {Id: pointer(tado.HomeId(2))}}},
 				},
 				err: nil,
 			},
@@ -136,8 +132,8 @@ func (f fakeTadoGetter) GetWeatherWithResponse(_ context.Context, _ tado.HomeId,
 	return &tado.GetWeatherResponse{
 		HTTPResponse: &http.Response{StatusCode: http.StatusOK, Body: http.NoBody},
 		JSON200: &tado.Weather{
-			SolarIntensity: &tado.PercentageDataPoint{Percentage: varP(float32(75))},
-			WeatherState:   &tado.WeatherStateDataPoint{Value: varP(tado.SUN)},
+			SolarIntensity: &tado.PercentageDataPoint{Percentage: pointer(float32(75))},
+			WeatherState:   &tado.WeatherStateDataPoint{Value: pointer(tado.SUN)},
 		},
 	}, nil
 }

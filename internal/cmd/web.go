@@ -11,7 +11,6 @@ import (
 	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -57,13 +56,9 @@ func runWeb(ctx context.Context, version string, v *viper.Viper, r prometheus.Re
 	r.MustRegister(serverMetrics)
 
 	var cache *web.ImageCache
-	if redisAddr := v.GetString("web.cache.addr"); redisAddr != "" {
+	if redisClient := newRedisClient(v); redisClient != nil {
 		cache = &web.ImageCache{
-			Client: redis.NewClient(&redis.Options{
-				Addr:     redisAddr,
-				Username: v.GetString("web.cache.username"),
-				Password: v.GetString("web.cache.password"),
-			}),
+			Client:    redisClient,
 			Namespace: "github.com/clambin/solaredge-monitor",
 			Rounding:  v.GetDuration("web.cache.rounding"),
 			TTL:       v.GetDuration("web.cache.ttl"),

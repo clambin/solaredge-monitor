@@ -36,7 +36,6 @@ func (e Exporter) Run(ctx context.Context) error {
 }
 
 func (e Exporter) export(update publisher.SolarEdgeUpdate) {
-	e.Logger.Debug("exporting update")
 	for site := range update {
 		e.Metrics.currentPower.WithLabelValues(update[site].Name).Set(update[site].PowerOverview.CurrentPower.Power)
 		e.Metrics.dayEnergy.WithLabelValues(update[site].Name).Set(update[site].PowerOverview.LastDayData.Energy)
