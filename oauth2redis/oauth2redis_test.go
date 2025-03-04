@@ -3,8 +3,8 @@ package oauth2redis
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/atomic"
 	"golang.org/x/oauth2"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -33,7 +33,7 @@ func TestTokenStore(t *testing.T) {
 var _ RedisClient = &fakeRedisClient{}
 
 type fakeRedisClient struct {
-	value atomic.String
+	value atomic.Value
 }
 
 func (f *fakeRedisClient) Set(ctx context.Context, _ string, value any, _ time.Duration) *redis.StatusCmd {
@@ -44,8 +44,8 @@ func (f *fakeRedisClient) Set(ctx context.Context, _ string, value any, _ time.D
 func (f *fakeRedisClient) Get(ctx context.Context, _ string) *redis.StringCmd {
 	cmd := redis.NewStringCmd(ctx)
 	value := f.value.Load()
-	if value != "" {
-		cmd.SetVal(value)
+	if value != nil {
+		cmd.SetVal(value.(string))
 	} else {
 		cmd.SetErr(redis.Nil)
 	}
