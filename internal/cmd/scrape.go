@@ -133,7 +133,8 @@ func runScrape(
 		health.IsHealthyFunc(func(ctx context.Context) error { return repo.DBH.PingContext(ctx) }),
 		health.IsHealthyFunc(func(ctx context.Context) error { return redisClient.Ping(ctx).Err() }),
 		&tadoPoller,
-		&solarEdgePoller,
+		// TODO: add solaredge back
+		//&solarEdgePoller,
 	)
 
 	var group errgroup.Group
