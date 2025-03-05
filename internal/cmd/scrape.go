@@ -133,9 +133,9 @@ func runScrape(
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
 	})
 	group.Go(func() error {
-		addr := "scrape.health.addr"
+		addr := v.GetString("scrape.health.addr")
 		logger.Debug("starting health probe", "addr", addr)
-		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString(addr), Handler: healthProbe})
+		return httputils.RunServer(ctx, &http.Server{Addr: addr, Handler: healthProbe})
 	})
 	group.Go(func() error { return writer.Run(ctx) })
 	group.Go(func() error { return exp.Run(ctx) })
