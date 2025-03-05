@@ -63,11 +63,7 @@ func newTadoClient(ctx context.Context, r prometheus.Registerer, redisClient *re
 
 func newOAuth2Client(ctx context.Context, redisClient *redis.Client, deviceAuthCallback func(response *oauth2.DeviceAuthResponse)) (client *http.Client, err error) {
 	// store to save our token
-	store := oauth2redis.TokenStore{
-		Key:         "github.com/clambin/solaredge-monitor/oauth2redis",
-		RedisClient: redisClient,
-		TTL:         30 * 24 * time.Hour,
-	}
+	store := oauth2redis.NewRedisTokenStore(redisClient, "github.com/clambin/solaredge-monitor/oauth2redis", 30*24*time.Hour)
 	token, err := store.Load()
 	if err != nil {
 		// store doesn't contain a valid token. ask the user to log in

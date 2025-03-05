@@ -1,7 +1,8 @@
-package oauth2redis
+package oauth2redis_test
 
 import (
 	"context"
+	"github.com/clambin/solaredge-monitor/oauth2redis"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/oauth2"
 	"sync/atomic"
@@ -11,11 +12,7 @@ import (
 
 func TestTokenStore(t *testing.T) {
 	var c fakeRedisClient
-	ts := &TokenStore{
-		RedisClient: &c,
-		Key:         "token",
-		TTL:         1 * time.Minute,
-	}
+	ts := oauth2redis.NewRedisTokenStore(&c, "token", 1*time.Minute)
 
 	tok := &oauth2.Token{AccessToken: "abc", Expiry: time.Now().Add(time.Hour)}
 	if err := ts.Save(tok); err != nil {
@@ -30,7 +27,7 @@ func TestTokenStore(t *testing.T) {
 	}
 }
 
-var _ RedisClient = &fakeRedisClient{}
+var _ oauth2redis.RedisClient = &fakeRedisClient{}
 
 type fakeRedisClient struct {
 	value atomic.Value
