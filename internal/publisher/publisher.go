@@ -12,10 +12,10 @@ import (
 
 type Publisher[T any] struct {
 	Updater[T]
-	Logger *slog.Logger
-	pubsub.Publisher[T]
-	Interval   time.Duration
 	lastUpdate atomic.Value
+	Logger     *slog.Logger
+	pubsub.Publisher[T]
+	Interval time.Duration
 }
 
 type Updater[T any] interface {
