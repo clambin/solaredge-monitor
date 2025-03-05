@@ -15,6 +15,7 @@ import (
 	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -50,6 +51,7 @@ var (
 				prometheus.DefaultRegisterer,
 				publisher.SolarEdgeUpdater{SolarEdgeClient: &solarEdgeClient},
 				publisher.TadoUpdater{Client: tadoClient, HomeId: homeId},
+				redisClient,
 				logger,
 			)
 		},
@@ -78,6 +80,7 @@ func runScrape(
 	r prometheus.Registerer,
 	solarEdgeUpdater publisher.Updater[publisher.SolarEdgeUpdate],
 	tadoUpdater publisher.Updater[*tado.Weather],
+	redisClient *redis.Client,
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge scraper", "version", version)
@@ -126,7 +129,12 @@ func runScrape(
 		Logger:    logger.With("component", "exporter"),
 	}
 
-	healthProbe := health.Probe(logger.With("component", "health"), &solarEdgePoller, &tadoPoller)
+	healthProbe := health.Probe(logger.With("component", "health"),
+		health.IsHealthyFunc(func(ctx context.Context) error { return repo.DBH.PingContext(ctx) }),
+		health.IsHealthyFunc(func(ctx context.Context) error { return redisClient.Ping(ctx).Err() }),
+		&tadoPoller,
+		&solarEdgePoller,
+	)
 
 	var group errgroup.Group
 	group.Go(func() error {

@@ -43,7 +43,7 @@ func (p *Publisher[T]) Run(ctx context.Context) error {
 	}
 }
 
-func (p *Publisher[T]) IsHealthy() error {
+func (p *Publisher[T]) IsHealthy(_ context.Context) error {
 	lastUpdate := p.lastUpdate.Load()
 	if lastUpdate == nil {
 		return fmt.Errorf("no data received from %s", p.getSource())

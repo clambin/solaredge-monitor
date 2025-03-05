@@ -1,6 +1,7 @@
 package health
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
@@ -10,8 +11,8 @@ import (
 )
 
 func TestHealthProbe(t *testing.T) {
-	up := componentFunc(func() error { return nil })
-	down := componentFunc(func() error { return errors.New("error") })
+	up := IsHealthyFunc(func(_ context.Context) error { return nil })
+	down := IsHealthyFunc(func(_ context.Context) error { return errors.New("error") })
 
 	tests := []struct {
 		name       string
@@ -36,10 +37,4 @@ func TestHealthProbe(t *testing.T) {
 			assert.Equal(t, tt.want, w.Code)
 		})
 	}
-}
-
-type componentFunc func() error
-
-func (c componentFunc) IsHealthy() error {
-	return c()
 }

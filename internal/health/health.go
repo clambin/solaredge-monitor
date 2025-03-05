@@ -1,29 +1,30 @@
 package health
 
 import (
-	"errors"
+	"context"
 	"log/slog"
 	"net/http"
 )
 
 type Component interface {
-	IsHealthy() error
+	IsHealthy(context.Context) error
+}
+
+type IsHealthyFunc func(context.Context) error
+
+func (c IsHealthyFunc) IsHealthy(ctx context.Context) error {
+	return c(ctx)
 }
 
 func Probe(logger *slog.Logger, components ...Component) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var errs error
 		for _, component := range components {
-			if err := component.IsHealthy(); err != nil {
-				errs = errors.Join(errs, err)
+			if err := component.IsHealthy(r.Context()); err != nil {
+				logger.Warn("health check failed", "err", err)
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
 			}
 		}
-		if errs != nil {
-			logger.Warn("Health check failed", "err", errs)
-			http.Error(w, errs.Error(), http.StatusServiceUnavailable)
-			return
-		}
-		w.Header().Set("Content-Type", "text/plain")
-		_, _ = w.Write([]byte("OK\n"))
+		w.WriteHeader(http.StatusOK)
 	})
 }

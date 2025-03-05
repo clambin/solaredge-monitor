@@ -68,10 +68,10 @@ func TestPublisher_Tado(t *testing.T) {
 
 func TestPublisher_IsHealthy(t *testing.T) {
 	p := Publisher[*tado.Weather]{Interval: 10 * time.Millisecond}
-	assert.Error(t, p.IsHealthy())
+	assert.Error(t, p.IsHealthy(context.TODO()))
 	p.lastUpdate.Store(time.Now())
-	assert.NoError(t, p.IsHealthy())
-	assert.Eventually(t, func() bool { return p.IsHealthy() != nil }, time.Second, p.Interval)
+	assert.NoError(t, p.IsHealthy(context.TODO()))
+	assert.Eventually(t, func() bool { return p.IsHealthy(context.TODO()) != nil }, time.Second, p.Interval)
 }
 
 func TestPublisher_getSource(t *testing.T) {
