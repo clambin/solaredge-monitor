@@ -40,7 +40,9 @@ var (
 	}
 
 	scrapeArguments = charmer.Arguments{
-		"scrape.interval": {Default: 15 * time.Minute, Help: "Scraper interval"},
+		"scrape.interval":    {Default: 15 * time.Minute, Help: "Scraper interval"},
+		"scrape.health.addr": {Default: ":9091", Help: "Health probe address"},
+		//"scrape.health.path": {Default: "/health", Help: "Health probe path"},
 	}
 )
 

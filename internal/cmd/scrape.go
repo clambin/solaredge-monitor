@@ -7,6 +7,7 @@ import (
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
+	"github.com/clambin/solaredge-monitor/internal/health"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
@@ -125,9 +126,14 @@ func runScrape(
 		Logger:    logger.With("component", "exporter"),
 	}
 
+	healthProbe := health.Probe(logger.With("component", "health"), &solarEdgePoller, &tadoPoller)
+
 	var group errgroup.Group
 	group.Go(func() error {
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+	})
+	group.Go(func() error {
+		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("scrape.health.addr"), Handler: healthProbe})
 	})
 	group.Go(func() error { return writer.Run(ctx) })
 	group.Go(func() error { return exp.Run(ctx) })
