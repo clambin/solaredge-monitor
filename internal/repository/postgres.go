@@ -61,7 +61,7 @@ func (db *PostgresDB) Store(measurement Measurement) error {
 	if err == nil {
 		tx := db.DBH.MustBegin()
 		tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
-			measurement.Timestamp, measurement.Intensity, measurement.Power, weatherID,
+			measurement.Timestamp.Local(), measurement.Intensity, measurement.Power, weatherID,
 		)
 		err = tx.Commit()
 	}

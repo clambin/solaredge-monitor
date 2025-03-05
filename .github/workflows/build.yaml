@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-      - redis
+      - timezone
 permissions:
   contents: read
   packages: write
