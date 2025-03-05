@@ -66,6 +66,23 @@ func TestPublisher_Tado(t *testing.T) {
 	<-ch
 }
 
+func TestPublisher_IsHealthy(t *testing.T) {
+	p := Publisher[*tado.Weather]{Interval: 10 * time.Millisecond}
+	assert.Error(t, p.IsHealthy(context.TODO()))
+	p.lastUpdate.Store(time.Now())
+	assert.NoError(t, p.IsHealthy(context.TODO()))
+	assert.Eventually(t, func() bool { return p.IsHealthy(context.TODO()) != nil }, time.Second, p.Interval)
+}
+
+func TestPublisher_getSource(t *testing.T) {
+	var p Publisher[*tado.Weather]
+	assert.Equal(t, "Tado", p.getSource())
+	var q Publisher[SolarEdgeUpdate]
+	assert.Equal(t, "SolarEdge", q.getSource())
+	var r Publisher[any]
+	assert.Equal(t, "unknown source", r.getSource())
+}
+
 var _ Updater[*tado.Weather] = fakeTadoClient{}
 
 type fakeTadoClient struct{}

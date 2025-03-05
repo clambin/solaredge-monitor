@@ -7,6 +7,7 @@ import (
 	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/go-common/httputils"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
+	"github.com/clambin/solaredge-monitor/internal/health"
 	"github.com/clambin/solaredge-monitor/internal/publisher"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/scraper"
@@ -14,6 +15,7 @@ import (
 	"github.com/clambin/tado/v2/tools"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -49,6 +51,7 @@ var (
 				prometheus.DefaultRegisterer,
 				publisher.SolarEdgeUpdater{SolarEdgeClient: &solarEdgeClient},
 				publisher.TadoUpdater{Client: tadoClient, HomeId: homeId},
+				redisClient,
 				logger,
 			)
 		},
@@ -77,6 +80,7 @@ func runScrape(
 	r prometheus.Registerer,
 	solarEdgeUpdater publisher.Updater[publisher.SolarEdgeUpdate],
 	tadoUpdater publisher.Updater[*tado.Weather],
+	redisClient *redis.Client,
 	logger *slog.Logger,
 ) error {
 	logger.Info("starting solaredge scraper", "version", version)
@@ -125,9 +129,22 @@ func runScrape(
 		Logger:    logger.With("component", "exporter"),
 	}
 
+	healthProbe := health.Probe(logger.With("component", "health"),
+		health.IsHealthyFunc(func(ctx context.Context) error { return repo.DBH.PingContext(ctx) }),
+		health.IsHealthyFunc(func(ctx context.Context) error { return redisClient.Ping(ctx).Err() }),
+		&tadoPoller,
+		// TODO: add solaredge back
+		//&solarEdgePoller,
+	)
+
 	var group errgroup.Group
 	group.Go(func() error {
 		return httputils.RunServer(ctx, &http.Server{Addr: v.GetString("prometheus.addr"), Handler: promhttp.Handler()})
+	})
+	group.Go(func() error {
+		addr := v.GetString("scrape.health.addr")
+		logger.Debug("starting health probe", "addr", addr)
+		return httputils.RunServer(ctx, &http.Server{Addr: addr, Handler: healthProbe})
 	})
 	group.Go(func() error { return writer.Run(ctx) })
 	group.Go(func() error { return exp.Run(ctx) })

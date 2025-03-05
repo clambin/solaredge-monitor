@@ -45,7 +45,7 @@ func Test_runScrape(t *testing.T) {
 	r := prometheus.NewPedanticRegistry()
 
 	go func() {
-		assert.NoError(t, runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, discardLogger))
+		assert.NoError(t, runScrape(ctx, "dev", v, r, &solarEdgeUpdater, &tadoUpdater, nil, discardLogger))
 	}()
 
 	dbc, err := repository.NewPostgresDB(connString)
