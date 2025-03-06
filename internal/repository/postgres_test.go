@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"context"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/testutils"
 	"github.com/stretchr/testify/assert"
@@ -12,8 +11,7 @@ import (
 )
 
 func TestStore(t *testing.T) {
-	ctx := context.Background()
-	c, connString, err := testutils.NewTestPostgresDB(ctx, "solaredge", "username", "password")
+	c, connString, err := testutils.NewTestPostgresDB(t.Context(), "solaredge", "username", "password")
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, testcontainers.TerminateContainer(c))
@@ -71,10 +69,43 @@ func TestStore(t *testing.T) {
 	allCount := len(measurements)
 
 	measurements, err = db.Get(first, timestamp)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, allCount, len(measurements))
+
+	first, last, err := db.GetDataRange()
+	require.NoError(t, err)
+	assert.NotZero(t, first)
+	assert.NotZero(t, last)
 
 	id, err = db.GetWeatherID("RAINING")
 	require.NoError(t, err)
 	assert.Equal(t, 4, id)
+}
+
+func TestNewPostgresDB_ConnectionString(t *testing.T) {
+	c, connString, err := testutils.NewTestPostgresDB(t.Context(), "solaredge", "username", "password")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, testcontainers.TerminateContainer(c))
+	})
+	t.Log(connString)
+
+	tests := []struct {
+		name             string
+		connectionString string
+		err              assert.ErrorAssertionFunc
+	}{
+		{"success", connString, assert.NoError},
+		{"blank", "", assert.Error},
+		{"invalid", "\r\n", assert.Error},
+		{"not postgres", "https://example.com", assert.Error},
+		{"no db name", "postgres://username:password@localhost:55890", assert.Error},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := repository.NewPostgresDB(tt.connectionString)
+			tt.err(t, err)
+		})
+	}
 }

@@ -130,7 +130,7 @@ func runScrape(
 	}
 
 	healthProbe := health.Probe(logger.With("component", "health"),
-		health.IsHealthyFunc(func(ctx context.Context) error { return repo.DBH.PingContext(ctx) }),
+		health.IsHealthyFunc(func(ctx context.Context) error { return repo.DBX.PingContext(ctx) }),
 		health.IsHealthyFunc(func(ctx context.Context) error { return redisClient.Ping(ctx).Err() }),
 		&tadoPoller,
 		// TODO: add solaredge back

@@ -26,9 +26,9 @@ func TestMeasurements_Fold(t *testing.T) {
 }
 
 // Before:
-// BenchmarkMeasurements_Fold/new-16                   1244            951993 ns/op         1966080 B/op          1 allocs/op
+// BenchmarkMeasurements_Fold-16    	    1209	    962439 ns/op	 1966122 B/op	       1 allocs/op
 // Current:
-// BenchmarkMeasurements_Fold-16    	    1188	    967904 ns/op	 1966123 B/op	       1 allocs/op
+// BenchmarkMeasurements_Fold-16    	    1395	    798887 ns/op	 1966120 B/op	       1 allocs/op
 func BenchmarkMeasurements_Fold(b *testing.B) {
 	const size = 365 * 24 * 4
 	measurements := make(repository.Measurements, size)

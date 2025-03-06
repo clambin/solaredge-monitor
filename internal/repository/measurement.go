@@ -9,10 +9,10 @@ import (
 var _ slog.LogValuer = Measurement{}
 
 type Measurement struct {
-	Timestamp time.Time
-	Weather   string
-	Power     float64
-	Intensity float64
+	Timestamp time.Time `db:"timestamp"`
+	Weather   string    `db:"weather"`
+	Power     float64   `db:"power"`
+	Intensity float64   `db:"intensity"`
 }
 
 func (m Measurement) LogValue() slog.Value {
@@ -34,13 +34,13 @@ func (m Measurements) Fold() Measurements {
 	}
 	folded := make(Measurements, len(m))
 	copy(folded, m)
-	baseDate := time.Date(2023, time.January, 1, 0, 0, 0, 0, folded[0].Timestamp.Location())
+	baseDate := time.Date(folded[0].Timestamp.Year(), time.January, 1, 0, 0, 0, 0, folded[0].Timestamp.Location())
 	for i := range len(folded) {
+		hh, mm, ss := folded[i].Timestamp.Clock()
 		folded[i].Timestamp = baseDate.Add(
-			time.Duration(folded[i].Timestamp.Hour())*time.Hour +
-				time.Duration(folded[i].Timestamp.Minute())*time.Minute +
-				time.Duration(folded[i].Timestamp.Second())*time.Second +
-				time.Duration(folded[i].Timestamp.Nanosecond()),
+			time.Duration(hh)*time.Hour +
+				time.Duration(mm)*time.Minute +
+				time.Duration(ss)*time.Second,
 		)
 	}
 	return folded

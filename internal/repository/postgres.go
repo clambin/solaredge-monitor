@@ -20,29 +20,29 @@ var _ prometheus.Collector = &PostgresDB{}
 
 type PostgresDB struct {
 	prometheus.Collector
-	DBH      *sqlx.DB
+	DBX      *sqlx.DB
 	database string
 }
 
 func NewPostgresDB(connectionString string) (*PostgresDB, error) {
-	dbName, err := validateConnectionString(connectionString)
+	dbName, err := getDBName(connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("invalid db url %q: %w", connectionString, err)
 	}
 	var db *PostgresDB
-	dbh, err := sqlx.Connect("postgres", connectionString)
+	dbx, err := sqlx.Connect("postgres", connectionString)
 	if err == nil {
 		db = &PostgresDB{
 			database:  dbName,
-			DBH:       dbh,
-			Collector: collectors.NewDBStatsCollector(dbh.DB, dbName),
+			DBX:       dbx,
+			Collector: collectors.NewDBStatsCollector(dbx.DB, dbName),
 		}
 		err = db.migrate()
 	}
 	return db, err
 }
 
-func validateConnectionString(connectionString string) (string, error) {
+func getDBName(connectionString string) (string, error) {
 	u, err := url.Parse(connectionString)
 	if err != nil {
 		return "", err
@@ -59,17 +59,15 @@ func validateConnectionString(connectionString string) (string, error) {
 func (db *PostgresDB) Store(measurement Measurement) error {
 	weatherID, err := db.GetWeatherID(measurement.Weather)
 	if err == nil {
-		tx := db.DBH.MustBegin()
-		tx.MustExec(`INSERT INTO solar(timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
+		_, err = db.DBX.Exec(`INSERT INTO solar (timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
 			measurement.Timestamp.Local(), measurement.Intensity, measurement.Power, weatherID,
 		)
-		err = tx.Commit()
 	}
 	return err
 }
 
 func (db *PostgresDB) Get(from, to time.Time) (measurements Measurements, err error) {
-	err = db.DBH.Select(&measurements,
+	err = db.DBX.Select(&measurements,
 		fmt.Sprintf(`SELECT timestamp, intensity, power, weather FROM solar, weatherids WHERE solar.weatherid = weatherids.id %s ORDER BY 1`,
 			getTimeClause(from, to),
 		),
@@ -78,7 +76,7 @@ func (db *PostgresDB) Get(from, to time.Time) (measurements Measurements, err er
 }
 
 func getTimeClause(from, to time.Time) string {
-	var conditions []string
+	conditions := make([]string, 0, 2)
 	if !from.IsZero() {
 		conditions = append(conditions, fmt.Sprintf("timestamp >= '%s'", from.Format("2006-01-02 15:04:05")))
 	}
@@ -92,18 +90,12 @@ func getTimeClause(from, to time.Time) string {
 }
 
 func (db *PostgresDB) GetDataRange() (time.Time, time.Time, error) {
-	type dataRange struct {
-		Min, Max time.Time
+	var response struct {
+		First time.Time `db:"first"`
+		Last  time.Time `db:"last"`
 	}
-	var response []dataRange
-	err := db.DBH.Select(&response, "SELECT MIN(timestamp), MAX(timestamp) FROM solar")
-	if err != nil {
-		return time.Time{}, time.Time{}, err
-	}
-	if len(response) != 1 {
-		return time.Time{}, time.Time{}, fmt.Errorf("invalid dataRange: %d", len(response))
-	}
-	return response[0].Min, response[0].Max, nil
+	err := db.DBX.Get(&response, `SELECT MIN(timestamp) "first", MAX(timestamp) "last" FROM solar`)
+	return response.First, response.Last, err
 }
 
 //go:embed migrations/*
@@ -115,7 +107,7 @@ func (db *PostgresDB) migrate() error {
 		return fmt.Errorf("invalid migration source: %w", err)
 	}
 
-	dbDriver, err := postgres.WithInstance(db.DBH.DB, &postgres.Config{DatabaseName: db.database})
+	dbDriver, err := postgres.WithInstance(db.DBX.DB, &postgres.Config{DatabaseName: db.database})
 	if err != nil {
 		return fmt.Errorf("invalid migration target: %w", err)
 	}
@@ -125,12 +117,9 @@ func (db *PostgresDB) migrate() error {
 		return fmt.Errorf("unable to migrate database: %w", err)
 	}
 
-	if err = m.Up(); err != nil {
-		if errors.Is(err, migrate.ErrNoChange) {
-			err = nil
-		} else {
-			err = fmt.Errorf("database migration failed: %w", err)
-		}
+	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("database migration failed: %w", err)
 	}
-	return err
+
+	return nil
 }
