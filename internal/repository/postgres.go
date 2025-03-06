@@ -60,7 +60,7 @@ func (db *PostgresDB) Store(measurement Measurement) error {
 	weatherID, err := db.GetWeatherID(measurement.Weather)
 	if err == nil {
 		_, err = db.DBX.Exec(`INSERT INTO solar (timestamp, intensity, power, weatherid) VALUES ($1, $2, $3, $4)`,
-			measurement.Timestamp.Local(), measurement.Intensity, measurement.Power, weatherID,
+			measurement.Timestamp, measurement.Intensity, measurement.Power, weatherID,
 		)
 	}
 	return err

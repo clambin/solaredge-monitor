@@ -88,7 +88,6 @@ func TestNewPostgresDB_ConnectionString(t *testing.T) {
 	t.Cleanup(func() {
 		require.NoError(t, testcontainers.TerminateContainer(c))
 	})
-	t.Log(connString)
 
 	tests := []struct {
 		name             string
