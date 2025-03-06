@@ -66,13 +66,15 @@ func (db *PostgresDB) Store(measurement Measurement) error {
 	return err
 }
 
-func (db *PostgresDB) Get(from, to time.Time) (measurements Measurements, err error) {
-	err = db.DBX.Select(&measurements,
-		fmt.Sprintf(`SELECT timestamp, intensity, power, weather FROM solar, weatherids WHERE solar.weatherid = weatherids.id %s ORDER BY 1`,
-			getTimeClause(from, to),
-		),
-	)
-	return
+func (db *PostgresDB) Get(from, to time.Time) (Measurements, error) {
+	stmt := "SELECT timestamp, intensity, power, weather FROM solar, weatherids WHERE solar.weatherid = weatherids.id"
+	if timeClause := getTimeClause(from, to); timeClause != "" {
+		stmt += " AND " + timeClause
+	}
+	stmt += " ORDER BY timestamp"
+	var measurements Measurements
+	err := db.DBX.Select(&measurements, stmt)
+	return measurements, err
 }
 
 func getTimeClause(from, to time.Time) string {
@@ -83,10 +85,7 @@ func getTimeClause(from, to time.Time) string {
 	if !to.IsZero() {
 		conditions = append(conditions, fmt.Sprintf("timestamp <= '%s'", to.Format("2006-01-02 15:04:05")))
 	}
-	if len(conditions) == 0 {
-		return ""
-	}
-	return " AND " + strings.Join(conditions, " AND ")
+	return strings.Join(conditions, " AND ")
 }
 
 func (db *PostgresDB) GetDataRange() (time.Time, time.Time, error) {
