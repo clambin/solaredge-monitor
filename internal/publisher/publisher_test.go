@@ -1,9 +1,9 @@
 package publisher
 
 import (
+	"codeberg.org/clambin/go-common/pubsub"
 	"context"
-	"github.com/clambin/go-common/pubsub"
-	v2 "github.com/clambin/solaredge/v2"
+	"github.com/clambin/solaredge/v2"
 	"github.com/clambin/tado/v2"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -28,18 +28,18 @@ func TestPublisher_SolarEdge(t *testing.T) {
 	assert.Equal(t, SolarEdgeUpdate{{
 		ID:   1,
 		Name: "my home",
-		PowerOverview: v2.PowerOverview{
-			LifeTimeData:  v2.EnergyOverview{Energy: 1000},
-			LastYearData:  v2.EnergyOverview{Energy: 100},
-			LastMonthData: v2.EnergyOverview{Energy: 10},
-			LastDayData:   v2.EnergyOverview{Energy: 1},
-			CurrentPower:  v2.CurrentPower{Power: 100},
+		PowerOverview: solaredge.PowerOverview{
+			LifeTimeData:  solaredge.EnergyOverview{Energy: 1000},
+			LastYearData:  solaredge.EnergyOverview{Energy: 100},
+			LastMonthData: solaredge.EnergyOverview{Energy: 10},
+			LastDayData:   solaredge.EnergyOverview{Energy: 1},
+			CurrentPower:  solaredge.CurrentPower{Power: 100},
 		},
 		InverterUpdates: []InverterUpdate{{
 			Name:         "foo",
 			SerialNumber: "1234",
-			Telemetry: v2.InverterTelemetry{
-				L1Data:    v2.InverterTelemetryL1Data{AcCurrent: 1, AcVoltage: 220},
+			Telemetry: solaredge.InverterTelemetry{
+				L1Data:    solaredge.InverterTelemetryL1Data{AcCurrent: 1, AcVoltage: 220},
 				DcVoltage: 380,
 			},
 		}},

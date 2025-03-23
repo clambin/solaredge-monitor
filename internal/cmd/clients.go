@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"codeberg.org/clambin/go-common/httputils/metrics"
+	"codeberg.org/clambin/go-common/httputils/roundtripper"
 	"context"
 	"fmt"
-	"github.com/clambin/go-common/httputils/metrics"
-	"github.com/clambin/go-common/httputils/roundtripper"
 	"github.com/clambin/solaredge-monitor/oauth2redis"
 	"github.com/clambin/solaredge/v2"
 	"github.com/clambin/tado/v2"

@@ -1,9 +1,9 @@
 package publisher
 
 import (
+	"codeberg.org/clambin/go-common/pubsub"
 	"context"
 	"fmt"
-	"github.com/clambin/go-common/pubsub"
 	"github.com/clambin/tado/v2"
 	"log/slog"
 	"sync/atomic"

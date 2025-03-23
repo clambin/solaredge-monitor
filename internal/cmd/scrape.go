@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"codeberg.org/clambin/go-common/charmer"
+	"codeberg.org/clambin/go-common/httputils"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/clambin/go-common/charmer"
-	"github.com/clambin/go-common/httputils"
 	"github.com/clambin/solaredge-monitor/internal/exporter"
 	"github.com/clambin/solaredge-monitor/internal/health"
 	"github.com/clambin/solaredge-monitor/internal/publisher"

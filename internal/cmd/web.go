@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"codeberg.org/clambin/go-common/charmer"
+	"codeberg.org/clambin/go-common/httputils"
+	"codeberg.org/clambin/go-common/httputils/metrics"
+	"codeberg.org/clambin/go-common/httputils/middleware"
 	"context"
 	"fmt"
-	"github.com/clambin/go-common/charmer"
-	"github.com/clambin/go-common/httputils"
-	"github.com/clambin/go-common/httputils/metrics"
-	"github.com/clambin/go-common/httputils/middleware"
 	"github.com/clambin/solaredge-monitor/internal/repository"
 	"github.com/clambin/solaredge-monitor/internal/web"
 	"github.com/prometheus/client_golang/prometheus"
