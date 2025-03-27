@@ -21,13 +21,13 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/redis v0.35.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sync v0.12.0
-	gonum.org/v1/plot v0.15.2
+	gonum.org/v1/plot v0.16.0
 )
 
 require (
 	codeberg.org/clambin/go-common/cache v0.9.0 // indirect
-	codeberg.org/go-fonts/liberation v0.4.1 // indirect
-	codeberg.org/go-latex/latex v0.0.1 // indirect
+	codeberg.org/go-fonts/liberation v0.5.0 // indirect
+	codeberg.org/go-latex/latex v0.1.0 // indirect
 	codeberg.org/go-pdf/fpdf v0.10.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	git.sr.ht/~sbinet/gg v0.6.0 // indirect
@@ -106,10 +106,10 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/image v0.24.0 // indirect
+	golang.org/x/image v0.25.0 // indirect
 	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
