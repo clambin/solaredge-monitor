@@ -5,6 +5,9 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/clambin/solaredge-monitor)
 ![GitHub](https://img.shields.io/github/license/clambin/solaredge-monitor?style=plastic)
 
+Deprecated: moved to https://codeberg.org/clambin/solaredge-monitor
+
+
 visualises SolarEdge power generation and weather statistics (using Tado). 
 
 ## Authors
